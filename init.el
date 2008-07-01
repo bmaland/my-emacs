@@ -1,3 +1,4 @@
+(setq inhibit-startup-message t) ;; Remove splash screen
 (prefer-coding-system 'utf-8)
 (toggle-debug-on-error t)
 
