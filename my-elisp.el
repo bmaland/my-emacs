@@ -117,6 +117,11 @@
                   (line-beginning-position 2))
   (message "Line copied"))
 
+(defun mark-line (&optional arg)
+  "Marks a line from start of indentation to end"
+  (interactive "p")
+  (back-to-indentation)
+  (end-of-line-mark arg))
 
 (defun file2url ()
   "Uploads the file in the current buffer via file2url.sh, displays the resulting url."
