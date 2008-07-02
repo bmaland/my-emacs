@@ -1,0 +1,8 @@
+--- !ditz.rubyforge.org,2008-03-06/project 
+name: my-emacs
+version: "0.3"
+components: 
+- !ditz.rubyforge.org,2008-03-06/component 
+  name: my-emacs
+releases: []
+
