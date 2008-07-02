@@ -109,6 +109,15 @@
   (newline-and-indent)
   )
 
+;; Taken from http://emacs.wordpress.com/2007/01/22/killing-yanking-and-copying-lines/
+(defun jao-copy-line ()
+  "Copy current line in the kill ring"
+  (interactive)
+  (kill-ring-save (line-beginning-position)
+                  (line-beginning-position 2))
+  (message "Line copied"))
+
+
 (defun file2url ()
   "Uploads the file in the current buffer via file2url.sh, displays the resulting url."
   (interactive)
