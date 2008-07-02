@@ -175,6 +175,9 @@
 
 ;;(require 'pastie)
 
+;; Aquamacs specific
+(when (boundp 'aquamacs-version)
+  (load "~/.emacs.d/aquamacs.el"))
 
 (setq system-specific-config
       (concat "~/.emacs.d/"
