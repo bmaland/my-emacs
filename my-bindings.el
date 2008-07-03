@@ -12,7 +12,7 @@
 (global-set-key [(control shift d)] 'duplicate-line)
 (global-set-key "\M-/" 'comment-region)
 (global-set-key "\M-\C-m" 'insert-line-below)
-(global-set-key [(shift enter)] 'newline-and-indent)
+;;(global-set-key [(shift enter)] 'newline-and-indent)
 (global-set-key [(control shift l)] 'mark-line)
 ;;(global-set-key "\C-m" 'newline-and-indent)
 
@@ -26,6 +26,8 @@
 (global-set-key "\C-cT" 'twittering-update-status-interactive)
 
 ;; Hooks
+;; TODO move non-binding related stuff to another file, or maybe
+;; create a new file just for hooks
 
 ;; Slime
 (add-hook 'slime-repl-mode-hook
@@ -38,6 +40,18 @@
           '(lambda ()
              ;; Default to auto-indent on Enter
              (local-set-key "\C-m" 'ruby-reindent-then-newline-and-indent)))
+
+ (add-hook 'python-mode-hook
+           '(lambda ()
+              ;; Default to auto-indent on Enter
+              (setq indent-tabs-mode nil)
+              (local-set-key "\C-m" 'newline-and-indent)))
+
+(add-hook 'shell-mode-hook
+          '(lambda ()
+             (setq sh-basic-offset 2)
+             (setq indent-tabs-mode nil)))
+
 
 ;; Markdown mode
 ;;(add-hook 'markdown-mode-hook

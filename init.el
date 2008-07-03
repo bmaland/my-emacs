@@ -1,4 +1,5 @@
 (setq inhibit-startup-message t) ;; Remove splash screen
+(setq show-trailing-whitespace t)
 (prefer-coding-system 'utf-8)
 (toggle-debug-on-error t)
 
@@ -69,6 +70,8 @@
 (global-hl-line-mode t)
 (global-font-lock-mode t)
 (set-face-background 'hl-line "#8b4513")
+
+;; (if (eq window-system 'x) ;; for X11
 
 ;;(custom-set-faces
 ;; custom-set-faces was added by Custom.
@@ -167,6 +170,9 @@
          (cons '("\\.text" . markdown-mode) auto-mode-alist))
 (add-to-list 'auto-mode-alist '("\.markdown$" . markdown-mode))
 
+(autoload 'python-mode
+  "python" "Python editing mode." t)
+
 (require 'my-elisp)
 (require 'my-bindings)
 
@@ -187,9 +193,10 @@
     (load system-specific-config))
 
 ;; I hate tabs!
-(global-set-key (kbd "TAB") 'self-insert-command)
+;;(global-set-key (kbd "TAB") 'self-insert-command)
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 2)
 (setq tab-width 2)
 (setq c-basic-indent 2)
+(setq python-indent 2)
 ;; \M-x set-variable var val
