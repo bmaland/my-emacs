@@ -3,19 +3,19 @@
 (prefer-coding-system 'utf-8)
 (toggle-debug-on-error t)
 
-(require 'cl)
+;;(require 'cl)
 
 ;; Start server if not already running
-(unless (string-equal "root" (getenv "USER"))
-  (when (and (> emacs-major-version 22)
-             (or (not (boundp 'server-process))
-                 (not (eq (process-status server-process)
-                          'listen))))
-    (server-start)))
+;; (unless (string-equal "root" (getenv "USER"))
+;;   (when (and (> emacs-major-version 22)
+;;              (or (not (boundp 'server-process))
+;;                  (not (eq (process-status server-process)
+;;                           'listen))))
+;;     (server-start)))
 
 ;; Load paths
 (add-to-list 'load-path "~/.emacs.d/")
-(add-to-list 'load-path "~/foss/slime/") ; your SLIME directory
+;;(add-to-list 'load-path "~/foss/slime/") ; your SLIME directory
 
 ;; (require 'vc-git)
 ;; (when (featurep 'vc-git) (add-to-list 'vc-handled-backends 'git))
@@ -24,7 +24,7 @@
 
 
 ;; Slime
-                                        ;(setq inferior-lisp-program "sbcl --no-linedit")
+;;(setq inferior-lisp-program "sbcl --no-linedit")
 (setq inferior-lisp-program "clisp")
 
 (eval-after-load "slime"
@@ -51,11 +51,7 @@
 
 (defalias 'qrr 'query-replace-regexp)
 
-
 ;; (autoload 'slime-selector "slime" t)
-
-
-
 
 ;;(ad-activate 'indent-sexp)
 
@@ -66,22 +62,9 @@
 ;; (setq scroll-step 0)
 ;; (setq scroll-conservatively 100)
 
-;; Set highlight line, and color
+;; Set highlight line
 (global-hl-line-mode t)
 (global-font-lock-mode t)
-(set-face-background 'hl-line "#8b4513")
-
-;; (if (eq window-system 'x) ;; for X11
-
-;;(custom-set-faces
-;; custom-set-faces was added by Custom.
-;; If you edit it by hand, you could mess it up, so be careful.
-;; Your init file should contain only one such instance.
-;; If there is more than one, they won't work right.
-;; '(default ((t (:stipple nil :background "black" :foreground "gray90" :inverse-video nil :box nil
-;;               :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 120 :width normal :family "misc-fixed"))))
-;; '(tooltip ((((class color)) (:background "lightyellow" :foreground "black")))))
-
 
 (custom-set-variables
   ;; custom-set-variables was added by Custom.
@@ -181,9 +164,9 @@
 
 ;;(require 'pastie)
 
-;; Aquamacs specific
-(when (boundp 'aquamacs-version)
-  (load "~/.emacs.d/aquamacs.el"))
+(if (eq window-system 'mac)
+    (load "~/.emacs.d/osx.el")
+  (load "~/.emacs.d/linux.el"))
 
 (setq system-specific-config
       (concat "~/.emacs.d/"
@@ -198,5 +181,5 @@
 (setq-default tab-width 2)
 (setq tab-width 2)
 (setq c-basic-indent 2)
-(setq python-indent 2)
+(setq python-indent 4)
 ;; \M-x set-variable var val
