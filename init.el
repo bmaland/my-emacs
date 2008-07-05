@@ -1,7 +1,9 @@
+;; A bunch of this stuff is borrowed from Phil Hagelberg's personal dotfiles collection
+;; over at http://github.com/technomancy/dotfiles/tree/master/
+
 (setq inhibit-startup-message t) ;; Remove splash screen
 (setq show-trailing-whitespace t)
 (prefer-coding-system 'utf-8)
-(toggle-debug-on-error t)
 
 ;;(require 'cl)
 
@@ -15,47 +17,33 @@
 
 ;; Load paths
 (add-to-list 'load-path "~/.emacs.d/")
-;;(add-to-list 'load-path "~/foss/slime/") ; your SLIME directory
+(add-to-list 'load-path "~/.emacs.d/sml-mode")
+(add-to-list 'load-path "~/foss/slime/") ; your SLIME directory
 
 ;; (require 'vc-git)
 ;; (when (featurep 'vc-git) (add-to-list 'vc-handled-backends 'git))
 ;; (require 'git)
-;; (autoload 'git-blame-mode "git-blame" "Minor mode for incremental blame for Git." t)
-
 
 ;; Slime
 ;;(setq inferior-lisp-program "sbcl --no-linedit")
-(setq inferior-lisp-program "clisp")
+;; (setq inferior-lisp-program "clisp")
 
-(eval-after-load "slime"
-  '(progn
-     (slime-setup '(slime-fancy slime-asdf slime-banner))
-     (setq slime-complete-symbol*-fancy t)
-     (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)))
+;; (eval-after-load "slime"
+;;   '(progn
+;;      (slime-setup '(slime-fancy slime-asdf slime-banner))
+;;      (setq slime-complete-symbol*-fancy t)
+;;      (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)))
 
 ;; (require 'slime)
 ;; (slime-setup)
 
-(setq load-path (cons "~/.emacs.d/sml-mode" load-path))
-(autoload 'sml-mode "sml-mode" "Major mode for editing ML programs." t)
-
-(setq auto-mode-alist
-      (append '(("\\.sml$" . sml-mode)
-                ("\\.sig$" . sml-mode)
-                ("\\.ml$"  . sml-mode)
-                ("\\.ML$"  . sml-mode)) auto-mode-alist))
-
-(defun my-mosml-setup () "Configure inferior SML mode for Moscow ML"
-  (load-library "sml-mosml"))
-(add-hook 'inferior-sml-load-hook 'my-mosml-setup)
-
 (defalias 'qrr 'query-replace-regexp)
 
-;; (autoload 'slime-selector "slime" t)
+;; ;; (autoload 'slime-selector "slime" t)
 
-;;(ad-activate 'indent-sexp)
+;; ;;(ad-activate 'indent-sexp)
 
-(setq isearch-lazy-highlight nil)
+;; (setq isearch-lazy-highlight nil)
 
 ;; Scroll margin and stop-that-bloody-halfpage-jump
 ;; (setq scroll-margin 3)
@@ -95,8 +83,6 @@
               (concat "#" (file-name-nondirectory buffer-file-name) "#")
             (expand-file-name (concat "#%" (buffer-name) "#")))))
 
-;; Cua-mode by default
-(cua-mode)
 
 ;;(setq browse-url-browser-function 'browse-url-firefox)
 
@@ -118,11 +104,13 @@
 
 
 
-(add-hook 'slime-mode-hook
-          (lambda ()
-            (slime-highlight-edits-mode 0)))
+;; (add-hook 'slime-mode-hook
+;;           (lambda ()
+;;             (slime-highlight-edits-mode 0)))
 
 
+;; Regenerate the autoload file if it doesn't exist or it's too
+;; old. (2 weeks or so)
 
 (let ((autoload-file "~/.emacs.d/loaddefs.el"))
   (if (or (not (file-exists-p autoload-file))
@@ -133,6 +121,14 @@
         (update-directory-autoloads "~/.emacs.d/")))
   (load autoload-file))
 
+(autoload 'git-blame-mode "git-blame" "Minor mode for incremental blame for Git." t)
+
+(autoload 'sml-mode "sml-mode" "Major mode for editing ML programs." t)
+(setq auto-mode-alist
+      (append '(("\\.sml$" . sml-mode)
+                ("\\.sig$" . sml-mode)
+                ("\\.ml$"  . sml-mode)
+                ("\\.ML$"  . sml-mode)) auto-mode-alist))
 
 (autoload 'w3m "w3m-load" "" t)
 (autoload 'lisppaste-paste-region "lisppaste" "" t)
@@ -156,13 +152,25 @@
 (autoload 'python-mode
   "python" "Python editing mode." t)
 
-(require 'my-elisp)
-(require 'my-bindings)
+
 
 (require 'textmate)
 (textmate-mode)
 
-;;(require 'pastie)
+(require 'pastie)
+
+;; I hate tabs!
+(global-set-key (kbd "TAB") 'self-insert-command)
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 2)
+(setq tab-width 2)
+(setq c-basic-indent 2)
+
+;; Personal customizations
+
+(require 'my-elisp)
+(require 'my-bindings)
+(require 'my-hooks)
 
 (if (eq window-system 'mac)
     (load "~/.emacs.d/osx.el")
@@ -175,11 +183,3 @@
 (if (file-exists-p system-specific-config)
     (load system-specific-config))
 
-;; I hate tabs!
-;;(global-set-key (kbd "TAB") 'self-insert-command)
-(setq-default indent-tabs-mode nil)
-(setq-default tab-width 2)
-(setq tab-width 2)
-(setq c-basic-indent 2)
-(setq python-indent 4)
-;; \M-x set-variable var val
