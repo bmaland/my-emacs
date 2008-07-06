@@ -17,6 +17,9 @@
 (global-set-key [(control shift l)] 'mark-line)
 ;;(global-set-key "\C-m" 'newline-and-indent)
 
+(global-set-key (kbd "C-x C-r") 'find-alternative-file-with-sudo)
+
+
 ;; Web
 
 ;; TODO check if w3m is available first? or move to site file

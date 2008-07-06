@@ -102,7 +102,7 @@
             magic-mode-alist))
 (fset 'xml-mode 'nxml-mode)
 
-
+(setq tramp-default-method "ssh")
 
 ;; (add-hook 'slime-mode-hook
 ;;           (lambda ()

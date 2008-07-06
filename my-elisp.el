@@ -13,15 +13,11 @@
                         (if (file-exists-p (concat buffer-file-name "c"))
                             (delete-file (concat buffer-file-name "c")))))))
 
-(font-lock-add-keywords 'emacs-lisp-mode
-                        '(("(\\|)" . 'paren-face)))
+(font-lock-add-keywords 'emacs-lisp-mode '(("(\\|)" . 'paren-face)))
 
-(font-lock-add-keywords 'lisp-mode
-                        '(("(\\|)" . 'paren-face)))
+(font-lock-add-keywords 'lisp-mode '(("(\\|)" . 'paren-face)))
 
-(font-lock-add-keywords 'scheme-mode
-                        '(("(\\|)" . 'paren-face)))
-
+(font-lock-add-keywords 'scheme-mode '(("(\\|)" . 'paren-face)))
 
 (font-lock-add-keywords
  'emacs-lisp-mode
@@ -44,6 +40,12 @@
     (beginning-of-defun)
     ad-do-it))
 
+(defun find-alternative-file-with-sudo ()
+  (interactive)
+  (when buffer-file-name
+    (find-alternate-file
+     (concat "/sudo:root@localhost:"
+	     buffer-file-name))))
 
 (defun my-eval-and-replace ()
   "Replace the preceding sexp with its value."
@@ -106,8 +108,7 @@
   "Inserts a new line below cursor"
   (interactive)
   (end-of-line)
-  (newline-and-indent)
-  )
+  (newline-and-indent))
 
 ;; Taken from http://emacs.wordpress.com/2007/01/22/killing-yanking-and-copying-lines/
 (defun jao-copy-line ()
