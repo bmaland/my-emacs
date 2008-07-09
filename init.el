@@ -8,12 +8,12 @@
 ;;(require 'cl)
 
 ;; Start server if not already running
-;; (unless (string-equal "root" (getenv "USER"))
-;;   (when (and (> emacs-major-version 22)
-;;              (or (not (boundp 'server-process))
-;;                  (not (eq (process-status server-process)
-;;                           'listen))))
-;;     (server-start)))
+(unless (string-equal "root" (getenv "USER"))
+  (when (and (> emacs-major-version 22)
+             (or (not (boundp 'server-process))
+                 (not (eq (process-status server-process)
+                          'listen))))
+    (server-start)))
 
 ;; Load paths
 (add-to-list 'load-path "~/.emacs.d/")
@@ -138,6 +138,8 @@
 
 (autoload 'js2-mode "js2" nil t)
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
+
+(add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
 
 (autoload 'ruby-mode "ruby-mode" "Ruby editing mode." t)
 (add-to-list 'auto-mode-alist '("\.rb$" . ruby-mode))
