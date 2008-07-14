@@ -10,10 +10,7 @@
 (global-set-key "\C-c\C-k" 'kill-region)
 (global-set-key "\C-j" 'newline)
 (global-set-key [(control shift d)] 'duplicate-line)
-(global-set-key "\C-c\C-c" 'comment-region)
-(global-set-key "\C-c\C-u" 'uncomment-region)
 (global-set-key "\M-\C-m" 'insert-line-below)
-;;(global-set-key [(shift enter)] 'newline-and-indent)
 (global-set-key [(control shift l)] 'mark-line)
 ;;(global-set-key "\C-m" 'newline-and-indent)
 
