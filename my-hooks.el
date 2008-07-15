@@ -14,4 +14,12 @@
           '(lambda ()
              (load-library "sml-mosml")))
 
+(add-hook 'slime-mode-hook
+           (lambda ()
+             (slime-highlight-edits-mode 0)))
+
+(add-hook 'write-file-hooks 'nuke-trailing-whitespace)
+;; Hopefully only temporary
+(add-hook 'write-file-hooks 'untabify-buffer)
+
 (provide 'my-hooks)

@@ -45,7 +45,7 @@
   (when buffer-file-name
     (find-alternate-file
      (concat "/sudo:root@localhost:"
-	     buffer-file-name))))
+       buffer-file-name))))
 
 (defun my-eval-and-replace ()
   "Replace the preceding sexp with its value."
@@ -130,5 +130,11 @@
   (message "%s"
            (shell-command-to-string
             (concatenate 'string "file2url.sh " buffer-file-name))))
+
+(defun untabify-buffer ()
+  "Untabify the whole (accessible part of the) current buffer"
+  (interactive)
+  (save-excursion
+    (untabify (point-min) (point-max))))
 
 (provide 'my-elisp)
