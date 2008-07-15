@@ -137,4 +137,14 @@
   (save-excursion
     (untabify (point-min) (point-max))))
 
+(defun dos2unix ()
+  "Convert a buffer from dos ^M end of lines to unix end of lines"
+  (interactive)
+    (goto-char (point-min))
+      (while (search-forward "\r" nil t) (replace-match "")))
+
+(defun indent-whole-buffer ()
+  (interactive)
+  (indent-region (point-min) (point-max) nil))
+
 (provide 'my-elisp)

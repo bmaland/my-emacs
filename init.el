@@ -8,8 +8,9 @@
 (menu-bar-mode (if window-system 1 -1))
 (prefer-coding-system 'utf-8)
 (fset 'yes-or-no-p 'y-or-n-p)
-
-(autoload 'nuke-trailing-whitespace "whitespace" nil t)
+;; These are damn useful
+(put 'upcase-region 'disabled nil)
+(put 'downcase-region 'disabled nil)
 
 ;;(require 'cl)
 
@@ -167,8 +168,8 @@
 
 (require 'textmate)
 (textmate-mode)
-
 (require 'pastie)
+(require 'show-wspace)
 
 ;; I hate tabs!
 (global-set-key (kbd "TAB") 'self-insert-command)
