@@ -1,18 +1,24 @@
 ;; NOTE hooks that changes keybindings are in my-bindings.el
 
-(add-hook 'shell-mode-hook
+;; TODO investigate if these local hooks are needed on linux as well . .
+;; I suspect I introduced the tab-problem during some Mac tweaking or similar
+
+(add-hook 'sh-mode-hook
           '(lambda ()
-             (make-local-hook 'write-contents-hook)
+             (make-local-variable 'write-contents-hooks)
              (add-hook 'write-contents-hooks 'untabify-buffer)
              (setq sh-basic-offset 2)
              (setq indent-tabs-mode nil)))
 
 (add-hook 'python-mode-hook
           '(lambda ()
-             (make-local-hook 'write-contents-hook)
+             (make-local-variable 'write-contents-hooks)
              (add-hook 'write-contents-hooks 'untabify-buffer)
              (setq indent-tabs-mode nil)
-             (setq python-indent 4)))
+             (setq tab-width 4)
+             (setq-default tab-width 4)
+             (setq python-indent 4)
+             (set (make-local-variable 'indent-tabs-mode) nil)))
 
 (add-hook 'inferior-sml-load-hook
           '(lambda ()
