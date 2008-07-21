@@ -11,6 +11,7 @@
 ;; These are damn useful
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
+(setq fill-column 80) ;; how wide the screen should be before word wrapping
 
 ;;(require 'cl)
 
@@ -155,6 +156,7 @@
 
 (autoload 'ruby-mode "ruby-mode" "Ruby editing mode." t)
 (add-to-list 'auto-mode-alist '("\.rb$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Rakefile" . ruby-mode))
 (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
 
 (autoload 'markdown-mode "markdown-mode.el"
