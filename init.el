@@ -3,6 +3,7 @@
 
 (setq inhibit-startup-message t) ;; Remove splash screen
 (setq show-trailing-whitespace t)
+(if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0))
 ;; show a menu only when running within X (save real estate when
 ;; in console)
 (menu-bar-mode (if window-system 1 -1))
@@ -24,12 +25,11 @@
 (display-time)
 
 ;; Start server if not already running
-(unless (string-equal "root" (getenv "USER"))
-  (when (and (> emacs-major-version 22)
-             (or (not (boundp 'server-process))
-                 (not (eq (process-status server-process)
-                          'listen))))
-    (server-start)))
+(when (and (> emacs-major-version 22)
+           (or (not (boundp 'server-process))
+               (not (eq (process-status server-process)
+                        'listen))))
+  (server-start))
 
 ;; Load paths
 (add-to-list 'load-path "~/.emacs.d/")

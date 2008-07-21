@@ -28,6 +28,12 @@
           (lambda ()
             (slime-highlight-edits-mode 0)))
 
+(add-hook 'markdown-mode-hook
+          (lambda ()
+            (setq tab-width 4)
+            (make-local-variable 'write-contents-hooks)
+            (add-hook 'write-contents-hooks 'untabify-buffer)))
+
 (add-hook 'write-file-hooks 'delete-trailing-whitespace)
 (add-hook 'font-lock-mode-hook 'show-ws-highlight-tabs)
 
