@@ -146,6 +146,11 @@
 (autoload 'w3m "w3m-load" "" t)
 (autoload 'lisppaste-paste-region "lisppaste" "" t)
 
+(autoload 'haml-mode "haml-mode" nil t)
+(add-to-list 'auto-mode-alist '("\.haml$" . haml-mode))
+(autoload 'sass-mode "sass-mode" nil t)
+(add-to-list 'auto-mode-alist '("\\.sass$" . sass-mode))
+
 (autoload 'php-mode "php-mode" "PHP Editing mode." t)
 (add-to-list 'auto-mode-alist '("\.php$" . php-mode))
 
