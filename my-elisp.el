@@ -45,7 +45,7 @@
   (when buffer-file-name
     (find-alternate-file
      (concat "/sudo:root@localhost:"
-       buffer-file-name))))
+             buffer-file-name))))
 
 (defun my-eval-and-replace ()
   "Replace the preceding sexp with its value."
@@ -140,11 +140,25 @@
 (defun dos2unix ()
   "Convert a buffer from dos ^M end of lines to unix end of lines"
   (interactive)
-    (goto-char (point-min))
-      (while (search-forward "\r" nil t) (replace-match "")))
+  (goto-char (point-min))
+  (while (search-forward "\r" nil t) (replace-match "")))
 
-(defun indent-whole-buffer ()
+(defun indent-buffer ()
   (interactive)
-  (indent-region (point-min) (point-max) nil))
+  (save-excursion (indent-region (point-min) (point-max) nil)))
+
+(defun load-elisp()
+  "Automatic reload current file that major mode is Emacs-Lisp mode."
+  (interactive)
+  (if (member major-mode '(emacs-lisp-mode)) ;if current major mode is emacs-lisp-mode
+      (progn
+        (indent-buffer)                      ;format
+        (save-buffer)                        ;save
+        (byte-compile-file buffer-file-name) ;compile
+        (load-file buffer-file-name)         ;loading
+        (eval-buffer)                        ;revert
+        )
+    (message "Current major mode is not Emacs-Lisp mode, so not reload.") ;otherwise don't loading
+    ))
 
 (provide 'my-elisp)
