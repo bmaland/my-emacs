@@ -1,12 +1,12 @@
-;; A bunch of this stuff is borrowed from Phil Hagelberg's personal dotfiles collection
-;; over at http://github.com/technomancy/dotfiles/tree/master/
+(require 'cl) ;; Common Lisp compability
 
 (setq inhibit-startup-message t) ;; Remove splash screen
 (setq show-trailing-whitespace t)
 (if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0))
-;; show a menu only when running within X (save real estate when
-;; in console)
+
+;; show a menu only when running within X
 (menu-bar-mode (if window-system 1 -1))
+
 (prefer-coding-system 'utf-8)
 (fset 'yes-or-no-p 'y-or-n-p)
 ;; These are damn useful
@@ -14,7 +14,9 @@
 (put 'downcase-region 'disabled nil)
 (setq-default fill-column 80) ;; how wide the screen should be before word wrapping
 
-;;(require 'cl)
+(setq dabbrev-case-replace nil) ;; Make sure case is preserved
+(setq bookmark-default-file "~/.emacs.d/bookmarks.bmk")
+(setq bookmark-save-flag 1) ;; How many mods between saves
 
 ;; format the title-bar to always include the buffer name
 (setq frame-title-format "emacs - %b")
@@ -26,46 +28,35 @@
 (display-time)
 
 ;; Start server if not already running
-(when (and (> emacs-major-version 22)
-           (or (not (boundp 'server-process))
-               (not (eq (process-status server-process)
-                        'listen))))
+(when (or (not (boundp 'server-process))
+          (not (eq (process-status server-process)
+                   'listen)))
   (server-start))
 
 ;; Load paths
 (add-to-list 'load-path "~/.emacs.d/")
 (add-to-list 'load-path "~/.emacs.d/sml-mode")
-(add-to-list 'load-path "~/foss/slime/") ; your SLIME directory
-
-;; (require 'vc-git)
-;; (when (featurep 'vc-git) (add-to-list 'vc-handled-backends 'git))
-;; (require 'git)
 
 ;; Slime
-;;(setq inferior-lisp-program "sbcl --no-linedit")
-;; (setq inferior-lisp-program "clisp")
+(setq slime-dir "~/foss/slime/")
+(when (file-directory-p slime-dir)
+  (add-to-list 'load-path slime-dir)
+  (setq inferior-lisp-program "sbcl --no-linedit")
 
-;; (eval-after-load "slime"
-;;   '(progn
-;;      (slime-setup '(slime-fancy slime-asdf slime-banner))
-;;      (setq slime-complete-symbol*-fancy t)
-;;      (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)))
+  (require 'slime)
 
-;; (require 'slime)
-;; (slime-setup)
+  (eval-after-load "slime"
+    '(progn
+       (slime-setup '(slime-fancy slime-asdf slime-banner))
+       (setq slime-complete-symbol*-fancy t)
+       (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)
+       )))
 
 (defalias 'qrr 'query-replace-regexp)
 
-;; ;; (autoload 'slime-selector "slime" t)
-
-;; ;;(ad-activate 'indent-sexp)
-
-;; (setq isearch-lazy-highlight nil)
-
 ;; Scroll margin and stop-that-bloody-halfpage-jump
-;; (setq scroll-margin 3)
-;; (setq scroll-step 0)
-;; (setq scroll-conservatively 100)
+(setq scroll-margin 3)
+(setq scroll-conservatively 100)
 
 (global-font-lock-mode t)
 (setq font-lock-maximum-decoration t)
@@ -100,19 +91,8 @@
               (concat "#" (file-name-nondirectory buffer-file-name) "#")
             (expand-file-name (concat "#%" (buffer-name) "#")))))
 
-
-;;(setq browse-url-browser-function 'browse-url-firefox)
-
 (if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
 (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
-;;(if (fboundp 'menu-bar-mode) (menu-bar-mode -1))
-
-(setq erc-server "irc.freenode.net"
-      erc-port 6667
-      erc-nick "Chrononaut-"
-      erc-user-full-name "Bjørn Arild Mæland"
-      erc-email-userid "chrononaut"    ; for when ident is not activated
-      erc-prompt-for-password nil) ; OPN doesn't require passwords
 
 (setq magic-mode-alist
       (cons '("<＼＼?xml " . nxml-mode)
@@ -120,7 +100,6 @@
 (fset 'xml-mode 'nxml-mode)
 
 (setq tramp-default-method "ssh")
-
 
 ;; Regenerate the autoload file if it doesn't exist or it's too
 ;; old. (2 weeks or so)
@@ -173,6 +152,8 @@
 (autoload 'python-mode
   "python" "Python editing mode." t)
 
+(autoload 'slime-selector "slime" t)
+
 (require 'textmate)
 (textmate-mode)
 (require 'pastie)
@@ -201,3 +182,6 @@
 
 (if (file-exists-p system-specific-config)
     (load system-specific-config))
+
+;; Display homedir when emacs starts, instead of *scratch*
+(find-file "~/")

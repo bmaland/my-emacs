@@ -161,4 +161,9 @@
     (message "Current major mode is not Emacs-Lisp mode, so not reload.") ;otherwise don't loading
     ))
 
+(defun word-count ()
+  "Count words in buffer"
+  (interactive)
+  (shell-command-on-region (point-min) (point-max) "wc -w"))
+
 (provide 'my-elisp)
