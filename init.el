@@ -12,7 +12,7 @@
 ;; These are damn useful
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
-(setq fill-column 80) ;; how wide the screen should be before word wrapping
+(setq-default fill-column 80) ;; how wide the screen should be before word wrapping
 
 ;;(require 'cl)
 
