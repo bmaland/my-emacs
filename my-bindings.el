@@ -18,6 +18,7 @@
 (global-set-key (kbd "C-x C-r") 'find-alternative-file-with-sudo)
 (global-set-key [f5] 'bookmark-set)
 (global-set-key [f6] 'bookmark-jump)
+(global-set-key (kbd "TAB") 'indent-according-to-mode)
 
 ;; TODO check if w3m is available first? or move to site file
 (global-set-key (kbd "C-x w") 'w3m)
@@ -40,6 +41,12 @@
 (add-hook 'python-mode-hook
            '(lambda ()
               (local-set-key "\C-m" 'newline-and-indent)
+              ))
+
+(add-hook 'sh-mode-hook
+           '(lambda ()
+              (local-set-key "\C-m" 'newline-and-indent)
+              (local-set-key (kbd "[") 'insert-double-brackets)
               ))
 
 (add-hook 'lisp-mode-hook

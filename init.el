@@ -151,7 +151,6 @@
 (autoload 'slime-selector "slime" t)
 
 (require 'textmate)
-(textmate-mode)
 (require 'pastie)
 (require 'show-wspace)
 
@@ -165,6 +164,7 @@
 ;; Personal customizations
 
 (require 'my-elisp)
+(require 'my-skeletons)
 (require 'my-bindings)
 (require 'my-hooks)
 

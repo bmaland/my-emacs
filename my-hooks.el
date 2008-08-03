@@ -5,17 +5,14 @@
              (make-local-variable 'write-contents-hooks)
              (add-hook 'write-contents-hooks 'untabify-buffer)
              (setq sh-basic-offset 2)
-             (setq indent-tabs-mode nil)))
+             ))
 
 (add-hook 'python-mode-hook
           '(lambda ()
              (make-local-variable 'write-contents-hooks)
              (add-hook 'write-contents-hooks 'untabify-buffer)
-             (setq indent-tabs-mode nil)
-             (setq tab-width 4)
-             (setq-default tab-width 4)
              (setq python-indent 4)
-             (set (make-local-variable 'indent-tabs-mode) nil)))
+             ))
 
 (add-hook 'inferior-sml-load-hook
           '(lambda ()
