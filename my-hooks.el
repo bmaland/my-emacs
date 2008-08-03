@@ -30,6 +30,7 @@
 
 (add-hook 'markdown-mode-hook
           (lambda ()
+            (auto-fill-mode 1)
             (setq tab-width 4)
             (make-local-variable 'write-contents-hooks)
             (add-hook 'write-contents-hooks 'untabify-buffer)))

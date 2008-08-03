@@ -1,5 +1,8 @@
 ;; General
 
+(global-set-key "\M-`" 'ff-find-other-file)
+(global-set-key "\C-c1" 'find-grep-dired)
+(global-set-key "\C-c2" 'grep-find)
 (global-set-key "\C-z" 'undo)
 (global-set-key [(control tab)] 'next-multiframe-window)
 (global-set-key [(control shift k)] 'kill-whole-line)
@@ -13,6 +16,9 @@
 (global-set-key "\M-\C-m" 'insert-line-below)
 (global-set-key [(control shift l)] 'mark-line)
 (global-set-key (kbd "C-x C-r") 'find-alternative-file-with-sudo)
+(global-set-key [f5] 'bookmark-set)
+(global-set-key [f6] 'bookmark-jump)
+
 
 ;; Web
 

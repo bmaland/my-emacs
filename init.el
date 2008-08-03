@@ -1,6 +1,3 @@
-;; A bunch of this stuff is borrowed from Phil Hagelberg's personal dotfiles collection
-;; over at http://github.com/technomancy/dotfiles/tree/master/
-
 (setq inhibit-startup-message t) ;; Remove splash screen
 (setq show-trailing-whitespace t)
 (if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0))
@@ -13,6 +10,9 @@
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 (setq fill-column 80) ;; how wide the screen should be before word wrapping
+(setq dabbrev-case-replace nil) ;; Make sure case is preserved
+(setq bookmark-default-file "~/.emacs.d/bookmarks.bmk")
+(setq bookmark-save-flag 1) ;; How many mods between saves
 
 ;;(require 'cl)
 
@@ -26,10 +26,9 @@
 (display-time)
 
 ;; Start server if not already running
-(when (and (> emacs-major-version 22)
-           (or (not (boundp 'server-process))
-               (not (eq (process-status server-process)
-                        'listen))))
+(when (or (not (boundp 'server-process))
+          (not (eq (process-status server-process)
+                   'listen)))
   (server-start))
 
 ;; Load paths
@@ -63,9 +62,8 @@
 ;; (setq isearch-lazy-highlight nil)
 
 ;; Scroll margin and stop-that-bloody-halfpage-jump
-;; (setq scroll-margin 3)
-;; (setq scroll-step 0)
-;; (setq scroll-conservatively 100)
+(setq scroll-margin 3)
+(setq scroll-conservatively 100)
 
 (global-font-lock-mode t)
 (setq font-lock-maximum-decoration t)
@@ -100,19 +98,10 @@
               (concat "#" (file-name-nondirectory buffer-file-name) "#")
             (expand-file-name (concat "#%" (buffer-name) "#")))))
 
-
 ;;(setq browse-url-browser-function 'browse-url-firefox)
 
 (if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
 (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
-;;(if (fboundp 'menu-bar-mode) (menu-bar-mode -1))
-
-(setq erc-server "irc.freenode.net"
-      erc-port 6667
-      erc-nick "Chrononaut-"
-      erc-user-full-name "Bjørn Arild Mæland"
-      erc-email-userid "chrononaut"    ; for when ident is not activated
-      erc-prompt-for-password nil) ; OPN doesn't require passwords
 
 (setq magic-mode-alist
       (cons '("<＼＼?xml " . nxml-mode)
