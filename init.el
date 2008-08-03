@@ -27,11 +27,7 @@
 ;; display the current time
 (display-time)
 
-;; Start server if not already running
-(when (or (not (boundp 'server-process))
-          (not (eq (process-status server-process)
-                   'listen)))
-  (server-start))
+(server-start)
 
 ;; Load paths
 (add-to-list 'load-path "~/.emacs.d/")

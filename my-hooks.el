@@ -28,6 +28,8 @@
             (make-local-variable 'write-contents-hooks)
             (add-hook 'write-contents-hooks 'untabify-buffer)))
 
+(add-hook 'server-done-hook (lambda nil (kill-buffer nil)))
+
 (eval-after-load "sql"
   '(progn
      (sql-set-product 'postgresql)
