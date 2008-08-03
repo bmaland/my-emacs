@@ -19,34 +19,42 @@
 (global-set-key [f5] 'bookmark-set)
 (global-set-key [f6] 'bookmark-jump)
 
-
-;; Web
-
 ;; TODO check if w3m is available first? or move to site file
 (global-set-key (kbd "C-x w") 'w3m)
 (global-set-key "\C-xh" 'view-url)
 (global-set-key "\C-cT" 'twittering-update-status-interactive)
 
 ;; Hooks
-;; TODO move non-binding related stuff to another file, or maybe
-;; create a new file just for hooks
-
-;; Slime
 (add-hook 'slime-repl-mode-hook
           (lambda ()
-            (local-set-key "\C-p" 'slime-close-all-parens-in-sexp)
+            (local-set-key "\C-xp" 'slime-close-all-parens-in-sexp)
             (local-set-key [up] 'slime-repl-previous-input)
-            (local-set-key [down] 'slime-repl-next-input)))
+            (local-set-key [down] 'slime-repl-next-input)
+            ))
 
 (add-hook 'ruby-mode-hook
           '(lambda ()
-             ;; Default to auto-indent on Enter
-             (local-set-key "\C-m" 'ruby-reindent-then-newline-and-indent)))
+             (local-set-key "\C-m" 'ruby-reindent-then-newline-and-indent)
+             ))
 
 (add-hook 'python-mode-hook
            '(lambda ()
-              ;; Default to auto-indent on Enter
-              (local-set-key "\C-m" 'newline-and-indent)))
+              (local-set-key "\C-m" 'newline-and-indent)
+              ))
+
+(add-hook 'lisp-mode-hook
+          '(lambda ()
+             (local-set-key "\C-m" 'reindent-then-newline-and-indent)
+             (local-set-key (kbd "TAB") 'lisp-indent-line)
+             (define-key lisp-mode-map "\C-j" 'eval-print-last-sexp)
+             ))
+
+(add-hook 'emacs-lisp-mode-hook
+          '(lambda ()
+             (local-set-key "\C-m" 'reindent-then-newline-and-indent)
+             (local-set-key (kbd "TAB") 'lisp-indent-line)
+             (define-key lisp-mode-map "\C-j" 'eval-print-last-sexp)
+             ))
 
 ;; Markdown mode
 ;;(add-hook 'markdown-mode-hook

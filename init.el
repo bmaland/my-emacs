@@ -1,9 +1,12 @@
+(require 'cl) ;; Common Lisp compability
+
 (setq inhibit-startup-message t) ;; Remove splash screen
 (setq show-trailing-whitespace t)
 (if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0))
-;; show a menu only when running within X (save real estate when
-;; in console)
+
+;; show a menu only when running within X
 (menu-bar-mode (if window-system 1 -1))
+
 (prefer-coding-system 'utf-8)
 (fset 'yes-or-no-p 'y-or-n-p)
 ;; These are damn useful
@@ -13,8 +16,6 @@
 (setq dabbrev-case-replace nil) ;; Make sure case is preserved
 (setq bookmark-default-file "~/.emacs.d/bookmarks.bmk")
 (setq bookmark-save-flag 1) ;; How many mods between saves
-
-;;(require 'cl)
 
 ;; format the title-bar to always include the buffer name
 (setq frame-title-format "emacs - %b")
@@ -34,32 +35,23 @@
 ;; Load paths
 (add-to-list 'load-path "~/.emacs.d/")
 (add-to-list 'load-path "~/.emacs.d/sml-mode")
-(add-to-list 'load-path "~/foss/slime/") ; your SLIME directory
-
-;; (require 'vc-git)
-;; (when (featurep 'vc-git) (add-to-list 'vc-handled-backends 'git))
-;; (require 'git)
 
 ;; Slime
-;;(setq inferior-lisp-program "sbcl --no-linedit")
-;; (setq inferior-lisp-program "clisp")
+(setq slime-dir "~/foss/slime/")
+(when (file-directory-p slime-dir)
+  (add-to-list 'load-path slime-dir)
+  (setq inferior-lisp-program "sbcl --no-linedit")
 
-;; (eval-after-load "slime"
-;;   '(progn
-;;      (slime-setup '(slime-fancy slime-asdf slime-banner))
-;;      (setq slime-complete-symbol*-fancy t)
-;;      (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)))
+  (require 'slime)
 
-;; (require 'slime)
-;; (slime-setup)
+  (eval-after-load "slime"
+    '(progn
+       (slime-setup '(slime-fancy slime-asdf slime-banner))
+       (setq slime-complete-symbol*-fancy t)
+       (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)
+       )))
 
 (defalias 'qrr 'query-replace-regexp)
-
-;; ;; (autoload 'slime-selector "slime" t)
-
-;; ;;(ad-activate 'indent-sexp)
-
-;; (setq isearch-lazy-highlight nil)
 
 ;; Scroll margin and stop-that-bloody-halfpage-jump
 (setq scroll-margin 3)
@@ -98,8 +90,6 @@
               (concat "#" (file-name-nondirectory buffer-file-name) "#")
             (expand-file-name (concat "#%" (buffer-name) "#")))))
 
-;;(setq browse-url-browser-function 'browse-url-firefox)
-
 (if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
 (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
 
@@ -109,7 +99,6 @@
 (fset 'xml-mode 'nxml-mode)
 
 (setq tramp-default-method "ssh")
-
 
 ;; Regenerate the autoload file if it doesn't exist or it's too
 ;; old. (2 weeks or so)
@@ -162,6 +151,8 @@
 (autoload 'python-mode
   "python" "Python editing mode." t)
 
+(autoload 'slime-selector "slime" t)
+
 (require 'textmate)
 (textmate-mode)
 (require 'pastie)
@@ -190,3 +181,6 @@
 
 (if (file-exists-p system-specific-config)
     (load system-specific-config))
+
+;; Display homedir when emacs starts, instead of *scratch*
+(find-file "~/")
