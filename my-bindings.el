@@ -49,6 +49,12 @@
               (local-set-key (kbd "[") 'insert-double-brackets)
               ))
 
+(add-hook 'css-mode-hook
+          '(lambda ()
+             (local-set-key (kbd "<tab>") 'indent-for-tab-command)
+             (local-set-key "\C-m" 'newline-and-indent)
+             ))
+
 (add-hook 'lisp-mode-hook
           '(lambda ()
              (local-set-key "\C-m" 'reindent-then-newline-and-indent)

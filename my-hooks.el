@@ -14,6 +14,15 @@
              (setq python-indent 4)
              ))
 
+(add-hook 'css-mode-hook
+          '(lambda ()
+             (make-local-variable 'write-contents-hooks)
+             (add-hook 'write-contents-hooks 'untabify-buffer)
+             (setq css-indent-offset 2)
+             (setq css-electric-brace-behavior t)
+             (setq css-electric-semi-behavior t)
+             ))
+
 (add-hook 'inferior-sml-load-hook
           '(lambda ()
              (load-library "sml-mosml")))
