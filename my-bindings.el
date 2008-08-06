@@ -39,20 +39,21 @@
              ))
 
 (add-hook 'python-mode-hook
-           '(lambda ()
-              (local-set-key "\C-m" 'newline-and-indent)
-              ))
+          '(lambda ()
+             (local-set-key "\C-m" 'newline-and-indent)
+             ))
 
 (add-hook 'sh-mode-hook
-           '(lambda ()
-              (local-set-key "\C-m" 'newline-and-indent)
-              (local-set-key (kbd "[") 'insert-double-brackets)
-              ))
+          '(lambda ()
+             (local-set-key "\C-m" 'newline-and-indent)
+             (local-set-key (kbd "[") 'insert-double-brackets)
+             ))
 
 (add-hook 'css-mode-hook
           '(lambda ()
-             (local-set-key (kbd "<tab>") 'indent-for-tab-command)
-             (local-set-key "\C-m" 'newline-and-indent)
+             (local-set-key (kbd "<return>") 'newline-and-indent)
+             (local-set-key (kbd "{") 'insert-braces)
+             (local-set-key (kbd ";") 'electric-semi)
              ))
 
 (add-hook 'lisp-mode-hook

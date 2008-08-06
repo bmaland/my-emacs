@@ -166,4 +166,19 @@
   (interactive)
   (shell-command-on-region (point-min) (point-max) "wc -w"))
 
+(defun shell-here ()
+  "Open a shell in `default-directory'."
+  (interactive)
+  (let ((dir (expand-file-name default-directory))
+        (buf (or (get-buffer "*shell*") (shell))))
+    (goto-char (point-max))
+    (if (not (string= (buffer-name) "*shell*"))
+        (switch-to-buffer-other-window buf))
+    (message list-buffers-directory)
+    (if (not (string= (expand-file-name list-buffers-directory) dir))
+        (progn (comint-send-string (get-buffer-process buf)
+                                   (concat "cd \"" dir "\"\r"))
+               (setq list-buffers-directory dir)))))
+
+
 (provide 'my-elisp)

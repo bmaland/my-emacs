@@ -1,3 +1,6 @@
+(setq user-full-name "Bjørn Arild Mæland"
+      user-mail-address "bjorn.maeland@gmail.com")
+
 (require 'cl) ;; Common Lisp compability
 
 (setq inhibit-startup-message t) ;; Remove splash screen
@@ -66,7 +69,6 @@
  '(case-fold-search         t)          ;; case-insensitive search
  '(transient-mark-mode      t)          ;; highlight the marked region
  '(default-major-mode       'text-mode) ;; open unknown in text mode
- '(c-default-style          "k&r")      ;; why is this even an option?
  '(case-fold-search t)
  '(load-home-init-file t t)
  '(make-backup-files nil)
@@ -160,6 +162,12 @@
 (setq-default tab-width 2)
 (setq tab-width 2)
 (setq c-basic-indent 2)
+
+;; Yasnippet
+
+(require 'yasnippet)
+(yas/initialize)
+(yas/load-directory "~/.emacs.d/snippets/")
 
 ;; Personal customizations
 

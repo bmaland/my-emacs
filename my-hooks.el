@@ -1,5 +1,10 @@
 ;; NOTE hooks that changes keybindings are in my-bindings.el
 
+(add-hook 'emacs-lisp-mode-hook
+          '(lambda ()
+             (textmate-mode 1)
+             ))
+
 (add-hook 'sh-mode-hook
           '(lambda ()
              (make-local-variable 'write-contents-hooks)
@@ -29,6 +34,7 @@
 
 (add-hook 'markdown-mode-hook
           (lambda ()
+            (textmate-mode 1)
             (auto-fill-mode 1)
             (setq tab-width 4)
             (make-local-variable 'write-contents-hooks)

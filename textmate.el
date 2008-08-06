@@ -25,37 +25,37 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-minor-mode textmate-mode
-       "Toggle Textmate mode.
+  "Toggle Textmate mode.
      With no argument, this command toggles the mode.
      Non-null prefix argument turns on the mode.
      Null prefix argument turns off the mode.
-"     
-      ;; The initial value.
-      nil
-      ;; The indicator for the mode line.
-      " TM"
-      ;; The minor mode bindings.
-      '(
-	([backspace] . textmate-backspace2)
-        ("\"" . move-over-dbl-quote)
-        ("\'" . move-over-quote)
-        (")" . move-over-bracket)
-        ("]" . move-over-square)
-        ("}" . move-over-curly)
-        ("[" . skeleton-pair-insert-maybe)
-        ("(" . skeleton-pair-insert-maybe)
-        ("{" . skeleton-pair-insert-maybe)
-	;; Duplicate TextMate's auto-indent
-	([return] . newline-and-indent)
-	;; Duplicate TextMate's command-return
-	("\M-\r" . open-next-line)
-	;; Duplicate TextMate's goto line
-	("\M-l" . goto-line)
-        )       
-      :group 'textmate
-      (progn
-        (setq skeleton-pair t))
-      )
+"
+  ;; The initial value.
+  nil
+  ;; The indicator for the mode line.
+  " TM"
+  ;; The minor mode bindings.
+  '(
+    ([backspace] . textmate-backspace2)
+    ("\"" . move-over-dbl-quote)
+    ("\'" . move-over-quote)
+    (")" . move-over-bracket)
+    ("]" . move-over-square)
+    ("}" . move-over-curly)
+    ("[" . skeleton-pair-insert-maybe)
+    ("(" . skeleton-pair-insert-maybe)
+    ("{" . skeleton-pair-insert-maybe)
+    ;; Duplicate TextMate's auto-indent
+    ([return] . newline-and-indent)
+    ;; Duplicate TextMate's command-return
+    ("\M-\r" . open-next-line)
+    ;; Duplicate TextMate's goto line
+    ("\M-l" . goto-line)
+    )
+  :group 'textmate
+  (progn
+    (setq skeleton-pair t))
+  )
 
 ;;implementation stuff
 
@@ -66,11 +66,11 @@
   (newline-and-indent))
 
 (setq textmate-pairs '( ( ?\( . ?\) )
-  (  ?\' . ?\' )
-  (  ?\" . ?\" )
-  (  ?[ . ?] )
-  (  ?{ . ?} )
-  )
+                        (  ?\' . ?\' )
+                        (  ?\" . ?\" )
+                        (  ?[ . ?] )
+                        (  ?{ . ?} )
+                        )
       )
 
 (defun is-empty-pair ()
@@ -79,15 +79,15 @@
   )
 
 (defun textmate-backspace2 ()
- (interactive)
- (if (eq (char-after) nil)
-  nil   ;; if char-after is nil, just backspace
- (if (is-empty-pair)
-     (delete-char 1)
-   )
- )
-(delete-backward-char 1)
-)
+  (interactive)
+  (if (eq (char-after) nil)
+      nil   ;; if char-after is nil, just backspace
+    (if (is-empty-pair)
+        (delete-char 1)
+      )
+    )
+  (delete-backward-char 1)
+  )
 
 (setq pushovers
       '(
@@ -108,17 +108,17 @@
         ))
 
 (defun move-over (char)
-(if (eq (char-after) char)
-    (funcall (cdr (assoc char pushovers)))
+  (if (eq (char-after) char)
+      (funcall (cdr (assoc char pushovers)))
     (funcall (cdr (assoc char defaults)))
+    )
   )
-)
 
 
 (defun move-over-bracket ()  (interactive)(move-over ?\) ))
 (defun move-over-curly ()  (interactive)(move-over ?\} ))
 (defun move-over-square ()  (interactive)(move-over ?\] ))
 (defun move-over-quote ()  (interactive)(move-over ?\' ))
-(defun move-over-dbl-quote ()  (interactive)(move-over ?\" )) 
+(defun move-over-dbl-quote ()  (interactive)(move-over ?\" ))
 
 (provide 'textmate)
