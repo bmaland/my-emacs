@@ -36,58 +36,16 @@
   " TM"
   ;; The minor mode bindings.
   '(
-    ([backspace] . textmate-backspace2)
     ("\"" . move-over-dbl-quote)
     ("\'" . move-over-quote)
     (")" . move-over-bracket)
     ("]" . move-over-square)
     ("}" . move-over-curly)
-    ("[" . skeleton-pair-insert-maybe)
-    ("(" . skeleton-pair-insert-maybe)
-    ("{" . skeleton-pair-insert-maybe)
-    ;; Duplicate TextMate's auto-indent
-    ([return] . newline-and-indent)
-    ;; Duplicate TextMate's command-return
-    ("\M-\r" . open-next-line)
-    ;; Duplicate TextMate's goto line
-    ("\M-l" . goto-line)
     )
   :group 'textmate
-  (progn
-    (setq skeleton-pair t))
   )
 
 ;;implementation stuff
-
-;; Function to open and goto indented next line
-(defun open-next-line()
-  (interactive)
-  (move-end-of-line nil)
-  (newline-and-indent))
-
-(setq textmate-pairs '( ( ?\( . ?\) )
-                        (  ?\' . ?\' )
-                        (  ?\" . ?\" )
-                        (  ?[ . ?] )
-                        (  ?{ . ?} )
-                        )
-      )
-
-(defun is-empty-pair ()
-  (interactive)
-  (eq (cdr (assoc (char-before)  textmate-pairs)) (char-after)  )
-  )
-
-(defun textmate-backspace2 ()
-  (interactive)
-  (if (eq (char-after) nil)
-      nil   ;; if char-after is nil, just backspace
-    (if (is-empty-pair)
-        (delete-char 1)
-      )
-    )
-  (delete-backward-char 1)
-  )
 
 (setq pushovers
       '(

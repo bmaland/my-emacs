@@ -180,5 +180,21 @@
                                    (concat "cd \"" dir "\"\r"))
                (setq list-buffers-directory dir)))))
 
+(defun delete-empty-pair ()
+  "Borrowed from TextMate mode"
+  (defun is-empty-pair ()
+    (let ((pairs '(( ?\( . ?\))
+                   ( ?\' . ?\')
+                   ( ?\" . ?\")
+                   ( ?[ . ?])
+                   ( ?{ . ?}))))
+      (eq (cdr (assoc (char-before) pairs)) (char-after))))
+
+  (interactive)
+  (if (eq (char-after) nil)
+      nil ;; if char-after is nil, just backspace
+    (if (is-empty-pair)
+        (delete-char 1)))
+  (delete-backward-char 1))
 
 (provide 'my-elisp)

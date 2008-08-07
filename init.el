@@ -51,8 +51,6 @@
        (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)
        )))
 
-(defalias 'qrr 'query-replace-regexp)
-
 ;; Scroll margin and stop-that-bloody-halfpage-jump
 (setq scroll-margin 3)
 (setq scroll-conservatively 100)
@@ -174,6 +172,7 @@
 (require 'my-elisp)
 (require 'my-skeletons)
 (require 'my-bindings)
+(require 'my-aliases)
 (require 'my-hooks)
 
 (if (eq window-system 'mac)

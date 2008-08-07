@@ -20,6 +20,11 @@
   ";"\n
   _)
 
+(define-skeleton semi-space
+  "Space on semicolon"
+  ""
+  ": " _)
+
 (setq skeleton-end-hook nil)
 
 (provide 'my-skeletons)
