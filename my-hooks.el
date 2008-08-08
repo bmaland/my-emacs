@@ -1,9 +1,3 @@
-(defun set-skeleton-pairs (pairs)
-  (mapcar '(lambda (pair)
-             (local-set-key pair 'skeleton-pair-insert-maybe)) pairs)
-  (setq skeleton-pair t)
-  )
-
 (defun lisp-keys ()
   "Keys shared between lisp mode and emacs lisp mode"
   (local-set-key [return] 'reindent-then-newline-and-indent)
@@ -30,6 +24,14 @@
           '(lambda ()
              (textmate-mode 1)
              (lisp-keys)
+
+             (make-local-variable 'after-save-hook)
+             (add-hook 'after-save-hook
+                       ;; If you're saving an elisp file, likely the .elc is no longer valid.
+                       (lambda ()
+                         (if (file-exists-p (concat buffer-file-name "c"))
+                             (delete-file (concat buffer-file-name "c")))))
+
              ))
 
 (add-hook 'ruby-mode-hook

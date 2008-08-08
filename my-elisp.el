@@ -1,45 +1,4 @@
-(add-hook 'emacs-lisp-mode-hook
-          '(lambda ()
-             ;; Default to auto-indent on Enter
-             (define-key emacs-lisp-mode-map "\C-m" 'reindent-then-newline-and-indent)))
-
-
-(add-hook 'emacs-lisp-mode-hook
-          ;; If you're saving an elisp file, likely the .elc is no longer valid.
-          (lambda ()
-            (make-local-variable 'after-save-hook)
-            (add-hook 'after-save-hook
-                      (lambda ()
-                        (if (file-exists-p (concat buffer-file-name "c"))
-                            (delete-file (concat buffer-file-name "c")))))))
-
-(font-lock-add-keywords 'emacs-lisp-mode '(("(\\|)" . 'paren-face)))
-
-(font-lock-add-keywords 'lisp-mode '(("(\\|)" . 'paren-face)))
-
-(font-lock-add-keywords 'scheme-mode '(("(\\|)" . 'paren-face)))
-
-(font-lock-add-keywords
- 'emacs-lisp-mode
- '(("\\<\\(FIX\\|TODO\\|FIXME\\|HACK\\|REFACTOR\\):"
-    1 font-lock-warning-face t)))
-
-(defface paren-face
-  '((((class color) (background dark))
-     (:foreground "orange"))
-    (((class color) (background light))
-     (:foreground "orange")))
-  "Face used to color parentheses."
-  :group 'my-faces)
-
-
-(defadvice indent-sexp (around indent-defun (&optional endpos))
-  "Indent the enclosing defun (or top-level sexp)."
-  (interactive)
-  (save-excursion
-    (beginning-of-defun)
-    ad-do-it))
-
+;; TODO fix this, probably tramp issue
 (defun find-alternative-file-with-sudo ()
   (interactive)
   (when buffer-file-name
@@ -64,6 +23,8 @@
   (undo)
   (insert (concat "\n" (pp (cl-macroexpand (read (current-kill 0)))))))
 
+;; TODO make this more general and use run-shell-command instead with sed etc
+;; so the buffer doesn't get modified
 (defun line-count-lisp ()
   (interactive)
   (save-excursion
@@ -72,14 +33,6 @@
     (goto-char (point-max))
     (let ((loc (line-number-at-pos)))
       (message (number-to-string loc) " lines of code. Be sure to undo now."))))
-
-(defun iwb ()
-  "indent whole buffer"
-  (interactive)
-  (delete-trailing-whitespace)
-  (indent-region (point-min) (point-max) nil)
-  (untabify (point-min) (point-max)))
-
 
 ;; From Steve Yegge
 (defun article-length ()
@@ -131,21 +84,21 @@
            (shell-command-to-string
             (concatenate 'string "file2url.sh " buffer-file-name))))
 
+(defun indent-buffer ()
+  "Indent whole buffer"
+  (interactive)
+  (save-excursion (indent-region (point-min) (point-max) nil)))
+
 (defun untabify-buffer ()
   "Untabify the whole (accessible part of the) current buffer"
   (interactive)
-  (save-excursion
-    (untabify (point-min) (point-max))))
+  (save-excursion (untabify (point-min) (point-max))))
 
 (defun dos2unix ()
   "Convert a buffer from dos ^M end of lines to unix end of lines"
   (interactive)
   (goto-char (point-min))
   (while (search-forward "\r" nil t) (replace-match "")))
-
-(defun indent-buffer ()
-  (interactive)
-  (save-excursion (indent-region (point-min) (point-max) nil)))
 
 (defun load-elisp()
   "Automatic reload current file that major mode is Emacs-Lisp mode."
@@ -196,5 +149,11 @@
     (if (is-empty-pair)
         (delete-char 1)))
   (delete-backward-char 1))
+
+(defun set-skeleton-pairs (pairs)
+  "Sets multiple skeleton pairs at once"
+  (mapcar '(lambda (pair)
+             (local-set-key pair 'skeleton-pair-insert-maybe)) pairs)
+  (setq skeleton-pair t))
 
 (provide 'my-elisp)
