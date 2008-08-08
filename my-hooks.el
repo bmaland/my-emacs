@@ -1,7 +1,12 @@
 (defun lisp-keys ()
-  "Keys shared between lisp mode and emacs lisp mode"
+  "Shared between lisp mode and emacs lisp mode"
+  (defalias 'ms 'mark-sexp)
+
   (local-set-key [return] 'reindent-then-newline-and-indent)
   (local-set-key "\C-j" 'eval-print-last-sexp)
+
+  (local-set-key [(meta up)] 'beginning-of-defun)
+  (local-set-key [(meta down)] 'end-of-defun)
 
   (set-skeleton-pairs '("(" "{" "["))
   )

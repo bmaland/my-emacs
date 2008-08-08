@@ -8,6 +8,8 @@
 (global-set-key "\C-x\C-m" 'execute-extended-command)
 (global-set-key "\C-c\C-m" 'execute-extended-command)
 (global-set-key "\C-w" 'backward-kill-word)
+(global-set-key "\C-cc" 'jao-copy-line)
+(global-set-key "\C-\M-w" 'my-mark-word)
 (global-set-key "\C-x\C-k" 'kill-region)
 (global-set-key "\C-c\C-k" 'kill-region)
 (global-set-key "\C-j" 'newline)
@@ -23,7 +25,6 @@
 (global-set-key [(control shift d)] 'duplicate-line)
 (global-set-key [(control shift l)] 'mark-line)
 (global-set-key "\M-l" 'goto-line)
-
 
 ;; TODO check if w3m is available first? or move to site file
 (global-set-key (kbd "C-x w") 'w3m)

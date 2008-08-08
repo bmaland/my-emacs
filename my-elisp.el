@@ -1,3 +1,8 @@
+(defun my-mark-word ()
+  (interactive)
+  (backward-word)
+  (mark-word))
+
 ;; TODO fix this, probably tramp issue
 (defun find-alternative-file-with-sudo ()
   (interactive)
