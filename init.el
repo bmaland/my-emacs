@@ -7,6 +7,9 @@
 (setq show-trailing-whitespace t)
 (if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0))
 
+(setq ispell-program-name "aspell")
+(setq ispell-dictionary "english")
+
 ;; show a menu only when running within X
 (menu-bar-mode (if window-system 1 -1))
 
