@@ -5,7 +5,7 @@
   (mark-word))
 
 (defun conservative-editing ()
-  "For working on other peoples source - turn off hooks etc."
+  "For working on other peoples source - turn off hooks etc. TODO place this in a minor mode"
   (interactive)
   (remove-hook 'write-file-hooks 'delete-trailing-whitespace)
   (remove-hook 'write-contents-hooks 'untabify-buffer)

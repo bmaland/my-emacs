@@ -2,7 +2,12 @@
 ;;; This format is meant to be slightly human-readable;
 ;;; nevertheless, you probably don't want to edit it.
 ;;; -*- End Of Bookmark File Format Version Stamp -*-
-(("my-bindings.el"
+(("init.el"
+  (filename . "~/.emacs.d/init.el")
+  (front-context-string . "(set-keyboard-co")
+  (rear-context-string . "-system 'utf-8)\n")
+  (position . 67))
+ ("my-bindings.el"
   (filename . "~/.emacs.d/my-bindings.el")
   (front-context-string . ";; TODO move non")
   (rear-context-string . "tive)\n\n;; Hooks\n")
