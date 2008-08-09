@@ -46,6 +46,13 @@
              (local-set-key [return] 'ruby-reindent-then-newline-and-indent)
              ))
 
+(add-hook 'nxml-mode-hook
+          '(lambda ()
+             (textmate-mode 1)
+
+             (local-set-key [return] 'reindent-then-newline-and-indent)
+             ))
+
 (add-hook 'sh-mode-hook
           '(lambda ()
              (make-local-variable 'write-contents-hooks)
