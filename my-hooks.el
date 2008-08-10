@@ -60,8 +60,7 @@
              (add-hook 'write-contents-hooks 'untabify-buffer)
              (setq sh-basic-offset 2)
 
-             (local-set-key [return] 'newline-and-indent)
-             (local-set-key (kbd "[") 'insert-double-brackets)
+             (local-set-key [return] 'reindent-then-newline-and-indent)
              ))
 
 (add-hook 'python-mode-hook

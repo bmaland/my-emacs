@@ -3,7 +3,8 @@
 
 (define-generic-mode 'yasnippet-mode
   '("#")
-  '("name" "contributor")
+  '("name" "contributor" "if" "end" "else" "unless" "when" "condition" "each"
+    "for" "true" "false" "case" "pattern")
   '(("${\\([a-zA-Z_]+\\)}" 1 font-lock-variable-name-face)
     ("[0-9]+" . 'font-lock-variable-name-face))
   nil
