@@ -85,7 +85,7 @@
 
 (add-hook 'markdown-mode-hook
           (lambda ()
-            (set-pairs '("(" "{" "[" "\"" "\'"))
+            (set-pairs '("(" "{" "[" "\""))
             (auto-fill-mode 1)
             (setq tab-width 4)
             (make-local-variable 'write-contents-hooks)
@@ -97,7 +97,5 @@
      ))
 
 (add-hook 'server-done-hook (lambda nil (kill-buffer nil)))
-(add-hook 'write-file-hooks 'delete-trailing-whitespace)
-(add-hook 'font-lock-mode-hook 'show-ws-highlight-tabs)
 
 (provide 'my-hooks)

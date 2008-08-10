@@ -2,7 +2,12 @@
 ;;; This format is meant to be slightly human-readable;
 ;;; nevertheless, you probably don't want to edit it.
 ;;; -*- End Of Bookmark File Format Version Stamp -*-
-(("my-hooks.el"
+(("my-elisp.el"
+  (filename . "~/.emacs.d/my-elisp.el")
+  (front-context-string . "(defun my-mark-w")
+  (rear-context-string)
+  (position . 1))
+ ("my-hooks.el"
   (filename . "~/.emacs.d/my-hooks.el")
   (front-context-string . "\n(add-hook 'emac")
   (rear-context-string . "             ))\n")

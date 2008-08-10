@@ -7,7 +7,6 @@
 (setq user-full-name "Bjørn Arild Mæland"
       user-mail-address "bjorn.maeland@gmail.com"
       inhibit-startup-message t ;; Remove splash screen
-      show-trailing-whitespace t
       ispell-program-name "aspell"
       ispell-dictionary "english"
       dabbrev-case-replace nil ;; Make sure case is preserved
@@ -154,7 +153,9 @@
 (autoload 'slime-selector "slime" t)
 
 (require 'pastie)
-(require 'show-wspace)
+(require 'conservative-mode)
+(require 'kill-wspace-mode)
+(kill-wspace-mode 1)
 
 ;; Yasnippet
 (require 'yasnippet)

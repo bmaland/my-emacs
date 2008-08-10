@@ -4,19 +4,6 @@
   (backward-word)
   (mark-word))
 
-(defun conservative-editing ()
-  "For working on other peoples source - turn off hooks etc. TODO place this in a minor mode"
-  (interactive)
-  (remove-hook 'write-file-hooks 'delete-trailing-whitespace)
-  (remove-hook 'write-contents-hooks 'untabify-buffer)
-  (local-set-key [return] 'newline-and-indent))
-
-(defun disable-conservative-editing ()
-  (interactive)
-  (add-hook 'write-file-hooks 'delete-trailing-whitespace)
-  (add-hook 'write-contents-hooks 'untabify-buffer)
-  (local-set-key [return] 'reindent-then-newline-and-indent))
-
 ;; TODO fix this, probably tramp issue
 (defun find-alternative-file-with-sudo ()
   (interactive)
