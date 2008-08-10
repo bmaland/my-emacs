@@ -17,7 +17,7 @@
     (progn
       (remove-hook 'write-file-hooks 'delete-trailing-whitespace)
       (remove-hook 'write-contents-hooks 'untabify-buffer)
-      (remove-hook 'font-lock-mode-hook 'setup-show-ws))
+      (remove-hook 'font-lock-mode-hook 'setup-show-ws))))
 
 (add-hook 'kill-wspace-unload-hook (lambda () (kill-wspace-mode 0)))
 

@@ -19,6 +19,8 @@
       frame-title-format "emacs - %b"
       scroll-preserve-screen-position 1
       font-lock-maximum-decoration t
+      slime-dir "~/foss/slime/"
+      snippet-dir "~/foss/snippets/"
       )
 
 (setq-default fill-column 80 ;; how wide the screen should be before word wrapping
@@ -66,7 +68,6 @@
 (add-to-list 'load-path "~/.emacs.d/sml-mode")
 
 ;; Slime
-(setq slime-dir "~/foss/slime/")
 (when (file-directory-p slime-dir)
   (add-to-list 'load-path slime-dir)
   (setq inferior-lisp-program "sbcl --no-linedit")
@@ -158,10 +159,11 @@
 (kill-wspace-mode 1)
 
 ;; Yasnippet
-(require 'yasnippet)
-(require 'yasnippet-mode)
-(yas/initialize)
-(yas/load-directory "~/foss/snippets/")
+(when (file-directory-p snippet-dir)
+  (require 'yasnippet)
+  (require 'yasnippet-mode)
+  (yas/initialize)
+  (yas/load-directory "~/foss/snippets/"))
 
 ;; Personal customizations
 (require 'my-faces)
