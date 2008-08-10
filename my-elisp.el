@@ -138,8 +138,8 @@
                                    (concat "cd \"" dir "\"\r"))
                (setq list-buffers-directory dir)))))
 
+;; Borrowed from TextMate mode
 (defun delete-empty-pair ()
-  "Borrowed from TextMate mode"
   (defun is-empty-pair ()
     (let ((pairs '(( ?\( . ?\))
                    ( ?\' . ?\')
@@ -155,10 +155,42 @@
         (delete-char 1)))
   (delete-backward-char 1))
 
-(defun set-skeleton-pairs (pairs)
-  "Sets multiple skeleton pairs at once"
+(defun move-over (char)
+  "Move over ending pair characters, like in TextMate"
+  (let ((pushovers
+         '((?\" . (lambda () (forward-char 1)))
+           (?\' . (lambda () (forward-char 1)))
+           (?\) . (lambda () (up-list 1)))
+           (?\] . (lambda () (up-list 1)))
+           (?\} . (lambda () (up-list 1)))
+           ))
+        (defaults
+          '((?\" . (lambda () (skeleton-pair-insert-maybe nil)))
+            (?\' . (lambda () (skeleton-pair-insert-maybe nil)))
+            (?\) . (lambda () (insert-char ?\) 1)))
+            (?\] . (lambda () (insert-char ?\] 1)))
+            (?\} . (lambda () (insert-char ?\} 1)))
+            )))
+    (if (eq (char-after) char)
+        (funcall (cdr (assoc char pushovers)))
+      (funcall (cdr (assoc char defaults))))))
+
+(defun move-over-bracket () (interactive) (move-over ?\)))
+(defun move-over-curly () (interactive) (move-over ?\}))
+(defun move-over-square () (interactive) (move-over ?\]))
+(defun move-over-quote () (interactive) (move-over ?\'))
+(defun move-over-dbl-quote () (interactive) (move-over ?\"))
+
+(defun set-pairs (pairs)
+  "Sets up handling of pair characters."
   (mapcar '(lambda (pair)
-             (local-set-key pair 'skeleton-pair-insert-maybe)) pairs)
+             (local-set-key pair 'skeleton-pair-insert-maybe)
+             (cond ((string= pair "\"") (local-set-key pair 'move-over-dbl-quote))
+                   ((string= pair "\'") (local-set-key pair 'move-over-quote))
+                   ((string= pair "[") (local-set-key "\]" 'move-over-square))
+                   ((string= pair "(") (local-set-key "\)" 'move-over-bracket))
+                   ((string= pair "{") (local-set-key "\}" 'move-over-curly))))
+          pairs)
   (setq skeleton-pair t))
 
 (provide 'my-elisp)

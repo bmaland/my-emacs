@@ -172,7 +172,6 @@
 
 (autoload 'slime-selector "slime" t)
 
-(require 'textmate)
 (require 'pastie)
 (require 'show-wspace)
 
