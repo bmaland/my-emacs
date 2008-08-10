@@ -8,8 +8,7 @@
   (local-set-key [(meta up)] 'beginning-of-defun)
   (local-set-key [(meta down)] 'end-of-defun)
 
-  (set-skeleton-pairs '("(" "{" "["))
-  )
+  (set-pairs '("(" "{" "[" "\"")))
 
 (add-hook 'slime-repl-mode-hook
           (lambda ()
@@ -21,13 +20,11 @@
 
 (add-hook 'lisp-mode-hook
           '(lambda ()
-             (textmate-mode 1)
              (lisp-keys)
              ))
 
 (add-hook 'emacs-lisp-mode-hook
           '(lambda ()
-             (textmate-mode 1)
              (lisp-keys)
 
              (make-local-variable 'after-save-hook)
@@ -35,14 +32,11 @@
                        ;; If you're saving an elisp file, likely the .elc is no longer valid.
                        (lambda ()
                          (if (file-exists-p (concat buffer-file-name "c"))
-                             (delete-file (concat buffer-file-name "c")))))
-
-             ))
+                             (delete-file (concat buffer-file-name "c")))))))
 
 (add-hook 'ruby-mode-hook
           '(lambda ()
-             (textmate-mode 1)
-             (set-skeleton-pairs '("(" "{" "["))
+             (set-pairs '("(" "{" "[" "\"" "\'"))
 
              (local-set-key [return] 'ruby-reindent-then-newline-and-indent)
              ))
@@ -65,8 +59,7 @@
 
 (add-hook 'python-mode-hook
           '(lambda ()
-             (textmate-mode 1)
-             (set-skeleton-pairs '("(" "{" "["))
+             (set-pairs '("(" "{" "[" "\"" "\'"))
              (make-local-variable 'write-contents-hooks)
              (add-hook 'write-contents-hooks 'untabify-buffer)
              (setq python-indent 4)
@@ -76,7 +69,6 @@
 
 (add-hook 'css-mode-hook
           '(lambda ()
-             (textmate-mode 1)
              (make-local-variable 'write-contents-hooks)
              (add-hook 'write-contents-hooks 'untabify-buffer)
              (setq css-indent-offset 2)
@@ -93,7 +85,7 @@
 
 (add-hook 'markdown-mode-hook
           (lambda ()
-            (textmate-mode 1)
+            (set-pairs '("(" "{" "[" "\"" "\'"))
             (auto-fill-mode 1)
             (setq tab-width 4)
             (make-local-variable 'write-contents-hooks)
