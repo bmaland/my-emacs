@@ -53,15 +53,17 @@
         (forward-char 1))
       (message "%d chars, %d words" char-count (/ char-count 5)))))
 
-(defun duplicate-line ()
-  "Duplicates current line and inserts it below. TODO: keep position & work for regions as well"
+(defun duplicate-line()
+  "Duplicate the current line"
   (interactive)
-  (beginning-of-line)
-  (kill-line)
-  (yank)
-  (newline)
-  (yank)
-  (end-of-line))
+  (let ((beg (line-beginning-position))
+        (end (line-end-position))
+        (column (current-column)))
+    (copy-region-as-kill beg end)
+    (end-of-line)
+    (newline)
+    (yank)
+    (move-to-column column)))
 
 (defun insert-line-below ()
   "Inserts a new line below cursor"

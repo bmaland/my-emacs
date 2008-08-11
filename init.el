@@ -21,12 +21,12 @@
       font-lock-maximum-decoration t
       slime-dir "~/foss/slime/"
       snippet-dir "~/foss/snippets/"
+      server-window #'switch-to-buffer-other-frame
       )
 
 (setq-default fill-column 80 ;; how wide the screen should be before word wrapping
               indent-tabs-mode nil
-              tab-width 2
-              )
+              tab-width 2)
 
 (custom-set-variables
  '(uniquify-buffer-name-style (quote forward) nil (uniquify))
@@ -38,6 +38,7 @@
  '(pc-select-meta-moves-sexps t)
  '(pc-select-selection-keys-only t)
  '(pc-selection-mode t)
+ '(iswitchb-mode t)
  '(require-final-newline t))
 
 (transient-mark-mode t)
@@ -45,7 +46,7 @@
 
 (global-font-lock-mode t)
 (global-hl-line-mode t)
-(set-face-background 'hl-line "#8b4513")
+(set-face-background 'hl-line "#232323")
 
 (if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0)) ;; No blinking cursor!
 (menu-bar-mode (if window-system 1 -1))
@@ -154,6 +155,7 @@
 (autoload 'slime-selector "slime" t)
 
 (require 'pastie)
+(require 'idle-highlight)
 (require 'conservative-mode)
 (require 'kill-wspace-mode)
 (kill-wspace-mode 1)

@@ -36,7 +36,7 @@
 
 (add-hook 'ruby-mode-hook
           '(lambda ()
-             (set-pairs '("(" "{" "[" "\"" "\'"))
+             (set-pairs '("(" "{" "[" "\"" "\'" "|"))
 
              (local-set-key [return] 'ruby-reindent-then-newline-and-indent)
              ))
