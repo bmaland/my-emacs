@@ -45,8 +45,10 @@
 (show-paren-mode t)
 
 (global-font-lock-mode t)
-(global-hl-line-mode t)
-(set-face-background 'hl-line "#232323")
+
+(when (window-system)
+  (global-hl-line-mode t)
+  (set-face-background 'hl-line "#232323"))
 
 (if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0)) ;; No blinking cursor!
 (menu-bar-mode (if window-system 1 -1))
@@ -186,5 +188,5 @@
 (if (file-exists-p system-specific-config)
     (load system-specific-config))
 
-;; Display homedir when emacs starts, instead of *scratch*
-(find-file "~/")
+;; Display dir when emacs starts, instead of *scratch*
+(if (file-exists-p "~/foss/") (find-file "~/foss/"))
