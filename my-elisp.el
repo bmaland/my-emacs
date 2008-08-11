@@ -156,6 +156,7 @@
         (delete-char 1)))
   (delete-backward-char 1))
 
+;; TODO move over >
 (defun move-over (char)
   "Move over ending pair characters, like in TextMate"
   (let ((pushovers

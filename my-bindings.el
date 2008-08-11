@@ -1,5 +1,6 @@
 ;; General
 
+(global-set-key "\C-x\C-b" 'ibuffer-list-buffers)
 (global-set-key "\M-`" 'ff-find-other-file)
 (global-set-key "\C-c1" 'find-grep-dired)
 (global-set-key "\C-c2" 'grep-find)

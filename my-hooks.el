@@ -43,25 +43,23 @@
 
 (add-hook 'nxml-mode-hook
           '(lambda ()
-             (textmate-mode 1)
+             (set-pairs '("<" "{" "[" "\"" "\'"))
 
              (local-set-key [return] 'reindent-then-newline-and-indent)
              ))
 
 (add-hook 'sh-mode-hook
           '(lambda ()
-             (make-local-variable 'write-contents-hooks)
-             (add-hook 'write-contents-hooks 'untabify-buffer)
+             (set-pairs '("(" "{" "\"" "\'"))
              (setq sh-basic-offset 2)
 
              (local-set-key [return] 'reindent-then-newline-and-indent)
+             (local-set-key "[" 'self-insert-command)
              ))
 
 (add-hook 'python-mode-hook
           '(lambda ()
              (set-pairs '("(" "{" "[" "\"" "\'"))
-             (make-local-variable 'write-contents-hooks)
-             (add-hook 'write-contents-hooks 'untabify-buffer)
              (setq python-indent 4)
 
              (local-set-key [return] 'reindent-then-newline-and-indent)
@@ -69,8 +67,8 @@
 
 (add-hook 'css-mode-hook
           '(lambda ()
-             (make-local-variable 'write-contents-hooks)
-             (add-hook 'write-contents-hooks 'untabify-buffer)
+             (set-pairs '("(" "[" "\"" "\'"))
+
              (setq css-indent-offset 2)
 
              (local-set-key [return] 'newline-and-indent)
@@ -87,15 +85,27 @@
           (lambda ()
             (set-pairs '("(" "{" "[" "\""))
             (auto-fill-mode 1)
-            (setq tab-width 4)
-            (make-local-variable 'write-contents-hooks)
-            (add-hook 'write-contents-hooks 'untabify-buffer)))
+            (setq tab-width 4)))
+
+(setq ibuffer-saved-filter-groups
+      (quote (("default"
+               ("dired" (mode . dired-mode))
+               ("ruby" (mode . ruby-mode))
+               ("shell" (mode . sh-mode))
+               ("elisp" (mode . emacs-lisp-mode))
+               ("emacs" (or
+                         (name . "^\\*scratch\\*$")
+                         (name . "^\\*Messages\\*$")))))))
+
+(add-hook 'ibuffer-mode-hook
+          (lambda ()
+            (ibuffer-switch-to-saved-filter-groups "default")))
+
+(add-hook 'server-done-hook (lambda nil (kill-buffer nil)))
 
 (eval-after-load "sql"
   '(progn
      (sql-set-product 'postgresql)
      ))
-
-(add-hook 'server-done-hook (lambda nil (kill-buffer nil)))
 
 (provide 'my-hooks)

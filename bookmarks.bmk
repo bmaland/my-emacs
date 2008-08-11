@@ -2,7 +2,22 @@
 ;;; This format is meant to be slightly human-readable;
 ;;; nevertheless, you probably don't want to edit it.
 ;;; -*- End Of Bookmark File Format Version Stamp -*-
-(("my-elisp.el"
+(("notat"
+  (filename . "~/notat/")
+  (front-context-string . "active_record.ma")
+  (rear-context-string . "008-07-03 11:49 ")
+  (position . 226))
+ ("hostconnect"
+  (filename . "~/foss/ruby/hostconnect/")
+  (front-context-string . "CHANGELOG\n  drwx")
+  (rear-context-string . "008-08-09 00:44 ")
+  (position . 244))
+ (".zsh"
+  (filename . "~/.zsh/")
+  (front-context-string . "aliases\n  -rw-r-")
+  (rear-context-string . "008-08-11 11:00 ")
+  (position . 224))
+ ("my-elisp.el"
   (filename . "~/.emacs.d/my-elisp.el")
   (front-context-string . "(defun my-mark-w")
   (rear-context-string)
