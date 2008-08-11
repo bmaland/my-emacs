@@ -46,7 +46,7 @@
 
 (global-font-lock-mode t)
 
-(when (window-system)
+(when (bound-and-true-p window-system)
   (global-hl-line-mode t)
   (set-face-background 'hl-line "#232323"))
 
