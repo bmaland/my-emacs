@@ -21,6 +21,10 @@
 (global-set-key (kbd "TAB") 'indent-according-to-mode)
 (global-set-key [backspace] 'delete-empty-pair)
 
+;; Org
+(define-key global-map "\C-cl" 'org-store-link)
+(define-key global-map "\C-ca" 'org-agenda)
+
 ;; TextMate inspired bindings
 (global-set-key (kbd "M-RET") 'insert-line-below)
 (global-set-key (kbd "M-S-<return>") '(lambda ()

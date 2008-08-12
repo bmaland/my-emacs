@@ -3,7 +3,7 @@
 (set-keyboard-coding-system 'utf-8)
 
 (require 'cl)
-
+;; TODO lol
 (setq user-full-name "Bjørn Arild Mæland"
       user-mail-address "bjorn.maeland@gmail.com"
       inhibit-startup-message t ;; Remove splash screen
@@ -12,7 +12,6 @@
       dabbrev-case-replace nil ;; Make sure case is preserved
       bookmark-default-file "~/.emacs.d/bookmarks.bmk"
       bookmark-save-flag 1 ;; How many mods between saves
-      display-time-24hr-format t
       scroll-margin 3
       scroll-conservatively 100
       c-basic-indent 2
@@ -22,10 +21,16 @@
       slime-dir "~/foss/slime/"
       snippet-dir "~/foss/snippets/"
       server-window #'switch-to-buffer-other-frame
-      )
+      display-time-string-forms '(
+                                  (propertize
+                                   (concat " " 24-hours ":" minutes ", " day "." month " ")
+                                   'face 'egoge-display-time))
+      org-log-done t
+      org-return-follows-link t)
 
 (setq-default fill-column 80 ;; how wide the screen should be before word wrapping
               indent-tabs-mode nil
+              show-trailing-whitespace t
               tab-width 2)
 
 (custom-set-variables
@@ -188,5 +193,5 @@
 (if (file-exists-p system-specific-config)
     (load system-specific-config))
 
-;; Display dir when emacs starts, instead of *scratch*
-(if (file-exists-p "~/foss/") (find-file "~/foss/"))
+;; Display gtd when emacs starts, instead of *scratch*
+(if (file-exists-p "~/notat/gtd.org") (find-file "~/notat/gtd.org"))
