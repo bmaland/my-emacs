@@ -19,6 +19,7 @@
       frame-title-format "emacs - %b"
       scroll-preserve-screen-position 1
       font-lock-maximum-decoration t
+      inhibit-default-init t
       slime-dir "~/foss/slime/"
       snippet-dir "~/foss/snippets/"
       )
@@ -136,6 +137,7 @@
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
 
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
+(add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
 
 (autoload 'ruby-mode "ruby-mode" "Ruby editing mode." t)
 (add-to-list 'auto-mode-alist '("\.rb$" . ruby-mode))
