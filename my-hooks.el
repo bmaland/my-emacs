@@ -81,6 +81,12 @@
           '(lambda ()
              (load-library "sml-mosml")))
 
+(add-hook 'sml-mode-hook
+          '(lambda ()
+             (set-pairs '("(" "{" "[" "\"" "\'"))
+             (setq sml-electric-semi-mode t)
+             (local-set-key [return] 'reindent-then-newline-and-indent)))
+
 (add-hook 'org-mode-hook
           (lambda ()
             (set-pairs '("(" "{" "[" "\""))
@@ -96,6 +102,8 @@
       (quote (("default"
                ("dired" (mode . dired-mode))
                ("ruby" (mode . ruby-mode))
+               ("haml" (mode . haml-mode))
+               ("sass" (mode . sass-mode))
                ("shell" (mode . sh-mode))
                ("elisp" (mode . emacs-lisp-mode))
                ("emacs" (or

@@ -3,7 +3,6 @@
 (set-keyboard-coding-system 'utf-8)
 
 (require 'cl)
-;; TODO lol
 (setq user-full-name "Bjørn Arild Mæland"
       user-mail-address "bjorn.maeland@gmail.com"
       inhibit-startup-message t ;; Remove splash screen

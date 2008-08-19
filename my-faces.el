@@ -38,7 +38,7 @@
 (mapcar (lambda (mode)
           (font-lock-add-keywords
            mode
-           '(("\\<\\(TODO\\|FIXME\\|FIX\\|HACK\\|REFACTOR\\)"
+           '(("\\<\\(TODO\\|FIXME\\|FIX\\|HACK\\|REFACTOR\\|NOTE\\)"
               1 font-lock-warning-face t))))
         programming-modes)
 

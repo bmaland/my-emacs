@@ -2,7 +2,12 @@
 ;;; This format is meant to be slightly human-readable;
 ;;; nevertheless, you probably don't want to edit it.
 ;;; -*- End Of Bookmark File Format Version Stamp -*-
-(("notat"
+(("authscand"
+  (filename . "~/Webdev/authscand/")
+  (front-context-string . "app\n  -rw-r--r--")
+  (rear-context-string . "008-07-22 19:53 ")
+  (position . 236))
+ ("notat"
   (filename . "~/notat/")
   (front-context-string . "active_record.ma")
   (rear-context-string . "008-07-03 11:49 ")
