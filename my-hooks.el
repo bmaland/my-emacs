@@ -48,6 +48,15 @@
              (local-set-key [return] 'reindent-then-newline-and-indent)
              ))
 
+(add-hook 'php-mode-hook
+          '(lambda ()
+             (set-pairs '("<" "{" "[" "\"" "\'"))
+             (setq c-basic-offset 4)
+             (c-set-offset 'inline-open 0)
+
+             (local-set-key [return] 'reindent-then-newline-and-indent)
+             ))
+
 (add-hook 'sh-mode-hook
           '(lambda ()
              (set-pairs '("(" "{" "\"" "\'"))
