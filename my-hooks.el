@@ -4,6 +4,7 @@
 
   (local-set-key [return] 'reindent-then-newline-and-indent)
   (local-set-key "\C-j" 'eval-print-last-sexp)
+  (local-set-key "\M-." 'find-function)
 
   (local-set-key [(meta up)] 'beginning-of-defun)
   (local-set-key [(meta down)] 'end-of-defun)
