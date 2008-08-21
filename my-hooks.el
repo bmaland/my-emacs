@@ -108,6 +108,12 @@
             (auto-fill-mode 1)
             (setq tab-width 4)))
 
+(add-hook 'prolog-mode-hook
+          (lambda ()
+            (set-pairs '("(" "{" "[" "\"" "'"))
+            (local-set-key [return] 'reindent-then-newline-and-indent)
+            ))
+
 (setq ibuffer-saved-filter-groups
       (quote (("default"
                ("dired" (mode . dired-mode))

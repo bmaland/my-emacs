@@ -17,6 +17,7 @@
       frame-title-format "emacs - %b"
       scroll-preserve-screen-position 1
       font-lock-maximum-decoration t
+      prolog-program-name "pl"
       slime-dir "~/foss/slime/"
       snippet-dir "~/foss/snippets/"
       server-window #'switch-to-buffer-other-frame
@@ -148,6 +149,8 @@
 (add-to-list 'auto-mode-alist '("\.rb$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Rakefile" . ruby-mode))
 (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
+
+(add-to-list 'auto-mode-alist '("\.pl$" . prolog-mode))
 
 (autoload 'markdown-mode "markdown-mode.el"
   "Major mode for editing Markdown files" t)
