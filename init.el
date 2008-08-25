@@ -1,6 +1,4 @@
 (prefer-coding-system 'utf-8)
-(set-terminal-coding-system 'utf-8)
-(set-keyboard-coding-system 'utf-8)
 
 (require 'cl)
 (setq user-full-name "Bjørn Arild Mæland"
@@ -21,6 +19,7 @@
       slime-dir "~/foss/slime/"
       snippet-dir "~/foss/snippets/"
       server-window #'switch-to-buffer-other-frame
+      twittering-username "Chrononaut"
       display-time-string-forms '(
                                   (propertize
                                    (concat " " 24-hours ":" minutes ", " day "." month " ")
@@ -166,6 +165,7 @@
 
 (require 'pastie)
 (require 'idle-highlight)
+(require 'twittering-mode)
 (require 'conservative-mode)
 (require 'kill-wspace-mode)
 (kill-wspace-mode 1)

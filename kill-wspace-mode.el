@@ -1,9 +1,3 @@
-(require 'show-wspace)
-
-(defun setup-show-ws ()
-  (show-ws-highlight-tabs)
-  (show-ws-highlight-trailing-whitespace))
-
 (define-minor-mode
   kill-wspace-mode
   "Kill Wspace mode"
