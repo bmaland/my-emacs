@@ -44,7 +44,8 @@
  '(pc-select-selection-keys-only t)
  '(pc-selection-mode t)
  '(iswitchb-mode t)
- '(require-final-newline t))
+ '(require-final-newline t)
+ '(column-number-mode t))
 
 (transient-mark-mode t)
 (show-paren-mode t)

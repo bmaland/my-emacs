@@ -164,6 +164,7 @@
   (let ((pushovers
          '((?\" . (lambda () (forward-char 1)))
            (?\' . (lambda () (forward-char 1)))
+           (?\| . (lambda () (forward-char 1)))
            (?\) . (lambda () (up-list 1)))
            (?\] . (lambda () (up-list 1)))
            (?\} . (lambda () (up-list 1)))
@@ -171,6 +172,7 @@
         (defaults
           '((?\" . (lambda () (skeleton-pair-insert-maybe nil)))
             (?\' . (lambda () (skeleton-pair-insert-maybe nil)))
+            (?\| . (lambda () (skeleton-pair-insert-maybe nil)))
             (?\) . (lambda () (insert-char ?\) 1)))
             (?\] . (lambda () (insert-char ?\] 1)))
             (?\} . (lambda () (insert-char ?\} 1)))
@@ -184,6 +186,7 @@
 (defun move-over-square () (interactive) (move-over ?\]))
 (defun move-over-quote () (interactive) (move-over ?\'))
 (defun move-over-dbl-quote () (interactive) (move-over ?\"))
+(defun move-over-pipe () (interactive) (move-over ?\|))
 
 (defun set-pairs (pairs)
   "Sets up handling of pair characters."
@@ -191,6 +194,7 @@
              (local-set-key pair 'skeleton-pair-insert-maybe)
              (cond ((string= pair "\"") (local-set-key pair 'move-over-dbl-quote))
                    ((string= pair "\'") (local-set-key pair 'move-over-quote))
+                   ((string= pair "|") (local-set-key pair 'move-over-pipe))
                    ((string= pair "[") (local-set-key "\]" 'move-over-square))
                    ((string= pair "(") (local-set-key "\)" 'move-over-bracket))
                    ((string= pair "{") (local-set-key "\}" 'move-over-curly))))
