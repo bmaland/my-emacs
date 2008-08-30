@@ -121,6 +121,7 @@
                ("sass" (mode . sass-mode))
                ("shell" (mode . sh-mode))
                ("elisp" (mode . emacs-lisp-mode))
+               ("gtalk" (mode . jabber-chat-mode))
                ("emacs" (or
                          (name . "^\\*scratch\\*$")
                          (name . "^\\*Messages\\*$")))))))

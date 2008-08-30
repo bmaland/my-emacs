@@ -27,24 +27,34 @@
       org-log-done t
       org-return-follows-link t)
 
+(setq jabber-connection-type 'ssl
+      jabber-server "gmail.com"
+      jabber-network-server "talk.google.com"
+      jabber-port 5223
+      jabber-username "bjorn.maeland")
+
 (setq-default fill-column 80 ;; how wide the screen should be before word wrapping
               indent-tabs-mode nil
               show-trailing-whitespace t
               tab-width 2)
 
 (custom-set-variables
- '(uniquify-buffer-name-style (quote forward) nil (uniquify))
- '(minibuffer-max-depth nil)        ;; enable multiple minibuffers
- '(case-fold-search t)              ;; case-insensitive search
+  ;; custom-set-variables was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
  '(case-fold-search t)
+ '(column-number-mode t)
+ '(iswitchb-mode t)
  '(load-home-init-file t t)
  '(make-backup-files nil)
+ '(minibuffer-max-depth nil)
  '(pc-select-meta-moves-sexps t)
  '(pc-select-selection-keys-only t)
  '(pc-selection-mode t)
- '(iswitchb-mode t)
  '(require-final-newline t)
- '(column-number-mode t))
+ '(safe-local-variable-values (quote ((Package . cl-USER) (Syntax . Common-Lisp))))
+ '(uniquify-buffer-name-style (quote forward) nil (uniquify)))
 
 (transient-mark-mode t)
 (show-paren-mode t)
@@ -74,6 +84,10 @@
 ;; Load paths
 (add-to-list 'load-path "~/.emacs.d/")
 (add-to-list 'load-path "~/.emacs.d/sml-mode")
+
+(when (file-directory-p "~/foss/emacs-jabber-0.7.1")
+  (add-to-list 'load-path "~/foss/emacs-jabber-0.7.1")
+  (require 'jabber))
 
 ;; Slime
 (when (file-directory-p slime-dir)
@@ -198,3 +212,9 @@
 
 ;; Display gtd when emacs starts, instead of *scratch*
 (if (file-exists-p "~/notat/gtd.org") (find-file "~/notat/gtd.org"))
+(custom-set-faces
+  ;; custom-set-faces was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ )

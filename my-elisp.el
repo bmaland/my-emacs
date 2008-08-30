@@ -127,6 +127,18 @@
   (interactive)
   (shell-command-on-region (point-min) (point-max) "wc -w"))
 
+;; TODO this needs a lot of work
+(defun word-freq ()
+  "Count word frequency in buffer"
+  (interactive)
+  (shell-command-on-region (point-min) (point-max)
+                           (concat
+                            "tr ' ' '\n'|tr '[A-Z]' '[a-z]'|" ;; Split words and downcase
+                            "sed 's/[()<>|/\"]//g'|"
+                            "sed 's/[,\.;!\?:]$//'|"
+                            "sed 's/^[^a-zA-Z]*//g'|"
+                            "sort|grep -v '^$'|uniq -c|sort -nr|cat -b")))
+
 (defun shell-here ()
   "Open a shell in `default-directory'."
   (interactive)
@@ -141,7 +153,7 @@
                                    (concat "cd \"" dir "\"\r"))
                (setq list-buffers-directory dir)))))
 
-;; Borrowed from TextMate mode
+;; Originally borrowed from TextMate mode
 (defun delete-empty-pair ()
   (defun is-empty-pair ()
     (let ((pairs '(( ?\( . ?\))
