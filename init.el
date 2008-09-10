@@ -151,6 +151,7 @@
 (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
 
 (add-to-list 'auto-mode-alist '("\.pl$" . prolog-mode))
+(add-to-list 'auto-mode-alist '("\.org$" . org-mode))
 
 (autoload 'markdown-mode "markdown-mode.el"
   "Major mode for editing Markdown files" t)

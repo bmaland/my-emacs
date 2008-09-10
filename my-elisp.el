@@ -141,6 +141,36 @@
                                    (concat "cd \"" dir "\"\r"))
                (setq list-buffers-directory dir)))))
 
+
+;; Insert the date, the time, and the date and time at point.
+
+(defvar insert-time-format "%T"
+  "*Format for \\[insert-time] (c.f. 'format-time-string' for how to format).")
+
+(defvar insert-date-format "%d.%m.%Y"
+  "*Format for \\[insert-date] (c.f. 'format-time-string' for how to format).")
+
+(defun insert-time ()
+  "Insert the current time according to the variable \"insert-time-format\"."
+  (interactive "*")
+  (insert (format-time-string insert-time-format
+                              (current-time))))
+
+(defun insert-date ()
+  "Insert the current date according to the variable \"insert-date-format\"."
+  (interactive "*")
+  (insert (format-time-string insert-date-format
+                              (current-time))))
+
+(defun insert-time-and-date ()
+  "Insert the current date according to the variable \"insert-date-format\", then a space, then the current time according to the variable \"insert-time-format\"."
+  (interactive "*")
+  (progn
+    (insert-date)
+    (insert " ")
+    (insert-time)))
+
+
 ;; Borrowed from TextMate mode
 (defun delete-empty-pair ()
   (defun is-empty-pair ()
