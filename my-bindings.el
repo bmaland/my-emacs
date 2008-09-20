@@ -1,6 +1,6 @@
 ;; General
 
-(global-set-key "\C-x\C-b" 'ibuffer-list-buffers)
+(global-set-key "\C-x\C-b" 'ibuffer)
 (global-set-key "\M-`" 'ff-find-other-file)
 (global-set-key "\C-c1" 'find-grep-dired)
 (global-set-key "\C-c2" 'grep-find)
@@ -20,6 +20,10 @@
 (global-set-key [f6] 'bookmark-jump)
 (global-set-key (kbd "TAB") 'indent-according-to-mode)
 (global-set-key [backspace] 'delete-empty-pair)
+
+;; Org
+(define-key global-map "\C-cl" 'org-store-link)
+(define-key global-map "\C-ca" 'org-agenda)
 
 ;; TextMate inspired bindings
 (global-set-key (kbd "M-RET") 'insert-line-below)
