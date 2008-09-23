@@ -20,6 +20,7 @@
 (global-set-key [f6] 'bookmark-jump)
 (global-set-key (kbd "TAB") 'indent-according-to-mode)
 (global-set-key [backspace] 'delete-empty-pair)
+(global-set-key (kbd "C-x M-f") 'ido-find-file-other-window)
 
 ;; Org
 (define-key global-map "\C-cl" 'org-store-link)
