@@ -15,6 +15,7 @@
       frame-title-format "emacs - %b"
       scroll-preserve-screen-position 1
       font-lock-maximum-decoration t
+      inhibit-default-init t
       prolog-program-name "pl"
       slime-dir "~/foss/slime/"
       snippet-dir "~/foss/snippets/"
@@ -159,6 +160,7 @@
 ;;(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
 
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
+(add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
 
 (autoload 'ruby-mode "ruby-mode" "Ruby editing mode." t)
 (add-to-list 'auto-mode-alist '("\.rb$" . ruby-mode))
@@ -166,6 +168,7 @@
 (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
 
 (add-to-list 'auto-mode-alist '("\.pl$" . prolog-mode))
+(add-to-list 'auto-mode-alist '("\.org$" . org-mode))
 
 (autoload 'markdown-mode "markdown-mode.el"
   "Major mode for editing Markdown files" t)
