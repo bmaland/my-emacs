@@ -1,4 +1,4 @@
-;; pastie.el -- Emacs integration for pastie.caboo.se.
+;; pastie.el -- Emacs integration for pastie.org.
 ;; Copyright (C) 2006 Christian Neukirchen <purl.org/net/chneukirchen>
 ;; Licensed under the GPL.
  
@@ -8,7 +8,7 @@
 ;; Thanks to: Phil Hagelberg for fixes.
  
 (defun pastie-region (begin end)
-  "Post the current region as a new paste at pastie.caboo.se.
+  "Post the current region as a new paste at pastie.org.
 Copies the URL into the kill ring."
   (interactive "r")
  
@@ -36,7 +36,7 @@ Copies the URL into the kill ring."
          (url-request-method "POST")
          (url-mime-accept-string "application/xml")
          (url-request-extra-headers '(("Content-Type" . "application/xml")))
-         (url (url-generic-parse-url "http://pastie.caboo.se/pastes/create"))
+         (url (url-generic-parse-url "http://pastie.org/pastes/create"))
  
          (url-request-data
           (concat "<paste>"
@@ -61,20 +61,20 @@ Copies the URL into the kill ring."
       (kill-buffer pastie-buffer))))
  
 (defun pastie-buffer ()
-  "Post the current buffer as a new paste at pastie.caboo.se.
+  "Post the current buffer as a new paste at pastie.org.
 Copies the URL into the kill ring."
   (interactive)
   (pastie-region (point-min) (point-max)))
  
 (defun pastie-get (id)
-  "Fetch the contents of the paste from pastie.caboo.se into a new buffer."
+  "Fetch the contents of the paste from pastie.org into a new buffer."
   (interactive "nPastie #: ")
  
   (let ((url-request-method "GET")
         (url-request-extra-headers nil)
         (url-mime-accept-string "*/*")
         (url (url-generic-parse-url
-              (format "http://pastie.caboo.se/%s/download" id))))
+              (format "http://pastie.org/%s/download" id))))
     (setq pastie-buffer (url-retrieve-synchronously url))
  
     (with-current-buffer pastie-buffer
