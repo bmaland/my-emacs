@@ -21,6 +21,24 @@
 (global-set-key (kbd "TAB") 'indent-according-to-mode)
 (global-set-key [backspace] 'delete-empty-pair)
 (global-set-key (kbd "C-x M-f") 'ido-find-file-other-window)
+(global-set-key (kbd "M-SPC") 'set-mark-command)
+
+;; make cursor movement keys under right hand's home-row.
+(global-set-key (kbd "M-j") 'backward-char) ; was indent-new-comment-line
+(global-set-key (kbd "M-l") 'forward-char)
+(global-set-key (kbd "M-i") 'previous-line) ; was tab-to-tab-stop
+(global-set-key (kbd "M-k") 'next-line) ; was kill-sentence
+
+;;; WINDOW SPLITING
+(global-set-key (kbd "M-0") 'delete-window) ; was digit-argument
+(global-set-key (kbd "M-1") 'delete-other-windows) ; was digit-argument
+(global-set-key (kbd "M-2") 'split-window-vertically) ; was digit-argument
+(global-set-key (kbd "M-3") 'split-window-horizontally) ; was digit-argument
+(global-set-key (kbd "M-o") 'other-window) ; was prefix
+
+(global-set-key (kbd "C-<left>") 'previous-user-buffer)
+(global-set-key (kbd "C-<right>") 'next-user-buffer)
+(global-set-key (kbd "<f9>") 'kill-this-buffer) ; Close file
 
 ;; Org
 (define-key global-map "\C-cl" 'org-store-link)
@@ -35,7 +53,6 @@
 (global-set-key [(control shift k)] 'kill-whole-line)
 (global-set-key [(control shift d)] 'duplicate-line)
 (global-set-key [(control shift l)] 'mark-line)
-(global-set-key "\M-l" 'goto-line)
 
 ;; TODO check if w3m is available first? or move to site file
 (global-set-key (kbd "C-x w") 'w3m)

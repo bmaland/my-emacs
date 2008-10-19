@@ -111,6 +111,7 @@
 (add-hook 'prolog-mode-hook
           (lambda ()
             (set-pairs '("(" "{" "[" "\"" "'"))
+            ;;(modify-syntax-entry ?_ ".")
             (local-set-key [return] 'reindent-then-newline-and-indent)))
 
 (setq ibuffer-saved-filter-groups
