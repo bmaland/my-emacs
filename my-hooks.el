@@ -49,6 +49,15 @@
              (local-set-key [return] 'reindent-then-newline-and-indent)
              ))
 
+(add-hook 'c-mode-hook
+          '(lambda ()
+             (set-pairs '("(" "<" "{" "[" "\"" "\'"))
+             (c-set-style "GNU")
+             (setq c-basic-offset 2)
+             (local-set-key [return] 'reindent-then-newline-and-indent)
+             (local-set-key "\C-c\C-z" 'compile)
+             ))
+
 (add-hook 'php-mode-hook
           '(lambda ()
              (set-pairs '("<" "{" "[" "\"" "\'"))

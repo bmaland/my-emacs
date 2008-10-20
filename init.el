@@ -164,6 +164,8 @@
 
 (autoload 'ruby-mode "ruby-mode" "Ruby editing mode." t)
 (add-to-list 'auto-mode-alist '("\.rb$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\.rake$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\.builder$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Rakefile" . ruby-mode))
 (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
 
