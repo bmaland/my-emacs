@@ -239,4 +239,40 @@
           pairs)
   (setq skeleton-pair t))
 
+;; --------------------------------------------------------- ;;
+;; Switch to buffer
+(if (>= emacs-major-version 22)
+    (progn
+      (defun ignore-buffer (str)
+        (or
+         ;;buffers I don't want to switch to
+         (string-match "\\*Buffer List\\*" str)
+         (string-match "^TAGS" str)
+         (string-match "^\\*Messages\\*$" str)
+         (string-match "^\\*Completions\\*$" str)
+         (string-match "^\\*scratch\\*$" str)
+         (string-match "^\\*ESS\\*$" str)
+         (string-match "^ " str)
+         (string-match "Mew message" str)
+         (string-match "output\\*$" str)
+         (string-match "compilation" str)
+         (string-match "^\\*TeX silent\\*$" str)
+         ;;(string-match "inbox" str)
+         ))
+
+      (defun next-user-buffer ()
+        "Switch to the next user buffer in cyclic order."
+        (interactive)
+        (next-buffer)
+        (while (ignore-buffer (buffer-name))
+          (next-buffer) ))
+
+      (defun previous-user-buffer ()
+        "Switch to the next user buffer in cyclic order."
+        (interactive)
+        (previous-buffer)
+        (while (ignore-buffer (buffer-name))
+          (previous-buffer)))))
+
+
 (provide 'my-elisp)
