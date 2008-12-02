@@ -91,6 +91,10 @@
   (add-to-list 'load-path "~/foss/emacs-jabber-0.7.1")
   (require 'jabber))
 
+(require 'multi-term)
+(multi-term-keystroke-setup)
+(setq multi-term-program "/bin/zsh")
+
 ;; Slime
 (when (file-directory-p slime-dir)
   (add-to-list 'load-path slime-dir)
@@ -215,12 +219,3 @@
 
 (if (file-exists-p system-specific-config)
     (load system-specific-config))
-
-;; Display gtd when emacs starts, instead of *scratch*
-(if (file-exists-p "~/notat/gtd.org") (find-file "~/notat/gtd.org"))
-(custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- )

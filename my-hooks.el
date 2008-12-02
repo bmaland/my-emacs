@@ -35,6 +35,10 @@
                          (if (file-exists-p (concat buffer-file-name "c"))
                              (delete-file (concat buffer-file-name "c")))))))
 
+(add-hook 'term-mode-hook
+          '(lambda ()
+             (set (make-local-variable 'scroll-margin) 0)))
+
 (add-hook 'ruby-mode-hook
           '(lambda ()
              (set-pairs '("(" "{" "[" "\"" "\'" "|"))
