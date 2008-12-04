@@ -60,7 +60,7 @@
 
 (transient-mark-mode t)
 (show-paren-mode t)
-
+(savehist-mode t)
 (global-font-lock-mode t)
 
 (when (bound-and-true-p window-system)
