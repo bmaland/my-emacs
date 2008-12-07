@@ -47,7 +47,6 @@
   ;; If there is more than one, they won't work right.
  '(case-fold-search t)
  '(column-number-mode t)
- '(iswitchb-mode t)
  '(load-home-init-file t t)
  '(make-backup-files nil)
  '(minibuffer-max-depth nil)
@@ -62,6 +61,7 @@
 (show-paren-mode t)
 (savehist-mode t)
 (global-font-lock-mode t)
+(ido-mode t)
 
 (when (bound-and-true-p window-system)
   (global-hl-line-mode t)
@@ -94,6 +94,9 @@
 (require 'multi-term)
 (multi-term-keystroke-setup)
 (setq multi-term-program "/bin/zsh")
+
+(require 'textmate)
+(textmate-mode)
 
 ;; Slime
 (when (file-directory-p slime-dir)
@@ -171,6 +174,7 @@
 (add-to-list 'auto-mode-alist '("\.rake$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\.builder$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Rakefile" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Capfile" . ruby-mode))
 (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
 
 (add-to-list 'auto-mode-alist '("\.pl$" . prolog-mode))

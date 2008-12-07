@@ -1,7 +1,6 @@
 ;; General
 
 (global-set-key "\M-#" 'calc)
-(global-set-key "\C-x\C-b" 'ibuffer)
 (global-set-key "\M-`" 'ff-find-other-file)
 (global-set-key "\C-c1" 'find-grep-dired)
 (global-set-key "\C-c2" 'grep-find)
@@ -55,6 +54,9 @@
 (global-set-key [(control shift k)] 'kill-whole-line)
 (global-set-key [(control shift d)] 'duplicate-line)
 (global-set-key [(control shift l)] 'mark-line)
+
+(global-set-key "\C-xgf" 'textmate-goto-file)
+(global-set-key "\C-xgs" 'textmate-goto-symbol)
 
 ;; TODO check if w3m is available first? or move to site file
 (global-set-key (kbd "C-x w") 'w3m)
