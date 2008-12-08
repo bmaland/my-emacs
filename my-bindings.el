@@ -45,6 +45,14 @@
 (define-key global-map "\C-cl" 'org-store-link)
 (define-key global-map "\C-ca" 'org-agenda)
 
+;; Quod Libet
+(global-set-key [f7] 'quodlibet-play)
+(global-set-key [f8] 'quodlibet-pause)
+(global-set-key [f9] 'quodlibet-prev)
+(global-set-key [f10] 'quodlibet-next)
+(global-set-key [f11] 'quodlibet-volume-down)
+(global-set-key [f12] 'quodlibet-volume-up)
+
 ;; TextMate inspired bindings
 (global-set-key (kbd "M-RET") 'insert-line-below)
 (global-set-key (kbd "M-S-<return>") '(lambda ()
