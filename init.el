@@ -208,7 +208,6 @@
 ;; Personal customizations
 (require 'my-faces)
 (require 'my-elisp)
-(require 'my-skeletons)
 (require 'my-bindings)
 (require 'my-aliases)
 (require 'my-hooks)

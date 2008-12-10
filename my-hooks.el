@@ -95,9 +95,6 @@
              (setq css-indent-offset 2)
 
              (local-set-key [return] 'newline-and-indent)
-             (local-set-key (kbd "{") 'insert-braces)
-             (local-set-key (kbd ";") 'electric-semi)
-             (local-set-key (kbd ":") 'semi-space)
              ))
 
 (add-hook 'inferior-sml-load-hook
