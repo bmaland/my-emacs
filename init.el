@@ -191,6 +191,7 @@
 
 (autoload 'slime-selector "slime" t)
 
+(require 'magit)
 (require 'pastie)
 (require 'idle-highlight)
 (require 'twittering-mode)
