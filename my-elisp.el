@@ -12,6 +12,10 @@
         (setq s (replace-match "" t nil s))))
     s))
 
+(defun ruby-eval-buffer () (interactive)
+        "Evaluate the buffer with ruby."
+        (shell-command-on-region (point-min) (point-max) "ruby"))
+
 (defun my-mark-word ()
   "Marks the whole word the cursor is placed on"
   (interactive)

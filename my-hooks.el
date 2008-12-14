@@ -43,6 +43,8 @@
           '(lambda ()
              (set-pairs '("(" "{" "[" "\"" "\'" "|"))
 
+             (inf-ruby-keys)
+
              (local-set-key [return] 'ruby-reindent-then-newline-and-indent)
              ))
 
@@ -96,6 +98,11 @@
 
              (local-set-key [return] 'newline-and-indent)
              ))
+
+(add-hook 'haml-mode-hook
+          '(lambda ()
+             (set-pairs '("(" "[" "\"" "\'"))
+             (local-set-key [return] 'newline-and-indent)))
 
 (add-hook 'inferior-sml-load-hook
           '(lambda ()

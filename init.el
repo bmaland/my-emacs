@@ -143,6 +143,11 @@
   (load autoload-file))
 
 ;; Autoloads
+(autoload 'run-ruby "inf-ruby"
+  "Run an inferior Ruby process")
+(autoload 'inf-ruby-keys "inf-ruby"
+  "Set local key defs for inf-ruby in ruby-mode")
+
 (autoload 'git-blame-mode "git-blame" "Minor mode for incremental blame for Git." t)
 
 (autoload 'sml-mode "sml-mode" "Major mode for editing ML programs." t)
