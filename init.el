@@ -196,7 +196,8 @@
 
 (autoload 'slime-selector "slime" t)
 
-(require 'magit)
+(autoload 'magit-status "magit" nil t)
+
 (require 'pastie)
 (require 'idle-highlight)
 (require 'twittering-mode)
