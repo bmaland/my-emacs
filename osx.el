@@ -16,6 +16,14 @@
          (if (file-exists-p file-name)
              (call-process "/usr/bin/open" nil 0 nil file-name))))
 
+(defun toggle-fullscreen ()
+  (interactive)
+  (set-frame-parameter nil 'fullscreen (if (frame-parameter nil 'fullscreen)
+                                           nil
+                                           'fullboth)))
+
+(global-set-key [(meta return)] 'toggle-fullscreen)
+
 (if (boundp 'aquamacs-version)
     (load "~/.emacs.d/aquamacs.el")
   (setq mac-option-modifier 'meta))
