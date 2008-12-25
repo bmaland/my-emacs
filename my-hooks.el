@@ -90,6 +90,14 @@
              (local-set-key [return] 'reindent-then-newline-and-indent)
              ))
 
+(add-hook 'js2-mode-hook
+          '(lambda ()
+             (set-pairs '("(" "{" "[" "\"" "\'"))
+             (setq js2-basic-offset 4)
+
+             (local-set-key [tab] 'js2-indent-line)
+             ))
+
 (add-hook 'css-mode-hook
           '(lambda ()
              (set-pairs '("(" "[" "\"" "\'"))
