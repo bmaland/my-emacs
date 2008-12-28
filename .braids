@@ -1,4 +1,11 @@
 --- 
+yasnippet/snippets/text-mode/emacs-lisp-mode: 
+  squashed: true
+  url: git://github.com/Chrononaut/yasnippet-emacs-lisp-mode.git
+  branch: master
+  type: git
+  revision: 2c58b23cd4301ffbc530cc90cfe0f74e95cd2bad
+  remote: braid/yasnippet/snippets/text-mode/emacs-lisp-mode
 yasnippet/snippets/text-mode/ruby-mode: 
   squashed: true
   url: git://github.com/Chrononaut/yasnippet-ruby-mode.git
