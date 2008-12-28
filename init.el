@@ -1,6 +1,7 @@
 (prefer-coding-system 'utf-8)
 
 (require 'cl)
+
 (setq user-full-name "Bjørn Arild Mæland"
       user-mail-address "bjorn.maeland@gmail.com"
       inhibit-startup-message t ;; Remove splash screen
@@ -21,6 +22,7 @@
       snippet-dir "~/.emacs.d/yasnippet/snippets/"
       server-window #'switch-to-buffer-other-frame
       vc-follow-symlinks nil
+      tramp-default-method "ssh"
       twittering-username "Chrononaut"
       display-time-string-forms '(
                                   (propertize
@@ -85,7 +87,11 @@
 
 ;; Load paths
 (add-to-list 'load-path "~/.emacs.d/")
+(add-to-list 'load-path "~/.emacs.d/elpa")
 (add-to-list 'load-path "~/.emacs.d/sml-mode")
+
+(require 'package)
+(package-initialize)
 
 (when (file-directory-p "~/foss/emacs-jabber-0.7.1")
   (add-to-list 'load-path "~/foss/emacs-jabber-0.7.1")
@@ -128,8 +134,6 @@
       (cons '("<＼＼?xml " . nxml-mode)
             magic-mode-alist))
 (fset 'xml-mode 'nxml-mode)
-
-(setq tramp-default-method "ssh")
 
 ;; Regenerate the autoload file if it doesn't exist or it's too
 ;; old. (2 weeks or so)
@@ -228,3 +232,25 @@
 
 (if (file-exists-p system-specific-config)
     (load system-specific-config))
+
+
+;;; This was installed by package-install.el.
+;;; This provides support for the package system and
+;;; interfacing with ELPA, the package archive.
+;;; Move this code earlier if you want to reference
+;;; packages in your .emacs.
+(when
+    (load
+     (expand-file-name "~/.emacs.d/elpa/package.el"))
+  (package-initialize))
+
+
+;;; This was installed by package-install.el.
+;;; This provides support for the package system and
+;;; interfacing with ELPA, the package archive.
+;;; Move this code earlier if you want to reference
+;;; packages in your .emacs.
+(when
+    (load
+     (expand-file-name "~/.emacs.d/elpa/package.el"))
+  (package-initialize))
