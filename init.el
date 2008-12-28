@@ -18,7 +18,7 @@
       inhibit-default-init t
       prolog-program-name "pl"
       slime-dir "~/foss/slime/"
-      snippet-dir "~/foss/snippets/"
+      snippet-dir "~/.emacs.d/yasnippet/snippets/"
       server-window #'switch-to-buffer-other-frame
       vc-follow-symlinks nil
       twittering-username "Chrononaut"
@@ -206,11 +206,10 @@
 (kill-wspace-mode 1)
 
 ;; Yasnippet
-(when (file-directory-p snippet-dir)
-  (require 'yasnippet)
-  (require 'yasnippet-mode)
-  (yas/initialize)
-  (yas/load-directory "~/foss/snippets/"))
+(require 'yasnippet)
+(require 'yasnippet-mode)
+(yas/initialize)
+(yas/load-directory snippet-dir)
 
 ;; Personal customizations
 (require 'my-faces)
