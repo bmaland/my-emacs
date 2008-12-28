@@ -1,0 +1,8 @@
+--- 
+yasnippet/snippets/text-mode/ruby-mode: 
+  squashed: true
+  url: git://github.com/Chrononaut/yasnippet-ruby-mode.git
+  branch: master
+  type: git
+  revision: a8cab00c313a43278704c103519404734973c10f
+  remote: braid/yasnippet/snippets/text-mode/ruby-mode
