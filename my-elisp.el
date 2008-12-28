@@ -1,3 +1,19 @@
+;; Thanks to consolers in #emacs
+(defun random-string (len)
+  (coerce (loop for i below len for x = (random 64) collect
+                (+ x
+                   (cond ((< x 8) 47)
+                         ((< x 36) (- 65 10))
+                         (t (- 97 36)))))
+          'string))
+
+(defun make-password ()
+  "Random string of 20 characters"
+  (interactive)
+  (let ((password (random-string 20)))
+    (kill-new password)
+    (message password)))
+
 (defun chomp (str)
   "Perl-like chomp function, trims whitespace"
   (let ((s (if (symbolp str) (symbol-name str) str)))
