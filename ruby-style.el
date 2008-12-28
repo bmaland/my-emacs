@@ -4,11 +4,19 @@
 ;;;
 ;;; C/C++ mode style for Ruby.
 ;;;
-;;;  $Author: matz $
+;;;  $Author: nobu $
 ;;;  created at: Thu Apr 26 13:54:01 JST 2007
 ;;;
+;;; sets ruby style if it seems like a source of ruby.
+;;;
+;;;   (require 'ruby-style)
+;;;   (add-hook 'c-mode-hook 'ruby-style-c-mode)
+;;;   (add-hook 'c++-mode-hook 'ruby-style-c-mode)
+;;;
+;;; uses ruby style always.
+;;;   (setq-default c-file-style "ruby")
 
-(defconst ruby-style-revision "$Revision: 19202 $"
+(defconst ruby-style-revision "$Revision: 19731 $"
   "Ruby style revision string.")
 
 (defconst ruby-style-version
@@ -56,7 +64,7 @@
 
 (defun ruby-style-c-mode ()
   (interactive)
-  (if (or (string-match "/ruby\\>" (buffer-file-name))
+  (if (or (let ((name (buffer-file-name))) (and name (string-match "/ruby\\>" name)))
           (save-excursion
             (goto-char (point-min))
             (let ((head (progn (forward-line 100) (point)))
