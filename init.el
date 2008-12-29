@@ -52,7 +52,9 @@
 
 ;; Load paths
 (add-to-list 'load-path "~/.emacs.d/sml-mode")
+(add-to-list 'load-path "~/.emacs.d/vendor/ri-emacs")
 
+(require 'ri)
 (require 'multi-term)
 (multi-term-keystroke-setup)
 
