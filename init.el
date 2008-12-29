@@ -1,6 +1,7 @@
 (prefer-coding-system 'utf-8)
 
 (add-to-list 'load-path "~/.emacs.d")
+(add-to-list 'load-path "~/.emacs.d/vendor")
 
 (require 'cl)
 (require 'browse-kill-ring)
@@ -48,7 +49,6 @@
 (put 'downcase-region 'disabled nil)
 
 (server-start)
-
 
 ;; Load paths
 (add-to-list 'load-path "~/.emacs.d/sml-mode")
