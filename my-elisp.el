@@ -1,3 +1,51 @@
+;;; my-elisp.el --- Various pieces of elisp created by myself and others
+
+;; This is from emacs-starter-kit
+(defun ido-imenu ()
+  "Update the imenu index and then use ido to select a symbol to navigate to."
+  (interactive)
+  (imenu--make-index-alist)
+  (let ((name-and-pos '())
+        (symbol-names '()))
+    (flet ((addsymbols (symbol-list)
+                       (when (listp symbol-list)
+                         (dolist (symbol symbol-list)
+                           (let ((name nil) (position nil))
+                             (cond
+                              ((and (listp symbol) (imenu--subalist-p symbol))
+                               (addsymbols symbol))
+
+                              ((listp symbol)
+                               (setq name (car symbol))
+                               (setq position (cdr symbol)))
+
+                              ((stringp symbol)
+                               (setq name symbol)
+                               (setq position (get-text-property 1 'org-imenu-marker symbol))))
+
+                             (unless (or (null position) (null name))
+                               (add-to-list 'symbol-names name)
+                               (add-to-list 'name-and-pos (cons name position))))))))
+      (addsymbols imenu--index-alist))
+    (let* ((selected-symbol (ido-completing-read "Symbol? " symbol-names))
+           (position (cdr (assoc selected-symbol name-and-pos))))
+      (goto-char position))))
+
+;; From emacs-starter-kit
+(defun recentf-ido-find-file ()
+  "Find a recent file using ido."
+  (interactive)
+  (let ((file (ido-completing-read "Choose recent file: " recentf-list nil t)))
+    (when file
+      (find-file file))))
+
+(defun pretty-lambdas ()
+  (font-lock-add-keywords
+   nil `(("(?\\(lambda\\>\\)"
+          (0 (progn (compose-region (match-beginning 1) (match-end 1)
+                                    ,(make-char 'greek-iso8859-7 107))
+                    nil))))))
+
 ;; Thanks to consolers in #emacs
 (defun random-string (len)
   (coerce (loop for i below len for x = (random 64) collect
@@ -275,37 +323,39 @@
 
 ;; --------------------------------------------------------- ;;
 ;; Switch to buffer
-(if (>= emacs-major-version 22)
-    (progn
-      (defun ignore-buffer (str)
-        (or
-         ;;buffers I don't want to switch to
-         (string-match "\\*Buffer List\\*" str)
-         (string-match "^TAGS" str)
-         (string-match "^\\*Messages\\*$" str)
-         (string-match "^\\*Completions\\*$" str)
-         (string-match "^\\*scratch\\*$" str)
-         (string-match "^\\*ESS\\*$" str)
-         (string-match "^ " str)
-         (string-match "Mew message" str)
-         (string-match "output\\*$" str)
-         (string-match "compilation" str)
-         (string-match "^\\*TeX silent\\*$" str)
-         ;;(string-match "inbox" str)
-         ))
 
-      (defun next-user-buffer ()
-        "Switch to the next user buffer in cyclic order."
-        (interactive)
-        (next-buffer)
-        (while (ignore-buffer (buffer-name))
-          (next-buffer) ))
+(let
+    ((ignore-buffer (lambda (str)
+                      (or
+                       ;;buffers I don't want to switch to
+                       (string-match "\\*Buffer List\\*" str)
+                       (string-match "^TAGS" str)
+                       (string-match "^\\*Ibuffer\\*$" str)
+                       (string-match "^\\*Help\\*$" str)
+                       (string-match "^\\*Apropos\\*$" str)
+                       (string-match "^\\*Messages\\*$" str)
+                       (string-match "^\\*Completions\\*$" str)
+                       (string-match "^\\*scratch\\*$" str)
+                       (string-match "^\\*ESS\\*$" str)
+                       (string-match "^ " str)
+                       (string-match "Mew message" str)
+                       (string-match "output\\*$" str)
+                       (string-match "compilation" str)
+                       (string-match "^\\*TeX silent\\*$" str)
+                       ))))
 
-      (defun previous-user-buffer ()
-        "Switch to the next user buffer in cyclic order."
-        (interactive)
-        (previous-buffer)
-        (while (ignore-buffer (buffer-name))
-          (previous-buffer)))))
+  (defun next-user-buffer ()
+    "Switch to the next user buffer in cyclic order."
+    (interactive)
+    (next-buffer)
+    (while (ignore-buffer (buffer-name))
+      (next-buffer)))
+
+  (defun previous-user-buffer ()
+    "Switch to the next user buffer in cyclic order."
+    (interactive)
+    (previous-buffer)
+    (while (ignore-buffer (buffer-name))
+      (previous-buffer))))
 
 (provide 'my-elisp)

@@ -1,13 +1,44 @@
 ;; General
 
+;; Align your code in a pretty way.
+(global-set-key (kbd "C-x \\") 'align-regexp)
+
+;; Completion that uses many different methods to find options.
+(global-set-key (kbd "M-/") 'hippie-expand)
+
+;; Jump to a definition in the current file. (This is awesome.)
+(global-set-key "\C-x\C-i" 'ido-imenu)
+
+;; Movement for windows and buffers
+(windmove-default-keybindings) ;; Shift+direction
+
+(global-set-key [(control tab)]               'next-multiframe-window)
+(global-set-key [(control shift iso-lefttab)] 'previous-multiframe-window)
+(global-set-key [(control shift right)]       'next-user-buffer)
+(global-set-key [(control shift left)]        'previous-user-buffer)
+
+;; File finding
+(global-set-key (kbd "C-x M-f")   'ido-find-file-other-window)
+(global-set-key (kbd "C-x C-M-f") 'find-file-in-project)
+(global-set-key (kbd "C-x f")     'recentf-ido-find-file)
+(global-set-key (kbd "C-x C-p")   'find-file-at-point)
+(global-set-key (kbd "C-c y")     'bury-buffer)
+(global-set-key (kbd "C-c r")     'revert-buffer)
+(global-set-key (kbd "M-`")       'file-cache-minibuffer-complete)
+(global-set-key (kbd "C-x C-b")   'ibuffer)
+
+;; Use regex searches by default.
+(global-set-key "\C-s"    'isearch-forward-regexp)
+(global-set-key "\C-r"    'isearch-backward-regexp)
+(global-set-key "\C-\M-s" 'isearch-forward)
+(global-set-key "\C-\M-r" 'isearch-backward)
+
 (global-set-key "\M-#" 'calc)
-(global-set-key "\C-xf" 'recentf-open-files)
+(global-set-key "\C-xf" 'recentf-ido-find-file)
 (global-set-key "\M-`" 'ff-find-other-file)
 (global-set-key "\C-c1" 'find-grep-dired)
 (global-set-key "\C-c2" 'grep-find)
 (global-set-key "\C-z" 'undo)
-(global-set-key [(control tab)] 'next-multiframe-window)
-(global-set-key [(control shift iso-lefttab)] 'previous-multiframe-window)
 (global-set-key "\C-x\C-m" 'execute-extended-command)
 (global-set-key "\C-c\C-m" 'execute-extended-command)
 (global-set-key "\C-w" 'backward-kill-word)
@@ -65,9 +96,6 @@
 (global-set-key "\C-xgf" 'textmate-goto-file)
 (global-set-key "\C-xgs" 'textmate-goto-symbol)
 
-;; TODO check if w3m is available first? or move to site file
-(global-set-key (kbd "C-x w") 'w3m)
-(global-set-key "\C-xh" 'view-url)
 (global-set-key "\C-cT" 'twittering-update-status-interactive)
 
 (provide 'my-bindings)

@@ -28,22 +28,30 @@
 (defvar my-extra-keywords
   '(("\t" . extra-whitespace-face)))
 
+;; TODO this should be moved to my-hooks i think
 (defvar programming-modes '(emacs-lisp-mode
                             lisp-mode
                             ruby-mode
                             python-mode
-                            sh-mode))
+                            sh-mode
+                            scheme-mode
+                            js2-mode
+                            sml-mode))
 
 ;; Highlight keywords for programming modes
 (mapcar (lambda (mode)
           (font-lock-add-keywords
            mode
-           '(("\\<\\(TODO\\|FIXME\\|FIX\\|HACK\\|REFACTOR\\|NOTE\\)"
+           '(("\\<\\(TODO\\|FIXME\\|FIX\\|HACK\\|REFACTOR\\|NOTE\\|OPTIMIZE\\)"
               1 font-lock-warning-face t))))
         programming-modes)
 
 (mapcar (lambda (mode)
           (font-lock-add-keywords mode my-extra-keywords))
         programming-modes)
+
+(when (bound-and-true-p window-system)
+  (global-hl-line-mode t)
+  (set-face-background 'hl-line "#232323"))
 
 (provide 'my-faces)

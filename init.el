@@ -1,50 +1,6 @@
 (prefer-coding-system 'utf-8)
 
-(setq user-full-name "Bjørn Arild Mæland"
-      user-mail-address "bjorn.maeland@gmail.com"
-      inhibit-startup-message t ;; Remove splash screen
-      ispell-program-name "aspell"
-      ispell-dictionary "english"
-      dabbrev-case-replace nil ;; Make sure case is preserved
-      scroll-margin 3
-      scroll-conservatively 100
-      c-basic-indent 2
-      frame-title-format "emacs - %b"
-      scroll-preserve-screen-position 1
-      font-lock-maximum-decoration t
-      inhibit-default-init t
-      prolog-program-name "pl"
-      server-window #'switch-to-buffer-other-frame
-      vc-follow-symlinks nil
-      tramp-default-method "ssh"
-      twittering-username "Chrononaut"
-      display-time-string-forms '((propertize
-                                   (concat " " 24-hours ":" minutes ", "
-                                           day "." month " ")
-                                   'face 'egoge-display-time))
-      org-log-done t
-      org-return-follows-link t
-
-      ;; Jabber
-      jabber-connection-type 'ssl
-      jabber-server "gmail.com"
-      jabber-network-server "talk.google.com"
-      jabber-port 5223
-      jabber-username "bjorn.maeland"
-
-      ;; Files and paths
-      bookmark-default-file "~/.emacs.d/bookmarks.bmk"
-      bookmark-save-flag 1 ;; How many mods between saves
-      slime-dir "~/foss/slime/"
-      snippet-dir "~/.emacs.d/yasnippet/snippets/"
-      dotfiles-dir (file-name-directory
-                    (or (buffer-file-name) load-file-name))
-      autoload-file (concat dotfiles-dir "loaddefs.el")
-      package-user-dir (concat dotfiles-dir "elpa")
-      custom-file (concat dotfiles-dir "custom.el"))
-
-(add-to-list 'load-path dotfiles-dir)
-(add-to-list 'load-path package-user-dir)
+(add-to-list 'load-path "~/.emacs.d")
 
 (require 'cl)
 (require 'browse-kill-ring)
@@ -53,15 +9,14 @@
 (require 'uniquify)
 (require 'ansi-color)
 (require 'recentf)
-(recentf-mode 1)
-
 (require 'pastie)
 (require 'twittering-mode)
 (require 'conservative-mode)
 (require 'kill-wspace-mode)
-(kill-wspace-mode t)
 
-;; Yasnippet
+(load "my-settings.el")
+(add-to-list 'load-path package-user-dir)
+
 (require 'yasnippet)
 (require 'yasnippet-mode)
 (yas/initialize)
@@ -71,22 +26,17 @@
 (require 'package)
 (package-initialize)
 
-(setq-default fill-column 80 ;; how wide the screen should be before word wrapping
-              indent-tabs-mode nil
-              show-trailing-whitespace t
-              tab-width 2)
-
+;; Default minor modes
 (transient-mark-mode t)
 (show-paren-mode t)
 (savehist-mode t)
 (global-font-lock-mode t)
 (ido-mode t)
+(recentf-mode t)
+(kill-wspace-mode t)
+(display-time-mode t)
 
-(when (bound-and-true-p window-system)
-  (global-hl-line-mode t)
-  (set-face-background 'hl-line "#232323"))
-
-(if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0)) ;; No blinking cursor!
+(if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0))
 (menu-bar-mode (if window-system 1 -1))
 (if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
 (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
@@ -97,17 +47,14 @@
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 
-;; display the current time
-(display-time)
-
 (server-start)
+
 
 ;; Load paths
 (add-to-list 'load-path "~/.emacs.d/sml-mode")
 
 (require 'multi-term)
 (multi-term-keystroke-setup)
-(setq multi-term-program "/bin/zsh")
 
 (require 'textmate)
 (textmate-mode)
@@ -115,8 +62,6 @@
 ;; Slime
 (when (file-directory-p slime-dir)
   (add-to-list 'load-path slime-dir)
-  (setq inferior-lisp-program "sbcl --no-linedit")
-
   (require 'slime)
 
   (eval-after-load "slime"
@@ -125,19 +70,6 @@
        (setq slime-complete-symbol*-fancy t)
        (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)
        )))
-
-;; Set autosave-dir, the dir will be created if it doesn't exist
-(defvar autosave-dir (concat "/tmp/." (user-login-name) "-emacs-autosaves/"))
-(make-directory autosave-dir t)
-
-(defun auto-save-file-name-p (filename)
-  (string-match "^#.*#$" (file-name-nondirectory filename)))
-
-(defun make-auto-save-file-name ()
-  (concat autosave-dir
-          (if buffer-file-name
-              (concat "#" (file-name-nondirectory buffer-file-name) "#")
-            (expand-file-name (concat "#%" (buffer-name) "#")))))
 
 ;; Regenerate the autoload file if it doesn't exist or it's too
 ;; old. (2 weeks or so)
@@ -179,8 +111,8 @@
 (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
 
 (autoload 'ruby-mode "ruby-mode" "Ruby editing mode." t)
-(add-to-list 'auto-mode-alist '("\.rb$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\.rake$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\.gemspec$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\.builder$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Rakefile" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Capfile" . ruby-mode))
@@ -209,6 +141,7 @@
 (require 'my-elisp)
 (require 'my-bindings)
 (require 'my-aliases)
+(require 'my-ruby)
 (require 'my-hooks)
 
 (if (eq window-system 'mac)
