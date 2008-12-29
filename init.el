@@ -1,16 +1,11 @@
 (prefer-coding-system 'utf-8)
 
-(require 'cl)
-(require 'browse-kill-ring)
-
 (setq user-full-name "Bjørn Arild Mæland"
       user-mail-address "bjorn.maeland@gmail.com"
       inhibit-startup-message t ;; Remove splash screen
       ispell-program-name "aspell"
       ispell-dictionary "english"
       dabbrev-case-replace nil ;; Make sure case is preserved
-      bookmark-default-file "~/.emacs.d/bookmarks.bmk"
-      bookmark-save-flag 1 ;; How many mods between saves
       scroll-margin 3
       scroll-conservatively 100
       c-basic-indent 2
@@ -19,46 +14,67 @@
       font-lock-maximum-decoration t
       inhibit-default-init t
       prolog-program-name "pl"
-      slime-dir "~/foss/slime/"
-      snippet-dir "~/.emacs.d/yasnippet/snippets/"
       server-window #'switch-to-buffer-other-frame
       vc-follow-symlinks nil
       tramp-default-method "ssh"
       twittering-username "Chrononaut"
-      display-time-string-forms '(
-                                  (propertize
-                                   (concat " " 24-hours ":" minutes ", " day "." month " ")
+      display-time-string-forms '((propertize
+                                   (concat " " 24-hours ":" minutes ", "
+                                           day "." month " ")
                                    'face 'egoge-display-time))
       org-log-done t
-      org-return-follows-link t)
+      org-return-follows-link t
 
-(setq jabber-connection-type 'ssl
+      ;; Jabber
+      jabber-connection-type 'ssl
       jabber-server "gmail.com"
       jabber-network-server "talk.google.com"
       jabber-port 5223
-      jabber-username "bjorn.maeland")
+      jabber-username "bjorn.maeland"
+
+      ;; Files and paths
+      bookmark-default-file "~/.emacs.d/bookmarks.bmk"
+      bookmark-save-flag 1 ;; How many mods between saves
+      slime-dir "~/foss/slime/"
+      snippet-dir "~/.emacs.d/yasnippet/snippets/"
+      dotfiles-dir (file-name-directory
+                    (or (buffer-file-name) load-file-name))
+      autoload-file (concat dotfiles-dir "loaddefs.el")
+      package-user-dir (concat dotfiles-dir "elpa")
+      custom-file (concat dotfiles-dir "custom.el"))
+
+(add-to-list 'load-path dotfiles-dir)
+(add-to-list 'load-path package-user-dir)
+
+(require 'cl)
+(require 'browse-kill-ring)
+(require 'saveplace)
+(require 'ffap)
+(require 'uniquify)
+(require 'ansi-color)
+(require 'recentf)
+(recentf-mode 1)
+
+(require 'pastie)
+(require 'twittering-mode)
+(require 'conservative-mode)
+(require 'kill-wspace-mode)
+(kill-wspace-mode t)
+
+;; Yasnippet
+(require 'yasnippet)
+(require 'yasnippet-mode)
+(yas/initialize)
+(yas/load-directory snippet-dir)
+
+;; ELPA
+(require 'package)
+(package-initialize)
 
 (setq-default fill-column 80 ;; how wide the screen should be before word wrapping
               indent-tabs-mode nil
               show-trailing-whitespace t
               tab-width 2)
-
-(custom-set-variables
-  ;; custom-set-variables was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- '(case-fold-search t)
- '(column-number-mode t)
- '(load-home-init-file t t)
- '(make-backup-files nil)
- '(minibuffer-max-depth nil)
- '(pc-select-meta-moves-sexps t)
- '(pc-select-selection-keys-only t)
- '(pc-selection-mode t)
- '(require-final-newline t)
- '(safe-local-variable-values (quote ((Package . cl-USER) (Syntax . Common-Lisp))))
- '(uniquify-buffer-name-style (quote forward) nil (uniquify)))
 
 (transient-mark-mode t)
 (show-paren-mode t)
@@ -87,16 +103,7 @@
 (server-start)
 
 ;; Load paths
-(add-to-list 'load-path "~/.emacs.d/")
-(add-to-list 'load-path "~/.emacs.d/elpa")
 (add-to-list 'load-path "~/.emacs.d/sml-mode")
-
-(require 'package)
-(package-initialize)
-
-(when (file-directory-p "~/foss/emacs-jabber-0.7.1")
-  (add-to-list 'load-path "~/foss/emacs-jabber-0.7.1")
-  (require 'jabber))
 
 (require 'multi-term)
 (multi-term-keystroke-setup)
@@ -119,6 +126,7 @@
        (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)
        )))
 
+;; Set autosave-dir, the dir will be created if it doesn't exist
 (defvar autosave-dir (concat "/tmp/." (user-login-name) "-emacs-autosaves/"))
 (make-directory autosave-dir t)
 
@@ -131,21 +139,15 @@
               (concat "#" (file-name-nondirectory buffer-file-name) "#")
             (expand-file-name (concat "#%" (buffer-name) "#")))))
 
-(setq magic-mode-alist
-      (cons '("<＼＼?xml " . nxml-mode)
-            magic-mode-alist))
-(fset 'xml-mode 'nxml-mode)
-
 ;; Regenerate the autoload file if it doesn't exist or it's too
 ;; old. (2 weeks or so)
-(let ((autoload-file "~/.emacs.d/loaddefs.el"))
-  (if (or (not (file-exists-p autoload-file))
-          (< (+ (car (nth 5 (file-attributes autoload-file))) 20)
-             (car (current-time))))
-      (let ((generated-autoload-file autoload-file))
-        (message "Updating autoloads...")
-        (update-directory-autoloads "~/.emacs.d/")))
-  (load autoload-file))
+(if (or (not (file-exists-p autoload-file))
+        (< (+ (car (nth 5 (file-attributes autoload-file))) 20)
+           (car (current-time))))
+    (let ((generated-autoload-file autoload-file))
+      (message "Updating autoloads...")
+      (update-directory-autoloads "~/.emacs.d/")))
+(load autoload-file)
 
 ;; Autoloads
 (autoload 'run-ruby "inf-ruby"
@@ -172,9 +174,6 @@
 
 (autoload 'php-mode "php-mode" "PHP Editing mode." t)
 (add-to-list 'auto-mode-alist '("\.php$" . php-mode))
-
-;;(autoload 'js2-mode "js2" nil t)
-;;(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
 
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
 (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
@@ -203,18 +202,7 @@
 
 (autoload 'magit-status "magit" nil t)
 
-(require 'pastie)
-(require 'idle-highlight)
-(require 'twittering-mode)
-(require 'conservative-mode)
-(require 'kill-wspace-mode)
-(kill-wspace-mode 1)
-
-;; Yasnippet
-(require 'yasnippet)
-(require 'yasnippet-mode)
-(yas/initialize)
-(yas/load-directory snippet-dir)
+(load custom-file 'noerror)
 
 ;; Personal customizations
 (require 'my-faces)
@@ -224,34 +212,9 @@
 (require 'my-hooks)
 
 (if (eq window-system 'mac)
-    (load "~/.emacs.d/osx.el")
-  (load "~/.emacs.d/linux.el"))
+    (load "osx.el")
+  (load "linux.el"))
 
-(setq system-specific-config
-      (concat "~/.emacs.d/hosts/"
-              (substring (shell-command-to-string "hostname -s") 0 -1) ".el"))
-
-(if (file-exists-p system-specific-config)
-    (load system-specific-config))
-
-
-;;; This was installed by package-install.el.
-;;; This provides support for the package system and
-;;; interfacing with ELPA, the package archive.
-;;; Move this code earlier if you want to reference
-;;; packages in your .emacs.
-(when
-    (load
-     (expand-file-name "~/.emacs.d/elpa/package.el"))
-  (package-initialize))
-
-
-;;; This was installed by package-install.el.
-;;; This provides support for the package system and
-;;; interfacing with ELPA, the package archive.
-;;; Move this code earlier if you want to reference
-;;; packages in your .emacs.
-(when
-    (load
-     (expand-file-name "~/.emacs.d/elpa/package.el"))
-  (package-initialize))
+(let ((system-specific-config (concat "~/.emacs.d/hosts/" system-name ".el")))
+  (if (file-exists-p system-specific-config)
+      (load system-specific-config)))

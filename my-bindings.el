@@ -1,6 +1,7 @@
 ;; General
 
 (global-set-key "\M-#" 'calc)
+(global-set-key "\C-xf" 'recentf-open-files)
 (global-set-key "\M-`" 'ff-find-other-file)
 (global-set-key "\C-c1" 'find-grep-dired)
 (global-set-key "\C-c2" 'grep-find)
@@ -38,8 +39,8 @@
 (global-set-key (kbd "M-3") 'split-window-horizontally) ; was digit-argument
 (global-set-key (kbd "M-o") 'other-window) ; was prefix
 
-(global-set-key (kbd "C-<left>") 'previous-user-buffer)
-(global-set-key (kbd "C-<right>") 'next-user-buffer)
+;;(global-set-key (kbd "C-<left>") 'previous-user-buffer)
+;;(global-set-key (kbd "C-<right>") 'next-user-buffer)
 (global-set-key (kbd "<f9>") 'kill-this-buffer) ; Close file
 
 ;; Org
@@ -47,12 +48,9 @@
 (define-key global-map "\C-ca" 'org-agenda)
 
 ;; Quod Libet
-(global-set-key [f7] 'quodlibet-play)
-(global-set-key [f8] 'quodlibet-pause)
-(global-set-key [f9] 'quodlibet-prev)
-(global-set-key [f10] 'quodlibet-next)
-(global-set-key [f11] 'quodlibet-volume-down)
-(global-set-key [f12] 'quodlibet-volume-up)
+(global-set-key [f10] 'quodlibet-prev)
+(global-set-key [f11] 'quodlibet-next)
+(global-set-key [f12] 'quodlibet-pause)
 
 ;; TextMate inspired bindings
 (global-set-key (kbd "M-RET") 'insert-line-below)
