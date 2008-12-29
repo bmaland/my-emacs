@@ -50,6 +50,7 @@
 
 (add-hook 'ruby-mode-hook
           '(lambda ()
+             (require 'ruby-compilation)
              (coding-hook)
              (set-pairs '("(" "{" "[" "\"" "\'" "|"))
              (inf-ruby-keys)
