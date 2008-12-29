@@ -50,12 +50,15 @@
 
 (add-hook 'ruby-mode-hook
           '(lambda ()
+             (require 'ruby-electric)
+             (ruby-electric-mode t)
              (require 'ruby-compilation)
              (coding-hook)
              (set-pairs '("(" "{" "[" "\"" "\'" "|"))
              (inf-ruby-keys)
              (local-set-key [return] 'ruby-reindent-then-newline-and-indent)
              (local-set-key (kbd "C-h r") 'ri)
+             (local-set-key (kbd "C-c C-c") 'ruby-compilation-this-buffer)
              ))
 
 (add-hook 'c-mode-hook

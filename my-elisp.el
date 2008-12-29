@@ -268,6 +268,7 @@
                    ( ?\' . ?\')
                    ( ?\" . ?\")
                    ( ?[ . ?])
+                   ( ?| . ?|)
                    ( ?{ . ?}))))
       (eq (cdr (assoc (char-before) pairs)) (char-after))))
 
