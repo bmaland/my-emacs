@@ -2,6 +2,7 @@
       user-mail-address "bjorn.maeland@gmail.com"
 
       inhibit-startup-message t ;; Remove splash screen
+      initial-major-mode 'emacs-lisp-mode
 
       ido-enable-prefix nil
       ido-enable-flex-matching t

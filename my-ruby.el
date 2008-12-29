@@ -1,5 +1,19 @@
 ;; Code borrowed from Emacs starter kit
 
+(defun rr (&optional arg)
+  "Run a Ruby interactive shell session in a buffer."
+  (interactive "P")
+  (let ((impl (if (not arg)
+                  "mri"
+                (completing-read "Ruby Implementation: "
+                                 '("ruby" "jruby" "rubinius" "yarv")))))
+    (run-ruby (cdr (assoc impl '(("mri" . "irb")
+                                 ("jruby" . "jruby -S irb")
+                                 ("rubinius" . "rbx")
+                                 ("yarv" . "irb1.9")))))
+    (with-current-buffer "*ruby*"
+      (rename-buffer (format "*%s*" impl) t))))
+
 ;;; Rake
 
 (defun pcomplete/rake ()
