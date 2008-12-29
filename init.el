@@ -34,8 +34,8 @@
 (global-font-lock-mode t)
 (ido-mode t)
 (recentf-mode t)
-(kill-wspace-mode t)
 (display-time-mode t)
+(auto-compression-mode t)
 
 (if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0))
 (menu-bar-mode (if window-system 1 -1))
@@ -43,6 +43,11 @@
 (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
 
 (fset 'yes-or-no-p 'y-or-n-p)
+(random t)
+
+;; Don't clutter up directories with files~
+(setq backup-directory-alist `(("." . ,(expand-file-name
+                                        "~/.emacs.d/backups"))))
 
 ;; These are damn useful
 (put 'upcase-region 'disabled nil)
@@ -145,6 +150,7 @@
 (require 'my-aliases)
 (require 'my-ruby)
 (require 'my-hooks)
+(kill-wspace-mode t)
 
 (if (eq window-system 'mac)
     (load "osx.el")

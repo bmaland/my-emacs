@@ -6,7 +6,6 @@
  '(case-fold-search t)
  '(column-number-mode t)
  '(load-home-init-file t t)
- '(make-backup-files nil)
  '(minibuffer-max-depth nil)
  '(pc-select-meta-moves-sexps t)
  '(pc-select-selection-keys-only t)

@@ -3,6 +3,12 @@
 
       inhibit-startup-message t ;; Remove splash screen
 
+      ido-enable-prefix nil
+      ido-enable-flex-matching t
+      ido-create-new-buffer 'always
+      ido-use-filename-at-point t
+      ido-max-prospects 10
+
       ispell-program-name "aspell"
       ispell-dictionary "english"
 
@@ -52,3 +58,5 @@
               indent-tabs-mode nil
               show-trailing-whitespace t
               tab-width 2)
+
+(set-default 'imenu-auto-rescan t)
