@@ -39,7 +39,7 @@ defined by the ack-command variable."
         (ack-full-buffer-name (concat "*ack-" pattern "*")))
     ;;    (save-some-buffers (not compilation-ask-about-save) nil)
     ;; lambda defined here since compilation-start expects to call a function to get the buffer name
-    (compilation-start (concat ack-command " " args " " pattern " " dir) 'ack-mode
+    (compilation-start (concat ack-command " " ack-args " " args " " pattern " " dir) 'ack-mode
                        (when ack-use-search-in-buffer-name
                          (function (lambda (ignore)
                                      ack-full-buffer-name)))
