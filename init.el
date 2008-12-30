@@ -14,6 +14,7 @@
 (require 'twittering-mode)
 (require 'conservative-mode)
 (require 'kill-wspace-mode)
+(require 'ack)
 
 (load "my-settings.el")
 (add-to-list 'load-path package-user-dir)
