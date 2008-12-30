@@ -7,6 +7,7 @@
  '(column-number-mode t)
  '(load-home-init-file t t)
  '(minibuffer-max-depth nil)
+ '(make-backup-files nil)
  '(pc-select-meta-moves-sexps t)
  '(pc-select-selection-keys-only t)
  '(pc-selection-mode t)

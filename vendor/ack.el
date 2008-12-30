@@ -1,12 +1,12 @@
-;; ack.el from http://www.rooijan.za.net/?q=node/530
-;; I have added: ack-in-project and ack-args variable
+;;; ack.el --- grep like compilation mode for Ack
+;; Original code from http://www.rooijan.za.net/?q=node/530
+;; It has since been enhanced by Bjørn Arild Mæland
 
 (require 'compile)
 (require 'thingatpt)
 
-(defvar ack-command "ack" "The command run by the ack function.")
-
-(defvar ack-args "--no-color" "The default arguments given to the ack function.")
+(defvar ack-command "ack --nogroup --no-color"
+  "The command run by the ack function.")
 
 (defvar ack-mode-font-lock-keywords
   '(("^\\(Compilation\\|Ack\\) started.*"
@@ -15,9 +15,7 @@
 (defvar ack-use-search-in-buffer-name t
   "If non-nil, use the search string in the ack buffer's name.")
 
-(define-compilation-mode ack-mode "Ack"
-  "Specialization of compilation-mode for use with ack."
-  nil)
+(define-derived-mode ack-mode grep-mode "ack")
 
 (defun ack (dir pattern args)
   "Run ack, with user-specified ARGS, and collect output in a buffer.
@@ -39,7 +37,7 @@ defined by the ack-command variable."
         (compilation-error-regexp-alist grep-regexp-alist)
         (compilation-directory default-directory)
         (ack-full-buffer-name (concat "*ack-" pattern "*")))
-;;    (save-some-buffers (not compilation-ask-about-save) nil)
+    ;;    (save-some-buffers (not compilation-ask-about-save) nil)
     ;; lambda defined here since compilation-start expects to call a function to get the buffer name
     (compilation-start (concat ack-command " " args " " pattern " " dir) 'ack-mode
                        (when ack-use-search-in-buffer-name
@@ -60,7 +58,7 @@ defined by the ack-command variable."
               git-dir
             (first (dir-locals-find-file (buffer-file-name))))))
     (if dir
-        (ack dir pattern ack-args)
+        (ack dir pattern "")
       (message (concat "Project file not found: " dir-locals-file)))))
 
-(provide 'ack-emacs)
+(provide 'ack)
