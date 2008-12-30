@@ -1,4 +1,11 @@
 --- 
+vendor/rhtml: 
+  squashed: true
+  url: git://github.com/eschulte/rhtml.git
+  branch: master
+  type: git
+  revision: ccf020045e77cbfa68f5e17307bcc1b0fb27759d
+  remote: braid/vendor/rhtml
 yasnippet/snippets/text-mode/emacs-lisp-mode: 
   squashed: true
   url: git://github.com/Chrononaut/yasnippet-emacs-lisp-mode.git
