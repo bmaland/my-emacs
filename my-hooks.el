@@ -59,6 +59,8 @@
              (local-set-key [return] 'ruby-reindent-then-newline-and-indent)
              (local-set-key (kbd "C-h r") 'ri)
              (local-set-key (kbd "C-c C-c") 'ruby-compilation-this-buffer)
+             (define-key ruby-mode-map (kbd "C-c M-t") 'ruby-test-file)
+             (define-key ruby-mode-map (kbd "C-c C-M-t") 'ruby-test-one)
              ))
 
 (add-hook 'c-mode-hook
@@ -84,14 +86,6 @@
              (setq sh-basic-offset 2)
              (local-set-key [return] 'reindent-then-newline-and-indent)
              (local-set-key "[" 'self-insert-command)
-             ))
-
-(add-hook 'python-mode-hook
-          '(lambda ()
-             (coding-hook)
-             (set-pairs '("(" "{" "[" "\"" "\'"))
-             (setq python-indent 4)
-             (local-set-key [return] 'reindent-then-newline-and-indent)
              ))
 
 (add-hook 'js2-mode-hook

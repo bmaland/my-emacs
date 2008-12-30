@@ -4,6 +4,11 @@
       inhibit-startup-message t ;; Remove splash screen
       initial-major-mode 'emacs-lisp-mode
 
+      ;; Flymake - only check syntax on save
+      flymake-no-changes-timeout 9999
+      flymake-start-syntax-check-on-newline nil
+      flymake-start-syntax-check-on-find-file nil
+
       ido-enable-prefix nil
       ido-enable-flex-matching t
       ido-create-new-buffer 'always

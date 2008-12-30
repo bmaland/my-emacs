@@ -108,20 +108,21 @@
 (autoload 'lisppaste-paste-region "lisppaste" "" t)
 
 (autoload 'haml-mode "haml-mode" nil t)
-(add-to-list 'auto-mode-alist '("\.haml$" . haml-mode))
+(add-to-list 'auto-mode-alist '("\\.haml$" . haml-mode))
 (autoload 'sass-mode "sass-mode" nil t)
 (add-to-list 'auto-mode-alist '("\\.sass$" . sass-mode))
 
 (autoload 'php-mode "php-mode" "PHP Editing mode." t)
-(add-to-list 'auto-mode-alist '("\.php$" . php-mode))
+(add-to-list 'auto-mode-alist '("\\.php$" . php-mode))
 
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
 (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
 
 (autoload 'ruby-mode "ruby-mode" "Ruby editing mode." t)
-(add-to-list 'auto-mode-alist '("\.rake$" . ruby-mode))
-(add-to-list 'auto-mode-alist '("\.gemspec$" . ruby-mode))
-(add-to-list 'auto-mode-alist '("\.builder$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.rake$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.gemspec$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.sake$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.builder$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Rakefile" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Capfile" . ruby-mode))
 (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
@@ -135,8 +136,8 @@
          (cons '("\\.text" . markdown-mode) auto-mode-alist))
 (add-to-list 'auto-mode-alist '("\.markdown$" . markdown-mode))
 
-(autoload 'python-mode
-  "python" "Python editing mode." t)
+;; I had to do this to use python-mode.el over python.el
+(load "python-mode.el")
 
 (autoload 'slime-selector "slime" t)
 
@@ -150,6 +151,7 @@
 (require 'my-bindings)
 (require 'my-aliases)
 (require 'my-ruby)
+(require 'my-python)
 (require 'my-hooks)
 (kill-wspace-mode t)
 

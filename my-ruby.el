@@ -14,6 +14,25 @@
     (with-current-buffer "*ruby*"
       (rename-buffer (format "*%s*" impl) t))))
 
+(add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
+(add-to-list 'interpreter-mode-alist '("jruby" . ruby-mode))
+(add-to-list 'interpreter-mode-alist '("ruby1.9" . ruby-mode))
+
+;; find-file-at-point help
+
+(defun ruby-module-path (module)
+    (shell-command-to-string
+     (concat
+      "ruby -e "
+      "\"ret='()';$LOAD_PATH.each{|p| "
+      "x=p+'/'+ARGV[0].gsub('.rb', '')+'.rb';"
+      "ret=File.expand_path(x)"
+      "if(File.exist?(x))};printf ret\" "
+      module)))
+
+(eval-after-load "ffap"
+  '(push '(ruby-mode . ruby-module-path) ffap-alist))
+
 ;;; Rake
 
 (defun pcomplete/rake ()
