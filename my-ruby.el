@@ -1,3 +1,5 @@
+(setq rinari-tags-file-name "TAGS")
+
 ;; Code borrowed from Emacs starter kit
 
 (defun rr (&optional arg)
@@ -17,6 +19,13 @@
 (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
 (add-to-list 'interpreter-mode-alist '("jruby" . ruby-mode))
 (add-to-list 'interpreter-mode-alist '("ruby1.9" . ruby-mode))
+
+;;; rhtml mode
+(add-to-list 'load-path "~/.emacs.d/vendor/rhtml")
+(require 'rhtml-mode)
+
+(add-hook 'rhtml-mode-hook
+          (lambda () (rinari-launch)))
 
 ;; find-file-at-point help
 
@@ -66,6 +75,7 @@ exec-to-string command, but it works and seems fast"
 (eval-after-load 'ruby-mode
   '(progn
      (require 'flymake)
+     (require 'rinari)
 
      ;; Invoke ruby with '-c' to get syntax checking
      (defun flymake-ruby-init ()
