@@ -41,6 +41,7 @@
 (global-set-key "\C-\M-r" 'isearch-backward)
 
 (global-set-key "\M-#"          'calc)
+(global-set-key (kbd "C-x gd")  'google-define)
 (global-set-key "\C-xf"         'recentf-ido-find-file)
 (global-set-key "\M-`"          'ff-find-other-file)
 (global-set-key "\C-c1"         'find-grep-dired)

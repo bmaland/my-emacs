@@ -90,6 +90,8 @@
 (load autoload-file)
 
 ;; Autoloads
+(autoload 'google-define "google-define")
+
 (autoload 'run-ruby "inf-ruby"
   "Run an inferior Ruby process")
 (autoload 'inf-ruby-keys "inf-ruby"
