@@ -144,7 +144,8 @@ google, and print in a temp-buffer"
  (let ((count 0)
        (header (concat "Definitions for " search-word))
        (temp-buffer-show-hook #'google-define-font-lock))
-   (with-output-to-temp-buffer "*Definitions*"
+   (with-output-to-temp-buffer
+       (concat "*Definitions: " search-word "*")
      (princ (concat header "\n\n"))
      (set-buffer data-buffer)
      (goto-char (point-min))
