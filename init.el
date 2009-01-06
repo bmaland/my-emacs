@@ -115,7 +115,9 @@
 (autoload 'php-mode "php-mode" "PHP Editing mode." t)
 (add-to-list 'auto-mode-alist '("\\.php$" . php-mode))
 
+(autoload 'yaml-mode "yaml-mode" "YAML Editing mode." t)
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
+
 (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
 
 (autoload 'ruby-mode "ruby-mode" "Ruby editing mode." t)
