@@ -94,6 +94,12 @@
      (concat "/sudo:root@localhost:"
              buffer-file-name))))
 
+(defun find-alternative-file-with-su ()
+  (interactive)
+  (when buffer-file-name
+    (find-alternate-file
+     (concat "/su::" buffer-file-name))))
+
 (defun my-eval-and-replace ()
   "Replace the preceding sexp with its value."
   (interactive)
