@@ -2,7 +2,7 @@
 ;; Pymacs from http://pymacs.progiciels-bpi.ca/archives/Pymacs.tar.gz
 ;;
 ;; Then, copy pycomplete.py to somewhere in your Python path (site-packages)
-;; http://groups.google.com/group/comp.lang.python/msg/048168c675ff0c68
+;; This file is included in the ~/.emacs.d/vendor directory.
 ;;
 ;; For flymake, pylint must be installed and the epylint wrapper must be
 ;; somewhere in PATH. On Arch Linux, epylint is included in the pylint
