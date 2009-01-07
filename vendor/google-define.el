@@ -34,6 +34,11 @@
 ;;;; 2008-01-25 I Replaced google-define-plus-space with
 ;;;; replace-regexp-in-string. Also, trimmed down
 ;;;; google-define-parse-buffer a bit.
+;;;;
+;;;; 2009-01-07 Bjørn Arild Mæland made a change that includes the
+;;;; searched word in the buffer name, so that recurring definitions
+;;;; will not make previous searches disappear.
+
 
 (require 'font-lock)
 
@@ -144,7 +149,7 @@ google, and print in a temp-buffer"
  (let ((count 0)
        (header (concat "Definitions for " search-word))
        (temp-buffer-show-hook #'google-define-font-lock))
-   (with-output-to-temp-buffer
+   (with-output-to-temp-buffer 
        (concat "*Definitions: " search-word "*")
      (princ (concat header "\n\n"))
      (set-buffer data-buffer)
