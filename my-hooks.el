@@ -136,6 +136,8 @@
 (add-hook 'org-mode-hook
           (lambda ()
             (set-pairs '("(" "{" "[" "\""))
+            (local-set-key (kbd "M-s-<left>") 'org-promote-subtree)
+            (local-set-key (kbd "M-s-<right>") 'org-demote-subtree)
             (auto-fill-mode 1)))
 
 (add-hook 'markdown-mode-hook

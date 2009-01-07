@@ -14,6 +14,7 @@
 (require 'twittering-mode)
 (require 'conservative-mode)
 (require 'kill-wspace-mode)
+(require 'magit) ; Can't autoload magit, need some of the functions earlier
 (require 'ack)
 
 (load "my-settings.el")
@@ -54,7 +55,9 @@
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 
-(server-start)
+(require 'server)
+(unless (server-running-p)
+  (server-start))
 
 ;; Load paths
 (add-to-list 'load-path "~/.emacs.d/vendor/sml-mode")
@@ -145,8 +148,6 @@
 (load "python-mode.el")
 
 (autoload 'slime-selector "slime" t)
-
-(autoload 'magit-status "magit" nil t)
 
 (load custom-file 'noerror)
 
