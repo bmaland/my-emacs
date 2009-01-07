@@ -94,6 +94,7 @@ exec-to-string command, but it works and seems fast"
 
      (add-hook 'ruby-mode-hook
                (lambda ()
+                 (c-subword-mode t)
                  (when (and buffer-file-name
                             (file-writable-p
                              (file-name-directory buffer-file-name))
