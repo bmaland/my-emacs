@@ -55,7 +55,7 @@
 (global-set-key "\C-x\C-k"      'kill-region)
 (global-set-key "\C-c\C-k"      'kill-region)
 (global-set-key "\C-j"          'newline)
-(global-set-key (kbd "C-x C-r") 'find-alternative-file-with-sudo)
+(global-set-key (kbd "C-x C-r") 'find-alternative-file-with-su)
 (global-set-key [f4]            'revert-buffer)
 (global-set-key [f5]            'bookmark-set)
 (global-set-key [f6]            'bookmark-jump)

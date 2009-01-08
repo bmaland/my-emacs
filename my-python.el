@@ -1,3 +1,13 @@
+;; Requirements:
+;; Pymacs from http://pymacs.progiciels-bpi.ca/archives/Pymacs.tar.gz
+;;
+;; Then, copy pycomplete.py to somewhere in your Python path (site-packages)
+;; This file is included in the ~/.emacs.d/vendor directory.
+;;
+;; For flymake, pylint must be installed and the epylint wrapper must be
+;; somewhere in PATH. On Arch Linux, epylint is included in the pylint
+;; package.
+
 (setq interpreter-mode-alist (cons '("python" . python-mode)
                                    interpreter-mode-alist))
 
@@ -12,6 +22,7 @@
              (coding-hook)
              (require 'ipython)
              (require 'pycomplete)
+             (c-subword-mode t)
              (load-library "pylint")
              (load "pylint-flymake.el")
              (set (make-variable-buffer-local 'beginning-of-defun-function)
@@ -33,23 +44,24 @@
                (flymake-mode t))))
 
 (defun my-python-documentation (w)
-    "Launch PyDOC on the Word at Point"
-    (interactive
-     (list (let* ((word (thing-at-point 'word))
-                                (input (read-string
-                                                (format "pydoc entry%s: "
-                                                                (if (not word) "" (format " (default %s)" word))))))
-                   (if (string= input "")
-                           (if (not word) (error "No pydoc args given")
-                                 word) ;sinon word
-                         input)))) ;sinon input
-    (shell-command (concat py-python-command " -c \"from pydoc import help;help(\'" w "\')\"") "*PYDOCS*")
-    (view-buffer-other-window "*PYDOCS*" t 'kill-buffer-and-window))
+  "Launch PyDOC on the Word at Point"
+  (interactive
+   (list (let* ((word (thing-at-point 'word))
+                (input (read-string
+                        (format "pydoc entry%s: "
+                                (if (not word) ""
+                                  (format " (default %s)" word))))))
+           (if (string= input "")
+               (if (not word) (error "No pydoc args given")
+                 word) ;sinon word
+             input)))) ;sinon input
+  (shell-command (concat py-python-command " -c \"from pydoc import help;help(\'" w "\')\"") "*PYDOCS*")
+  (view-buffer-other-window "*PYDOCS*" t 'kill-buffer-and-window))
 
 (defun py-next-block ()
-   "go to the next block.  Cf. `forward-sexp' for lisp-mode"
-   (interactive)
-   (py-mark-block nil 't)
-   (back-to-indentation))
+  "go to the next block.  Cf. `forward-sexp' for lisp-mode"
+  (interactive)
+  (py-mark-block nil 't)
+  (back-to-indentation))
 
 (provide 'my-python)

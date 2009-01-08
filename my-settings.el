@@ -1,8 +1,11 @@
+(setenv "PATH" (concat (getenv "PATH") ":/usr/local/bin"))
+(setq exec-path (append exec-path '("/usr/local/bin")))
+
 (setq user-full-name "Bjørn Arild Mæland"
       user-mail-address "bjorn.maeland@gmail.com"
 
       inhibit-startup-message t ;; Remove splash screen
-      initial-major-mode 'emacs-lisp-mode
+      initial-major-mode 'emacs-lisp-mode ;; Elisp as default for scratch
 
       ;; Flymake - only check syntax on save
       flymake-no-changes-timeout 9999
@@ -40,8 +43,15 @@
                                    (concat " " 24-hours ":" minutes ", "
                                            day "." month " ")
                                    'face 'egoge-display-time))
+
+      ;; org-mode
       org-log-done t
       org-return-follows-link t
+      org-export-skip-text-before-1st-heading t
+      org-export-with-LaTeX-fragments t
+      org-export-html-style-extra "<style type=\"text/css\">
+div.figure p { text-align: left; margin: 25px; }
+</style>"
 
       ;; Jabber
       jabber-connection-type 'ssl
@@ -58,7 +68,6 @@
       autoload-file "~/.emacs.d/loaddefs.el"
       package-user-dir "~/.emacs.d/elpa"
       custom-file "~/.emacs.d/custom.el")
-
 
 (setq-default fill-column 80 ;; how wide the screen should be before word wrapping
               indent-tabs-mode nil
