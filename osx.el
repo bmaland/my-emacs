@@ -24,7 +24,11 @@
     (progn
       (one-buffer-one-frame-mode 0)
       (emulate-mac-finnish-keyboard-mode t)
-      (setq x-select-enable-clipboard t) ;; merge the Emacs kill-ring with the clipboard
+
+      (setq x-select-enable-clipboard t ;; merge Emacs kill-ring with the clipboard
+            ;; open *help* in current frame
+            special-display-regexps (remove "[ ]?\\*[hH]elp.*" special-display-regexps))
+
       (set-default-font "-apple-monaco-medium-r-normal--14-120-72-72-m-120-iso10646-1"))
   ;; Carbon Emacs
   (setq mac-option-modifier 'meta))
