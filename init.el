@@ -56,7 +56,9 @@
 (put 'downcase-region 'disabled nil)
 
 (require 'server)
-(unless (server-running-p)
+(if (boundp 'server-running-p)
+    (unless (server-running-p)
+      (server-start))
   (server-start))
 
 ;; Load paths
