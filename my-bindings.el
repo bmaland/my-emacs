@@ -33,6 +33,7 @@
 (global-set-key (kbd "C-c r")     'revert-buffer)
 (global-set-key (kbd "M-`")       'file-cache-minibuffer-complete)
 (global-set-key (kbd "C-x C-b")   'ibuffer)
+(global-set-key (kbd "C-x C-d")   'dired)
 
 ;; Use regex searches by default.
 (global-set-key "\C-s"    'isearch-forward-regexp)

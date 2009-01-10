@@ -6,6 +6,7 @@
 
       inhibit-startup-message t ;; Remove splash screen
       initial-major-mode 'emacs-lisp-mode ;; Elisp as default for scratch
+      default-major-mode 'org-mode
 
       ;; Flymake - only check syntax on save
       flymake-no-changes-timeout 9999

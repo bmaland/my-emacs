@@ -55,15 +55,10 @@
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 
-(require 'server)
-(if (boundp 'server-running-p)
-    (unless (server-running-p)
-      (server-start))
-  (server-start))
-
 ;; Load paths
 (add-to-list 'load-path "~/.emacs.d/vendor/sml-mode")
 (add-to-list 'load-path "~/.emacs.d/vendor/ri-emacs")
+(add-to-list 'load-path "~/.emacs.d/vendor/org-mode")
 
 (require 'ri)
 (require 'multi-term)
