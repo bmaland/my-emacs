@@ -48,7 +48,11 @@
                                    'face 'egoge-display-time))
 
       ;; org-mode
+      org-directory "~/notat"
       org-default-notes-file "~/notat/.notes"
+      org-agenda-files '("~/notat")
+      org-deadline-warning-days 7
+      org-reverse-note-order nil
       org-log-done 'note
       org-return-follows-link t
       org-export-skip-text-before-1st-heading t
@@ -59,7 +63,6 @@ div.figure p { text-align: left; margin: 25px; }
       org-file-apps '((auto-mode . emacs)
                       ("\\.x?html?\\'" . "firefox %s")
                       ("\\.pdf\\'" . "evince %s"))
-      org-agenda-files '("~/notat")
 
       org-agenda-custom-commands
       '(("w" todo "WAITING"
@@ -72,18 +75,16 @@ div.figure p { text-align: left; margin: 25px; }
          ((org-agenda-files '("~/notat"))
           (org-agenda-text-search-extra-files nil))))
 
-
       org-remember-templates
       '(("Todo" ?t "* TODO %^{Brief Description} %^g\nAdded: %U"
-         "~/notat/gtd.org" "Innboks")
-        ("Journal" ?j "\n* %^{topic} %T \n%i%?\n"
+         "~/notat/gtd.org" "Usortert")
+
+        ("Journal" ?j "\n* %^{topic} %T %^g \n%i%?\n"
          "~/notat/journal.org")
-        ("Book" ?b "\n* %^{Book Title} %t :READING: \n%[l:/booktemp.txt]\n"
-         "L:journal.org")
-        ("Private" ?p "\n* %^{topic} %T \n%i%?\n" "F:/gtd/privnotes.org")
-        ("Contact" ?c "\n* %^{Name} :CONTACT:\n%[l:/contemp.txt]\n"
-         "F:/gtd/privnotes.org")
         )
+
+      org-refile-targets '((nil . (:level . 1)) (nil . (:level . 2))
+                           (("opensource.org" "webprojects.org") . (:tag . "PROJECT")))
 
       remember-annotation-functions '(org-remember-annotation)
       remember-handler-functions '(org-remember-handler)
@@ -91,8 +92,6 @@ div.figure p { text-align: left; margin: 25px; }
       ;; Jabber
       jabber-connection-type 'ssl
       jabber-server "gmail.com"
-      jabber-network-server "talk.google.com"
-      jabber-port 5223
       jabber-username "bjorn.maeland"
 
       ;; Files and paths

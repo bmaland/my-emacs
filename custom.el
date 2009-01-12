@@ -9,8 +9,10 @@
  '(make-backup-files nil)
  '(minibuffer-max-depth nil)
  '(org-default-notes-file "~/notat/.notes")
- '(org-tag-alist (quote (("PROJECT" . 112) ("HOME" . 104) ("STUDIES" . 115) ("WORK" . 119))))
- '(org-todo-keywords (quote ((sequence "TODO" "MAYBE" "NEXT" "STARTED" "WAITING" "DONE"))))
+ '(org-tag-alist (quote (("PROJECT" . ?p) ("HOME" . 104) ("STUDIES" . 115) ("WORK" . 119)
+                         ("URGENT" . ?u) ("ARCHIVE" . ?r) ("NOTES" . ?n) ("ACTION" . ?a))))
+ '(org-todo-keywords (quote ((sequence "TODO(t)" "MAYBE(m)" "NEXT(n!)" "STARTED(s)"
+                                       "WAITING(w@/!)" "|" "DONE(d!)" "CANCELLED(c@)"))))
  '(pc-select-meta-moves-sexps t)
  '(pc-select-selection-keys-only t)
  '(pc-selection-mode t)
