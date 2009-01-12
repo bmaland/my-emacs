@@ -136,8 +136,16 @@
 (add-hook 'org-mode-hook
           (lambda ()
             (set-pairs '("(" "{" "[" "\""))
+
             (local-set-key (kbd "M-s-<left>") 'org-promote-subtree)
             (local-set-key (kbd "M-s-<right>") 'org-demote-subtree)
+            (local-set-key (kbd "C-c d") '(lambda () (interactive)
+                                            (org-todo 'done)))
+            (local-set-key (kbd "C-c s") '(lambda () (interactive)
+                                            (org-todo "STARTED")))
+            (local-set-key (kbd "C-c w") '(lambda () (interactive)
+                                            (org-todo "WAITING")))
+
             (auto-fill-mode 1)))
 
 (add-hook 'markdown-mode-hook
@@ -166,5 +174,7 @@
 (add-hook 'server-done-hook (lambda nil (kill-buffer nil)))
 
 (eval-after-load "sql" '(progn (sql-set-product 'postgresql)))
+
+
 
 (provide 'my-hooks)

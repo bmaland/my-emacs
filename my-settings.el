@@ -8,6 +8,8 @@
       initial-major-mode 'emacs-lisp-mode ;; Elisp as default for scratch
       default-major-mode 'org-mode
 
+      calendar-date-style 'european
+
       ;; Flymake - only check syntax on save
       flymake-no-changes-timeout 9999
       flymake-start-syntax-check-on-newline nil
@@ -46,13 +48,28 @@
                                    'face 'egoge-display-time))
 
       ;; org-mode
-      org-log-done t
+      org-log-done 'note
       org-return-follows-link t
       org-export-skip-text-before-1st-heading t
       org-export-with-LaTeX-fragments t
       org-export-html-style-extra "<style type=\"text/css\">
 div.figure p { text-align: left; margin: 25px; }
 </style>"
+      org-file-apps '((auto-mode . emacs)
+                      ("\\.x?html?\\'" . "firefox %s")
+                      ("\\.pdf\\'" . "evince %s"))
+      org-agenda-files '("~/notat")
+
+      org-agenda-custom-commands '(("w" todo "WAITING"
+                                    ((org-agenda-sorting-strategy '(priority-down))
+                                     (org-agenda-prefix-format "  Mixed: ")))
+                                   ("U" tags-tree "+boss-urgent"
+                                    ((org-show-following-heading nil)
+                                     (org-show-hierarchy-above nil)))
+                                   ("N" search ""
+                                    ((org-agenda-files '("~/notat"))
+                                     (org-agenda-text-search-extra-files nil))))
+
 
       ;; Jabber
       jabber-connection-type 'ssl
