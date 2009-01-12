@@ -48,6 +48,7 @@
                                    'face 'egoge-display-time))
 
       ;; org-mode
+      org-default-notes-file "~/notat/.notes"
       org-log-done 'note
       org-return-follows-link t
       org-export-skip-text-before-1st-heading t
@@ -60,16 +61,32 @@ div.figure p { text-align: left; margin: 25px; }
                       ("\\.pdf\\'" . "evince %s"))
       org-agenda-files '("~/notat")
 
-      org-agenda-custom-commands '(("w" todo "WAITING"
-                                    ((org-agenda-sorting-strategy '(priority-down))
-                                     (org-agenda-prefix-format "  Mixed: ")))
-                                   ("U" tags-tree "+boss-urgent"
-                                    ((org-show-following-heading nil)
-                                     (org-show-hierarchy-above nil)))
-                                   ("N" search ""
-                                    ((org-agenda-files '("~/notat"))
-                                     (org-agenda-text-search-extra-files nil))))
+      org-agenda-custom-commands
+      '(("w" todo "WAITING"
+         ((org-agenda-sorting-strategy '(priority-down))
+          (org-agenda-prefix-format "  Mixed: ")))
+        ("U" tags-tree "+boss-urgent"
+         ((org-show-following-heading nil)
+          (org-show-hierarchy-above nil)))
+        ("N" search ""
+         ((org-agenda-files '("~/notat"))
+          (org-agenda-text-search-extra-files nil))))
 
+
+      org-remember-templates
+      '(("Todo" ?t "* TODO %^{Brief Description} %^g\nAdded: %U"
+         "~/notat/gtd.org" "Innboks")
+        ("Journal" ?j "\n* %^{topic} %T \n%i%?\n"
+         "~/notat/journal.org")
+        ("Book" ?b "\n* %^{Book Title} %t :READING: \n%[l:/booktemp.txt]\n"
+         "L:journal.org")
+        ("Private" ?p "\n* %^{topic} %T \n%i%?\n" "F:/gtd/privnotes.org")
+        ("Contact" ?c "\n* %^{Name} :CONTACT:\n%[l:/contemp.txt]\n"
+         "F:/gtd/privnotes.org")
+        )
+
+      remember-annotation-functions '(org-remember-annotation)
+      remember-handler-functions '(org-remember-handler)
 
       ;; Jabber
       jabber-connection-type 'ssl

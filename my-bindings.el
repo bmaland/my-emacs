@@ -81,6 +81,7 @@
 ;; Org
 (define-key global-map "\C-cl" 'org-store-link)
 (define-key global-map "\C-ca" 'org-agenda)
+(define-key global-map (kbd "C-c r") 'org-remember)
 
 ;; Quod Libet
 (global-set-key [f10] 'quodlibet-prev)

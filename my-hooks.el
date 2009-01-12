@@ -148,6 +148,8 @@
 
             (auto-fill-mode 1)))
 
+(add-hook 'remember-mode-hook 'org-remember-apply-template)
+
 (add-hook 'markdown-mode-hook
           (lambda ()
             (set-pairs '("(" "{" "[" "\""))
