@@ -146,8 +146,6 @@
             (local-set-key (kbd "C-c w") '(lambda () (interactive)
                                             (org-todo "WAITING")))
 
-            (org-remember-insinuate) ;; Setup remember for org
-
             (defun org-summary-todo (n-done n-not-done)
               "Switch entry to DONE when all subentries are done, to TODO otherwise."
               (let (org-log-done org-log-states)   ; turn off logging
@@ -156,6 +154,8 @@
             (add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
 
             (auto-fill-mode 1)))
+
+(add-hook 'remember-mode-hook 'org-remember-apply-template)
 
 (add-hook 'markdown-mode-hook
           (lambda ()
