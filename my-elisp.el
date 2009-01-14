@@ -1,3 +1,115 @@
+;;; my-elisp.el --- Various pieces of elisp created by myself and others
+
+;; By Xah Lee
+(defun select-text-in-quote ()
+"Select text between the nearest left and right delimiters.
+Delimiters are paired characters: ()[]<>«»“”‘’「」, including \"\"."
+ (interactive)
+ (let (b1 b2)
+   (skip-chars-backward "^<>(“{[「«\"‘")
+   (setq b1 (point))
+   (skip-chars-forward "^<>)”}]」»\"’")
+   (setq b2 (point))
+   (set-mark b1)
+   )
+ )
+
+;; by Nikolaj Schumacher, 2008-10-20. Released under GPL.
+(defun semnav-up (arg)
+  (interactive "p")
+  (when (nth 3 (syntax-ppss))
+    (if (> arg 0)
+        (progn
+          (skip-syntax-forward "^\"")
+          (goto-char (1+ (point)))
+          (decf arg))
+      (skip-syntax-backward "^\"")
+      (goto-char (1- (point)))
+      (incf arg)))
+  (up-list arg))
+
+;; by Nikolaj Schumacher, 2008-10-20. Released under GPL.
+(defun extend-selection (arg &optional incremental)
+  "Select the current word.
+Subsequent calls expands the selection to larger semantic unit."
+  (interactive (list (prefix-numeric-value current-prefix-arg)
+                     (or (and transient-mark-mode mark-active)
+                         (eq last-command this-command))))
+  (if incremental
+      (progn
+        (semnav-up (- arg))
+        (forward-sexp)
+        (mark-sexp -1))
+    (if (> arg 1)
+        (extend-selection (1- arg) t)
+      (if (looking-at "\\=\\(\\s_\\|\\sw\\)*\\_>")
+          (goto-char (match-end 0))
+        (unless (memq (char-before) '(?\) ?\"))
+          (forward-sexp)))
+      (mark-sexp -1))))
+
+;; This is from emacs-starter-kit
+(defun ido-imenu ()
+  "Update the imenu index and then use ido to select a symbol to navigate to."
+  (interactive)
+  (imenu--make-index-alist)
+  (let ((name-and-pos '())
+        (symbol-names '()))
+    (flet ((addsymbols (symbol-list)
+                       (when (listp symbol-list)
+                         (dolist (symbol symbol-list)
+                           (let ((name nil) (position nil))
+                             (cond
+                              ((and (listp symbol) (imenu--subalist-p symbol))
+                               (addsymbols symbol))
+
+                              ((listp symbol)
+                               (setq name (car symbol))
+                               (setq position (cdr symbol)))
+
+                              ((stringp symbol)
+                               (setq name symbol)
+                               (setq position (get-text-property 1 'org-imenu-marker symbol))))
+
+                             (unless (or (null position) (null name))
+                               (add-to-list 'symbol-names name)
+                               (add-to-list 'name-and-pos (cons name position))))))))
+      (addsymbols imenu--index-alist))
+    (let* ((selected-symbol (ido-completing-read "Symbol? " symbol-names))
+           (position (cdr (assoc selected-symbol name-and-pos))))
+      (goto-char position))))
+
+;; From emacs-starter-kit
+(defun recentf-ido-find-file ()
+  "Find a recent file using ido."
+  (interactive)
+  (let ((file (ido-completing-read "Choose recent file: " recentf-list nil t)))
+    (when file
+      (find-file file))))
+
+(defun pretty-lambdas ()
+  (font-lock-add-keywords
+   nil `(("(?\\(lambda\\>\\)"
+          (0 (progn (compose-region (match-beginning 1) (match-end 1)
+                                    ,(make-char 'greek-iso8859-7 107))
+                    nil))))))
+
+;; Thanks to consolers in #emacs
+(defun random-string (len)
+  (coerce (loop for i below len for x = (random 64) collect
+                (+ x
+                   (cond ((< x 8) 47)
+                         ((< x 36) (- 65 10))
+                         (t (- 97 36)))))
+          'string))
+
+(defun make-password ()
+  "Random string of 20 characters"
+  (interactive)
+  (let ((password (random-string 20)))
+    (kill-new password)
+    (message password)))
+
 (defun chomp (str)
   "Perl-like chomp function, trims whitespace"
   (let ((s (if (symbolp str) (symbol-name str) str)))
@@ -29,6 +141,12 @@
     (find-alternate-file
      (concat "/sudo:root@localhost:"
              buffer-file-name))))
+
+(defun find-alternative-file-with-su ()
+  (interactive)
+  (when buffer-file-name
+    (find-alternate-file
+     (concat "/su::" buffer-file-name))))
 
 (defun my-eval-and-replace ()
   "Replace the preceding sexp with its value."
@@ -204,6 +322,7 @@
                    ( ?\' . ?\')
                    ( ?\" . ?\")
                    ( ?[ . ?])
+                   ( ?| . ?|)
                    ( ?{ . ?}))))
       (eq (cdr (assoc (char-before) pairs)) (char-after))))
 
@@ -259,37 +378,39 @@
 
 ;; --------------------------------------------------------- ;;
 ;; Switch to buffer
-(if (>= emacs-major-version 22)
-    (progn
-      (defun ignore-buffer (str)
-        (or
-         ;;buffers I don't want to switch to
-         (string-match "\\*Buffer List\\*" str)
-         (string-match "^TAGS" str)
-         (string-match "^\\*Messages\\*$" str)
-         (string-match "^\\*Completions\\*$" str)
-         (string-match "^\\*scratch\\*$" str)
-         (string-match "^\\*ESS\\*$" str)
-         (string-match "^ " str)
-         (string-match "Mew message" str)
-         (string-match "output\\*$" str)
-         (string-match "compilation" str)
-         (string-match "^\\*TeX silent\\*$" str)
-         ;;(string-match "inbox" str)
-         ))
 
-      (defun next-user-buffer ()
-        "Switch to the next user buffer in cyclic order."
-        (interactive)
-        (next-buffer)
-        (while (ignore-buffer (buffer-name))
-          (next-buffer) ))
+(let
+    ((ignore-buffer (lambda (str)
+                      (or
+                       ;;buffers I don't want to switch to
+                       (string-match "\\*Buffer List\\*" str)
+                       (string-match "^TAGS" str)
+                       (string-match "^\\*Ibuffer\\*$" str)
+                       (string-match "^\\*Help\\*$" str)
+                       (string-match "^\\*Apropos\\*$" str)
+                       (string-match "^\\*Messages\\*$" str)
+                       (string-match "^\\*Completions\\*$" str)
+                       (string-match "^\\*scratch\\*$" str)
+                       (string-match "^\\*ESS\\*$" str)
+                       (string-match "^ " str)
+                       (string-match "Mew message" str)
+                       (string-match "output\\*$" str)
+                       (string-match "compilation" str)
+                       (string-match "^\\*TeX silent\\*$" str)
+                       ))))
 
-      (defun previous-user-buffer ()
-        "Switch to the next user buffer in cyclic order."
-        (interactive)
-        (previous-buffer)
-        (while (ignore-buffer (buffer-name))
-          (previous-buffer)))))
+  (defun next-user-buffer ()
+    "Switch to the next user buffer in cyclic order."
+    (interactive)
+    (next-buffer)
+    (while (ignore-buffer (buffer-name))
+      (next-buffer)))
+
+  (defun previous-user-buffer ()
+    "Switch to the next user buffer in cyclic order."
+    (interactive)
+    (previous-buffer)
+    (while (ignore-buffer (buffer-name))
+      (previous-buffer))))
 
 (provide 'my-elisp)

@@ -9,6 +9,8 @@
                             (mouse-color . "LightSkyBlue")
                             (left . 0) (width . 141) (height . 44)))
 
+(setq browse-url-browser-function 'browse-url-default-macosx-browser)
+
 ;;(define-key dired-mode-map "o" 'dired-open-mac)
 (defun dired-open-mac ()
        (interactive)
@@ -16,14 +18,26 @@
          (if (file-exists-p file-name)
              (call-process "/usr/bin/open" nil 0 nil file-name))))
 
-(defun toggle-fullscreen ()
-  (interactive)
-  (set-frame-parameter nil 'fullscreen (if (frame-parameter nil 'fullscreen)
-                                           nil
-                                           'fullboth)))
-
-(global-set-key [(meta return)] 'toggle-fullscreen)
-
+;; Implementation specific settings
 (if (boundp 'aquamacs-version)
-    (load "~/.emacs.d/aquamacs.el")
-  (setq mac-option-modifier 'meta))
+    ;; Aquamacs
+    (progn
+      (one-buffer-one-frame-mode 0)
+      (emulate-mac-finnish-keyboard-mode t)
+
+      (setq x-select-enable-clipboard t ;; merge Emacs kill-ring with the clipboard
+            ;; open *help* in current frame
+            special-display-regexps (remove "[ ]?\\*[hH]elp.*" special-display-regexps))
+
+      (set-default-font "-apple-monaco-medium-r-normal--14-120-72-72-m-120-iso10646-1"))
+  ;; Carbon Emacs
+  (setq mac-option-modifier 'meta)
+  
+  ;; Fullscreen for Carbon Emacs
+  (defun toggle-fullscreen ()
+    (interactive)
+    (set-frame-parameter nil 'fullscreen (if (frame-parameter nil 'fullscreen)
+                                             nil
+                                             'fullboth)))
+
+  (global-set-key [(meta return)] 'toggle-fullscreen))

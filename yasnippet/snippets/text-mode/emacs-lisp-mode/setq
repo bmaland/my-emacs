@@ -1,0 +1,4 @@
+# -*- mode: yasnippet -*-
+#name : setq
+# --
+(setq ${1:place} ${2:value})

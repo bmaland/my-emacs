@@ -1,0 +1,4 @@
+# -*- mode: yasnippet -*-
+#name : setf
+# --
+(setf ${1:place} ${2:value})

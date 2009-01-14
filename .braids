@@ -1,0 +1,36 @@
+--- 
+vendor/rhtml: 
+  squashed: true
+  url: git://github.com/eschulte/rhtml.git
+  branch: master
+  type: git
+  revision: ccf020045e77cbfa68f5e17307bcc1b0fb27759d
+  remote: braid/vendor/rhtml
+yasnippet/snippets/text-mode/emacs-lisp-mode: 
+  squashed: true
+  url: git://github.com/Chrononaut/yasnippet-emacs-lisp-mode.git
+  branch: master
+  type: git
+  revision: 2c58b23cd4301ffbc530cc90cfe0f74e95cd2bad
+  remote: braid/yasnippet/snippets/text-mode/emacs-lisp-mode
+yasnippet/snippets/text-mode/ruby-mode: 
+  squashed: true
+  url: git://github.com/Chrononaut/yasnippet-ruby-mode.git
+  branch: master
+  type: git
+  revision: a8cab00c313a43278704c103519404734973c10f
+  remote: braid/yasnippet/snippets/text-mode/ruby-mode
+yasnippet/snippets/text-mode/sh-mode: 
+  squashed: true
+  url: git://github.com/Chrononaut/yasnippet-sh-mode.git
+  branch: master
+  type: git
+  revision: 959ba8492654fca91e3c94113e3e50c33ceee8a2
+  remote: braid/yasnippet/snippets/text-mode/sh-mode
+vendor/ri-emacs: 
+  squashed: true
+  url: git://github.com/technomancy/ri-emacs.git
+  branch: master
+  type: git
+  revision: 737bd672081bec976eefe662909c85f55dfe9083
+  remote: braid/vendor/ri-emacs

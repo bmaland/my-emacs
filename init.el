@@ -1,99 +1,68 @@
 (prefer-coding-system 'utf-8)
 
+(add-to-list 'load-path "~/.emacs.d")
+(add-to-list 'load-path "~/.emacs.d/vendor")
+
 (require 'cl)
-(setq user-full-name "Bjørn Arild Mæland"
-      user-mail-address "bjorn.maeland@gmail.com"
-      inhibit-startup-message t ;; Remove splash screen
-      ispell-program-name "aspell"
-      ispell-dictionary "english"
-      dabbrev-case-replace nil ;; Make sure case is preserved
-      bookmark-default-file "~/.emacs.d/bookmarks.bmk"
-      bookmark-save-flag 1 ;; How many mods between saves
-      scroll-margin 3
-      scroll-conservatively 100
-      c-basic-indent 2
-      frame-title-format "emacs - %b"
-      scroll-preserve-screen-position 1
-      font-lock-maximum-decoration t
-      inhibit-default-init t
-      prolog-program-name "pl"
-      slime-dir "~/foss/slime/"
-      snippet-dir "~/foss/snippets/"
-      server-window #'switch-to-buffer-other-frame
-      vc-follow-symlinks nil
-      twittering-username "Chrononaut"
-      display-time-string-forms '(
-                                  (propertize
-                                   (concat " " 24-hours ":" minutes ", " day "." month " ")
-                                   'face 'egoge-display-time))
-      org-log-done t
-      org-return-follows-link t)
+(require 'browse-kill-ring)
+(require 'saveplace)
+(require 'ffap)
+(require 'uniquify)
+(require 'ansi-color)
+(require 'recentf)
+(require 'pastie)
+(require 'twittering-mode)
+(require 'conservative-mode)
+(require 'kill-wspace-mode)
+(require 'magit) ; Can't autoload magit, need some of the functions earlier
+(require 'ack)
 
-(setq jabber-connection-type 'ssl
-      jabber-server "gmail.com"
-      jabber-network-server "talk.google.com"
-      jabber-port 5223
-      jabber-username "bjorn.maeland")
+(load "my-settings.el")
+(add-to-list 'load-path package-user-dir)
 
-(setq-default fill-column 80 ;; how wide the screen should be before word wrapping
-              indent-tabs-mode nil
-              show-trailing-whitespace t
-              tab-width 2)
+(require 'yasnippet)
+(require 'yasnippet-mode)
+(yas/initialize)
+(yas/load-directory snippet-dir)
 
-(custom-set-variables
-  ;; custom-set-variables was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- '(case-fold-search t)
- '(column-number-mode t)
- '(load-home-init-file t t)
- '(make-backup-files nil)
- '(minibuffer-max-depth nil)
- '(pc-select-meta-moves-sexps t)
- '(pc-select-selection-keys-only t)
- '(pc-selection-mode t)
- '(require-final-newline t)
- '(safe-local-variable-values (quote ((Package . cl-USER) (Syntax . Common-Lisp))))
- '(uniquify-buffer-name-style (quote forward) nil (uniquify)))
+;; ELPA
+(require 'package)
+(package-initialize)
 
+;; Default minor modes
 (transient-mark-mode t)
 (show-paren-mode t)
 (savehist-mode t)
 (global-font-lock-mode t)
 (ido-mode t)
+(recentf-mode t)
+(display-time-mode t)
+(auto-compression-mode t)
 
-(when (bound-and-true-p window-system)
-  (global-hl-line-mode t)
-  (set-face-background 'hl-line "#232323"))
-
-(if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0)) ;; No blinking cursor!
+(if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0))
 (menu-bar-mode (if window-system 1 -1))
 (if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
 (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
 
 (fset 'yes-or-no-p 'y-or-n-p)
+(random t)
+
+;; Don't clutter up directories with files~
+(setq backup-directory-alist `(("." . ,(expand-file-name
+                                        "~/.emacs.d/backups"))))
 
 ;; These are damn useful
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 
-;; display the current time
-(display-time)
-
-(server-start)
-
 ;; Load paths
-(add-to-list 'load-path "~/.emacs.d/")
-(add-to-list 'load-path "~/.emacs.d/sml-mode")
+(add-to-list 'load-path "~/.emacs.d/vendor/sml-mode")
+(add-to-list 'load-path "~/.emacs.d/vendor/ri-emacs")
+(add-to-list 'load-path "~/.emacs.d/vendor/org-mode")
 
-(when (file-directory-p "~/foss/emacs-jabber-0.7.1")
-  (add-to-list 'load-path "~/foss/emacs-jabber-0.7.1")
-  (require 'jabber))
-
+(require 'ri)
 (require 'multi-term)
 (multi-term-keystroke-setup)
-(setq multi-term-program "/bin/zsh")
 
 (require 'textmate)
 (textmate-mode)
@@ -101,8 +70,6 @@
 ;; Slime
 (when (file-directory-p slime-dir)
   (add-to-list 'load-path slime-dir)
-  (setq inferior-lisp-program "sbcl --no-linedit")
-
   (require 'slime)
 
   (eval-after-load "slime"
@@ -112,37 +79,19 @@
        (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)
        )))
 
-(defvar autosave-dir (concat "/tmp/." (user-login-name) "-emacs-autosaves/"))
-(make-directory autosave-dir t)
-
-(defun auto-save-file-name-p (filename)
-  (string-match "^#.*#$" (file-name-nondirectory filename)))
-
-(defun make-auto-save-file-name ()
-  (concat autosave-dir
-          (if buffer-file-name
-              (concat "#" (file-name-nondirectory buffer-file-name) "#")
-            (expand-file-name (concat "#%" (buffer-name) "#")))))
-
-(setq magic-mode-alist
-      (cons '("<＼＼?xml " . nxml-mode)
-            magic-mode-alist))
-(fset 'xml-mode 'nxml-mode)
-
-(setq tramp-default-method "ssh")
-
 ;; Regenerate the autoload file if it doesn't exist or it's too
 ;; old. (2 weeks or so)
-(let ((autoload-file "~/.emacs.d/loaddefs.el"))
-  (if (or (not (file-exists-p autoload-file))
-          (< (+ (car (nth 5 (file-attributes autoload-file))) 20)
-             (car (current-time))))
-      (let ((generated-autoload-file autoload-file))
-        (message "Updating autoloads...")
-        (update-directory-autoloads "~/.emacs.d/")))
-  (load autoload-file))
+(if (or (not (file-exists-p autoload-file))
+        (< (+ (car (nth 5 (file-attributes autoload-file))) 20)
+           (car (current-time))))
+    (let ((generated-autoload-file autoload-file))
+      (message "Updating autoloads...")
+      (update-directory-autoloads "~/.emacs.d/")))
+(load autoload-file)
 
 ;; Autoloads
+(autoload 'google-define "google-define")
+
 (autoload 'run-ruby "inf-ruby"
   "Run an inferior Ruby process")
 (autoload 'inf-ruby-keys "inf-ruby"
@@ -161,23 +110,24 @@
 (autoload 'lisppaste-paste-region "lisppaste" "" t)
 
 (autoload 'haml-mode "haml-mode" nil t)
-(add-to-list 'auto-mode-alist '("\.haml$" . haml-mode))
+(add-to-list 'auto-mode-alist '("\\.haml$" . haml-mode))
 (autoload 'sass-mode "sass-mode" nil t)
 (add-to-list 'auto-mode-alist '("\\.sass$" . sass-mode))
 
 (autoload 'php-mode "php-mode" "PHP Editing mode." t)
-(add-to-list 'auto-mode-alist '("\.php$" . php-mode))
+(add-to-list 'auto-mode-alist '("\\.php$" . php-mode))
 
-;;(autoload 'js2-mode "js2" nil t)
-;;(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
-
+(autoload 'yaml-mode "yaml-mode" "YAML Editing mode." t)
 (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
+
 (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
 
 (autoload 'ruby-mode "ruby-mode" "Ruby editing mode." t)
-(add-to-list 'auto-mode-alist '("\.rb$" . ruby-mode))
-(add-to-list 'auto-mode-alist '("\.rake$" . ruby-mode))
-(add-to-list 'auto-mode-alist '("\.builder$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.rb$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.rake$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.gemspec$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.sake$" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.builder$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Rakefile" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Capfile" . ruby-mode))
 (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
@@ -191,41 +141,27 @@
          (cons '("\\.text" . markdown-mode) auto-mode-alist))
 (add-to-list 'auto-mode-alist '("\.markdown$" . markdown-mode))
 
-(autoload 'python-mode
-  "python" "Python editing mode." t)
+;; I had to do this to use python-mode.el over python.el
+(load "python-mode.el")
 
 (autoload 'slime-selector "slime" t)
 
-(autoload 'magit-status "magit" nil t)
-
-(require 'pastie)
-(require 'idle-highlight)
-(require 'twittering-mode)
-(require 'conservative-mode)
-(require 'kill-wspace-mode)
-(kill-wspace-mode 1)
-
-;; Yasnippet
-(when (file-directory-p snippet-dir)
-  (require 'yasnippet)
-  (require 'yasnippet-mode)
-  (yas/initialize)
-  (yas/load-directory "~/foss/snippets/"))
+(load custom-file 'noerror)
 
 ;; Personal customizations
 (require 'my-faces)
 (require 'my-elisp)
 (require 'my-bindings)
 (require 'my-aliases)
+(require 'my-ruby)
+(require 'my-python)
 (require 'my-hooks)
+(kill-wspace-mode t)
 
 (if (eq window-system 'mac)
-    (load "~/.emacs.d/osx.el")
-  (load "~/.emacs.d/linux.el"))
+    (load "osx.el")
+  (load "linux.el"))
 
-(setq system-specific-config
-      (concat "~/.emacs.d/hosts/"
-              (substring (shell-command-to-string "hostname -s") 0 -1) ".el"))
-
-(if (file-exists-p system-specific-config)
-    (load system-specific-config))
+(let ((system-specific-config (concat "~/.emacs.d/hosts/" system-name ".el")))
+  (if (file-exists-p system-specific-config)
+      (load system-specific-config)))

@@ -1,5 +1,9 @@
+backups/*
 auto-save-list
 loaddefs.el
 url
 bookmarks.bmk
 history
+tramp
+*.elc
+.org-id-locations
