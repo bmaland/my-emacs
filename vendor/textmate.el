@@ -59,9 +59,6 @@
 (defvar textmate-set-bindings nil
   "* Should key bindings be automatically configured upon loading this library? Set this to nil if you want to configure your own bindings.")
 
-(defvar textmate-ack-command "/Users/bjorn/dotfiles/bin/ack"
-  "* The command run by the ack function.")
-
 (defvar textmate-use-file-cache t
   "* Should `textmate-goto-file' keep a local cache of files?")
 
@@ -157,7 +154,7 @@
 
                               ((stringp symbol)
                                (setq name symbol)
-                               (setq position (gettext-property 1 'org-imenu-marker symbol))))
+                               (setq position (get-text-property 1 'org-imenu-marker symbol))))
 
                              (unless (or (null position) (null name))
                                (add-to-list 'symbol-names name)
@@ -179,22 +176,10 @@
         ;; the root is still included in the filepaths, even though it is removed
         ;; by sed in textmate-project-files. So expanding the root here makes
         ;; the root appear twice in the paths on my system.
-        (expand-file-name root))
-      "/"
+        (expand-file-name root) "/")
       (textmate-completing-read
        "Find file: "
        (textmate-cached-project-files root))))))
-
-(defun textmate-find-in-project ()
-  (interactive)
-    (shell-command
-     (concat
-      *textmate-ack-command*
-      " "
-      (read-string "Search for: " (thing-at-point 'symbol))
-      " "
-       *textmate-project-root*
-      )))
 
 (defun textmate-clear-cache ()
   (interactive)
