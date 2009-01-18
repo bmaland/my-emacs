@@ -146,8 +146,6 @@
             (local-set-key (kbd "C-c w") '(lambda () (interactive)
                                             (org-todo "WAITING")))
 
-            (org-remember-insinuate) ;; Setup remember for org
-
             (defun org-summary-todo (n-done n-not-done)
               "Switch entry to DONE when all subentries are done, to TODO otherwise."
               (let (org-log-done org-log-states)   ; turn off logging
@@ -157,24 +155,13 @@
 
             (auto-fill-mode 1)))
 
+(add-hook 'remember-mode-hook 'org-remember-apply-template)
+
 (add-hook 'markdown-mode-hook
           (lambda ()
             (set-pairs '("(" "{" "[" "\""))
             (auto-fill-mode 1)
             (setq tab-width 4)))
-
-(setq ibuffer-saved-filter-groups
-      (quote (("default"
-               ("dired" (mode . dired-mode))
-               ("ruby" (mode . ruby-mode))
-               ("haml" (mode . haml-mode))
-               ("sass" (mode . sass-mode))
-               ("shell" (mode . sh-mode))
-               ("elisp" (mode . emacs-lisp-mode))
-               ("gtalk" (mode . jabber-chat-mode))
-               ("emacs" (or
-                         (name . "^\\*scratch\\*$")
-                         (name . "^\\*Messages\\*$")))))))
 
 (add-hook 'ibuffer-mode-hook
           (lambda ()
@@ -183,7 +170,5 @@
 (add-hook 'server-done-hook (lambda nil (kill-buffer nil)))
 
 (eval-after-load "sql" '(progn (sql-set-product 'postgresql)))
-
-
 
 (provide 'my-hooks)
