@@ -9,6 +9,7 @@
       default-major-mode 'org-mode
 
       calendar-date-style 'european
+      european-calendar-style t ;; Obsolute since 23.1, but keep for a while
 
       ;; Flymake - only check syntax on save
       flymake-no-changes-timeout 9999
@@ -45,10 +46,10 @@
       display-time-string-forms '((propertize
                                    (concat " " 24-hours ":" minutes ", "
                                            day "." month " ")
-                                   'face 'egoge-display-time))
+                                   'face 'egoge-display-time)))
 
-      ;; org-mode
-      org-directory "~/notat"
+;; org-mode
+(setq org-directory "~/notat"
       org-default-notes-file "~/notat/.notes"
       org-agenda-files '("~/notat")
       org-deadline-warning-days 7
@@ -86,7 +87,27 @@ div.figure p { text-align: left; margin: 25px; }
       org-refile-targets '((nil . (:level . 1)) (nil . (:level . 2))
                            (("opensource.org" "webprojects.org") . (:tag . "PROJECT")))
 
-      remember-annotation-functions '(org-remember-annotation)
+      org-publish-project-alist
+      '(
+        ("studier-notes"
+         :base-directory "~/notat/studier/"
+         :base-extension "org"
+         :publishing-directory "~/public_html/studier"
+         :recursive nil
+         :publishing-function org-publish-org-to-html
+         :language "nn"
+         :inline-images t
+         :completion-function (lambda ()
+                                (shell-command (concat "scp -r ~/notat/studier/* "
+                                                       "rasmus.uib.no:~/public_html/studier/"))
+         :headline-levels 4
+         :auto-preamble t
+         :auto-index t
+         :index-title "Notat til emner ved UiB"
+         )
+        ("studier" :components ("studier-notes")))))
+
+(setq remember-annotation-functions '(org-remember-annotation)
       remember-handler-functions '(org-remember-handler)
 
       ;; Jabber
