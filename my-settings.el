@@ -1,4 +1,4 @@
-(setenv "PATH" (concat (getenv "PATH") ":/usr/local/bin"))
+(setenv "PATH" (concat (getenv "PATH") ":/usr/local/bin:" (getenv "HOME") "/dotfiles/bin"))
 (setq exec-path (append exec-path '("/usr/local/bin")))
 
 (setq user-full-name "Bjørn Arild Mæland"
@@ -102,6 +102,28 @@ div.figure p { text-align: left; margin: 25px; }
       autoload-file "~/.emacs.d/loaddefs.el"
       package-user-dir "~/.emacs.d/elpa"
       custom-file "~/.emacs.d/custom.el")
+
+(setq ibuffer-saved-filter-groups
+      (quote (("default"
+               ("dired" (mode . dired-mode))
+               ("ruby" (mode . ruby-mode))
+               ("haml" (mode . haml-mode))
+               ("elisp" (mode . emacs-lisp-mode))
+               ("org" (mode . org-mode))
+               ("erc" (mode . erc-mode))
+               ("gtalk" (mode . jabber-chat-mode))
+               ("emacs" (or
+                         (name . "^\\*scratch\\*$")
+                         (name . "^\\*Messages\\*$")))))))
+
+(setq erc-server "irc.freenode.net"
+       erc-port 6667
+       erc-nick "bjornarild"
+       erc-user-full-name "Bjørn Arild Mæland"
+       erc-email-userid "bjorn"
+       erc-prompt-for-password nil
+       erc-mode-line-format ""
+       erc-autojoin-channels-alist '(("freenode.net" "#emacs")))
 
 (setq-default fill-column 80 ;; how wide the screen should be before word wrapping
               indent-tabs-mode nil

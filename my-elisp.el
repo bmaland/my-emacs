@@ -1,5 +1,12 @@
 ;;; my-elisp.el --- Various pieces of elisp created by myself and others
 
+(defun emacswiki ()
+  "Docstring"
+  (interactive)
+  (w3m-browse-url (concat "http://www.emacswiki.org/cgi-bin/wiki/"
+                          (read-string "Page? ")
+                          )))
+
 ;; By Xah Lee
 (defun select-text-in-quote ()
 "Select text between the nearest left and right delimiters.
