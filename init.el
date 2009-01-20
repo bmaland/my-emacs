@@ -3,6 +3,7 @@
 (add-to-list 'load-path "~/.emacs.d")
 (add-to-list 'load-path "~/.emacs.d/vendor")
 
+;; TODO autoload some of these
 (require 'cl)
 (require 'browse-kill-ring)
 (require 'saveplace)
@@ -16,6 +17,7 @@
 (require 'kill-wspace-mode)
 (require 'magit) ; Can't autoload magit, need some of the functions earlier
 (require 'ack)
+(require 'google-define)
 
 (load "my-settings.el")
 (add-to-list 'load-path package-user-dir)

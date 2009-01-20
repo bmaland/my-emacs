@@ -93,19 +93,20 @@ div.figure p { text-align: left; margin: 25px; }
          :base-directory "~/notat/studier/"
          :base-extension "org"
          :publishing-directory "~/public_html/studier"
-         :recursive nil
-         :publishing-function org-publish-org-to-html
          :language "nn"
          :inline-images t
          :completion-function (lambda ()
-                                (shell-command (concat "scp -r ~/notat/studier/* "
-                                                       "rasmus.uib.no:~/public_html/studier/"))
+                                (shell-command
+                                 (concat
+                                  "scp -r ~/public_html/studier/*.html "
+                                  "rasmus.uib.no:~/public_html/studier/")))
          :headline-levels 4
+         :todo-keywords nil ; Skip todo keywords
          :auto-preamble t
          :auto-index t
          :index-title "Notat til emner ved UiB"
          )
-        ("studier" :components ("studier-notes")))))
+        ("studier" :components ("studier-notes"))))
 
 (setq remember-annotation-functions '(org-remember-annotation)
       remember-handler-functions '(org-remember-handler)
