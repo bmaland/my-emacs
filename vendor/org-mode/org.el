@@ -5,7 +5,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.17trans
+;; Version: 6.18
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -93,7 +93,7 @@
 
 ;;; Version
 
-(defconst org-version "6.17trans"
+(defconst org-version "6.18"
   "The version number of the file org.el.")
 
 (defun org-version (&optional here)
@@ -2665,7 +2665,7 @@ If TABLE-TYPE is non-nil, also check for table.el-type tables."
 
 (declare-function org-clock-save-markers-for-cut-and-paste "org-clock"
 		  (beg end))
-(declare-function org-update-mode-line "org-clock" ())
+(declare-function org-clock-update-mode-line "org-clock" ())
 (defvar org-clock-start-time)
 (defvar org-clock-marker (make-marker)
   "Marker recording the last clock-in.")
@@ -2702,7 +2702,7 @@ Otherwise, return nil."
 	    (setq org-clock-start-time
 		  (apply 'encode-time
 			 (org-parse-time-string (match-string 1))))
-	    (org-update-mode-line)))
+	    (org-clock-update-mode-line)))
 	 (t
 	  (and (match-end 4) (delete-region (match-beginning 4) (match-end 4)))
 	  (end-of-line 1)
@@ -2770,7 +2770,9 @@ Org-mode Agenda.
 
 The archived entries will be filed as subtrees of the specified
 headline.  When the headline is omitted, the subtrees are simply
-filed away at the end of the file, as top-level entries.
+filed away at the end of the file, as top-level entries.  Also in
+the heading you can use %s to represent the file name, this can be
+useful when using the same archive for a number of different files.
 
 Here are a few examples:
 \"%s_archive::\"
@@ -2783,6 +2785,10 @@ Here are a few examples:
 
 \"~/org/archive.org::\"
 	Archive in file ~/org/archive.org (absolute path), as top-level trees.
+
+\"~/org/archive.org::From %s\"
+	Archive in file ~/org/archive.org (absolute path), und headlines
+        \"From FILENAME\" where file name is the current file name.
 
 \"basement::** Finished Tasks\"
 	Archive in file ./basement (relative path), as level 3 trees
@@ -3779,15 +3785,15 @@ will be prompted for."
 
 (defun org-activate-footnote-links (limit)
   "Run through the buffer and add overlays to links."
-  (if (re-search-forward "\\[\\([0-9]+\\]\\|fn:[^ \t\r\n:]+?[]:]\\)" 
+  (if (re-search-forward "\\(^\\|[^][]\\)\\(\\[\\([0-9]+\\]\\|fn:[^ \t\r\n:]+?[]:]\\)\\)" 
 			 limit t)
       (progn
-	(add-text-properties (match-beginning 0) (match-end 0)
+	(add-text-properties (match-beginning 1) (match-end 1)
 			     (list 'mouse-face 'highlight
 				   'rear-nonsticky org-nonsticky-props
 				   'keymap org-mouse-map
 				   'help-echo
-				   (if (= (point-at-bol) (match-beginning 0))
+				   (if (= (point-at-bol) (match-beginning 1))
 				       "Footnote definition"
 				     "Footnote reference")
 				   ))
@@ -6824,6 +6830,7 @@ used as the link location instead of reading one interactively."
   (let ((minibuffer-local-completion-map
 	 (copy-keymap minibuffer-local-completion-map)))
     (org-defkey minibuffer-local-completion-map " " 'self-insert-command)
+    (org-defkey minibuffer-local-completion-map "?" 'self-insert-command)
     (apply 'org-ido-completing-read args)))
 
 (defun org-ido-completing-read (&rest args)
@@ -9439,7 +9446,7 @@ also TODO lines."
     ;; Get a new match request, with completion
     (let ((org-last-tags-completion-table
 	   (org-global-tags-completion-table)))
-      (setq match (org-ido-completing-read
+      (setq match (org-completing-read
 		   "Match: " 'org-tags-completion-function nil nil nil
 		   'org-tags-history))))
 
@@ -9569,16 +9576,16 @@ also TODO lines."
 (defun org-string>= (a b) (not (string< a b)))
 (defun org-string>  (a b) (and (not (string= a b)) (not (string< a b))))
 (defun org-string<> (a b) (not (string= a b)))
-(defun org-time=  (a b) (=     (org-2ft a) (org-2ft b)))
-(defun org-time<  (a b) (<     (org-2ft a) (org-2ft b)))
-(defun org-time<= (a b) (<=    (org-2ft a) (org-2ft b)))
-(defun org-time>  (a b) (>     (org-2ft a) (org-2ft b)))
-(defun org-time>= (a b) (>=    (org-2ft a) (org-2ft b)))
-(defun org-time<> (a b) (org<> (org-2ft a) (org-2ft b)))
+(defun org-time=  (a b) (setq a (org-2ft a) b (org-2ft b)) (and (> a 0) (> b 0) (=     a b)))
+(defun org-time<  (a b) (setq a (org-2ft a) b (org-2ft b)) (and (> a 0) (> b 0) (<     a b)))
+(defun org-time<= (a b) (setq a (org-2ft a) b (org-2ft b)) (and (> a 0) (> b 0) (<=    a b)))
+(defun org-time>  (a b) (setq a (org-2ft a) b (org-2ft b)) (and (> a 0) (> b 0) (>     a b)))
+(defun org-time>= (a b) (setq a (org-2ft a) b (org-2ft b)) (and (> a 0) (> b 0) (>=    a b)))
+(defun org-time<> (a b) (setq a (org-2ft a) b (org-2ft b)) (and (> a 0) (> b 0) (org<> a b)))
 (defun org-2ft (s)
   "Convert S to a floating point time.
 If S is already a number, just return it.  If it is a string, parse
-it as a time string and apply `float-time' to it.  f S is nil, just return 0."
+it as a time string and apply `float-time' to it.  If S is nil, just return 0."
   (cond
    ((numberp s) s)
    ((stringp s)
@@ -10160,39 +10167,41 @@ the scanner.  The following items can be given here:
      ((eq match nil) (setq matcher t))
      (t (setq matcher (if match (cdr (org-make-tags-matcher match)) t))))
 
-    (when (eq scope 'tree)
-      (org-back-to-heading t)
-      (org-narrow-to-subtree)
-      (setq scope nil))
+    (save-excursion
+      (save-restriction
+	(when (eq scope 'tree)
+	  (org-back-to-heading t)
+	  (org-narrow-to-subtree)
+	  (setq scope nil))
 
-    (if (not scope)
-	(progn
-	  (org-prepare-agenda-buffers
-	   (list (buffer-file-name (current-buffer))))
-	  (org-scan-tags func matcher))
-      ;; Get the right scope
-      (setq pos (point))
-      (cond
-       ((and scope (listp scope) (symbolp (car scope)))
-	(setq scope (eval scope)))
-       ((eq scope 'agenda)
-	(setq scope (org-agenda-files t)))
-       ((eq scope 'agenda-with-archives)
-	(setq scope (org-agenda-files t))
-	(setq scope (org-add-archive-files scope)))
-       ((eq scope 'file)
-	(setq scope (list (buffer-file-name))))
-       ((eq scope 'file-with-archives)
-	(setq scope (org-add-archive-files (list (buffer-file-name))))))
-      (org-prepare-agenda-buffers scope)
-      (while (setq file (pop scope))
-	(with-current-buffer (org-find-base-buffer-visiting file)
-	  (save-excursion
-	    (save-restriction
-	      (widen)
-	      (goto-char (point-min))
-	      (setq res (append res (org-scan-tags func matcher)))))))
-      res)))
+	(if (not scope)
+	    (progn
+	      (org-prepare-agenda-buffers
+	       (list (buffer-file-name (current-buffer))))
+	      (setq res (org-scan-tags func matcher)))
+	  ;; Get the right scope
+	  (setq pos (point))
+	  (cond
+	   ((and scope (listp scope) (symbolp (car scope)))
+	    (setq scope (eval scope)))
+	   ((eq scope 'agenda)
+	    (setq scope (org-agenda-files t)))
+	   ((eq scope 'agenda-with-archives)
+	    (setq scope (org-agenda-files t))
+	    (setq scope (org-add-archive-files scope)))
+	   ((eq scope 'file)
+	    (setq scope (list (buffer-file-name))))
+	   ((eq scope 'file-with-archives)
+	    (setq scope (org-add-archive-files (list (buffer-file-name))))))
+	  (org-prepare-agenda-buffers scope)
+	  (while (setq file (pop scope))
+	    (with-current-buffer (org-find-base-buffer-visiting file)
+	      (save-excursion
+		(save-restriction
+		  (widen)
+		  (goto-char (point-min))
+		  (setq res (append res (org-scan-tags func matcher))))))))))
+    res))
 
 ;;;; Properties
 
@@ -14157,13 +14166,15 @@ not an indirect buffer."
 	(or (buffer-base-buffer buf) buf)
       nil)))
 
-(defun org-image-file-name-regexp ()
-  "Return regexp matching the file names of images."
-  (if (fboundp 'image-file-name-regexp)
+(defun org-image-file-name-regexp (&optional extensions)
+  "Return regexp matching the file names of images.
+If EXTENSIONS is given, only match these."
+  (if (and (not extensions) (fboundp 'image-file-name-regexp))
       (image-file-name-regexp)
     (let ((image-file-name-extensions
-	   '("png" "jpeg" "jpg" "gif" "tiff" "tif"
-	     "xbm" "xpm" "pbm" "pgm" "ppm")))
+	   (or extensions
+	       '("png" "jpeg" "jpg" "gif" "tiff" "tif"
+		 "xbm" "xpm" "pbm" "pgm" "ppm"))))
       (concat "\\."
 	      (regexp-opt (nconc (mapcar 'upcase
 					 image-file-name-extensions)
@@ -14171,10 +14182,10 @@ not an indirect buffer."
 			  t)
 	      "\\'"))))
 
-(defun org-file-image-p (file)
+(defun org-file-image-p (file &optional extensions)
   "Return non-nil if FILE is an image."
   (save-match-data
-    (string-match (org-image-file-name-regexp) file)))
+    (string-match (org-image-file-name-regexp extensions) file)))
 
 (defun org-get-cursor-date ()
   "Return the date at cursor in as a time.
