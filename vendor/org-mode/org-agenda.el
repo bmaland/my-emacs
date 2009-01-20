@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.17trans
+;; Version: 6.18
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -80,6 +80,15 @@ only needed when the text to be killed contains more than N non-white lines."
 This is done by leaving out unnecessary lines."
   :group 'org-agenda
   :type 'boolean)
+
+(defcustom org-agenda-block-separator ?=
+  "The separator between blocks in the agenda.
+If this is a string, it will be used as the separator, with a newline added.
+If it is a character, it will be repeated to fill the window width."
+  :group 'org-agenda
+  :type '(choice
+	  (character)
+	  (string)))
 
 (defgroup org-agenda-export nil
  "Options concerning exporting agenda views in Org-mode."
@@ -2041,7 +2050,11 @@ VALUE defaults to t."
 	(setq buffer-read-only nil)
 	(goto-char (point-max))
 	(unless (or (bobp) org-agenda-compact-blocks)
-	  (insert "\n" (make-string (window-width) ?=) "\n"))
+	  (insert "\n"
+		  (if (stringp org-agenda-block-separator)
+		      org-agenda-block-separator
+		    (make-string (window-width) org-agenda-block-separator))
+		  "\n"))
 	(narrow-to-region (point) (point-max)))
     (org-agenda-reset-markers)
     (setq org-agenda-contributing-files nil)

@@ -5,7 +5,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.17trans
+;; Version: 6.18
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -542,7 +542,7 @@ Org-mode file."
   :type '(string :tag "File or URL"))
 
 (defconst org-export-html-scripts
-"<script language=\"javascript\" type=\"text/javascript\">
+"<script type=\"text/javascript\">
 <!--/*--><![CDATA[/*><!--*/
  function CodeHighlightOn(elem, id)
  {
@@ -692,6 +692,12 @@ be linked only."
   :type '(choice (const :tag "Never" nil)
 		 (const :tag "Always" t)
 		 (const :tag "When there is no description" maybe)))
+
+(defcustom org-export-html-inline-image-extensions
+  '("png" "jpeg" "jpg" "gif")
+  "Extensions of image files that can be inlined into HTML."
+  :group 'org-export-html
+  :type '(repeat (string :tag "Extension")))
 
 ;; FIXME: rename
 (defcustom org-export-html-expand t
@@ -2355,14 +2361,24 @@ and `+n' for continuing previous numering.
 Code formatting according to language currently only works for HTML.
 Numbering lines works for all three major backends (html, latex, and ascii)."
   (save-match-data
-    (let (num cont rtn named rpllbl keepp fmt)
+    (let (num cont rtn named rpllbl keepp textareap cols rows fmt)
       (setq opts (or opts "")
 	    num (string-match "[-+]n\\>" opts)
 	    cont (string-match "\\+n\\>" opts)
 	    rpllbl (string-match "-r\\>" opts)
 	    keepp (string-match "-k\\>" opts)
+	    textareap (string-match "-t\\>" opts)
+	    cols (if (string-match "-w[ \t]+\\([0-9]+\\)" opts)
+		     (string-to-number (match-string 1 opts))
+		   80)
+	    rows (if (string-match "-h[ \t]+\\([0-9]+\\)" opts)
+		     (string-to-number (match-string 1 opts))
+		   (org-count-lines code))
 	    fmt (if (string-match "-l[ \t]+\"\\([^\"\n]+\\)\"" opts)
 		    (match-string 1 opts)))
+      (when (and textareap (eq backend 'html))
+	;; we cannot use numbering or highlighting.
+	(setq num nil cont nil lang nil))
       (if keepp (setq rpllbl 'keep))
       (setq rtn code)
       (when (equal lang "org")
@@ -2402,8 +2418,15 @@ Numbering lines works for all three major backends (html, latex, and ascii)."
 		  (setq rtn (replace-match
 			     (format "<pre class=\"src src-%s\">\n" lang)
 			     t t rtn))))
-	  (setq rtn (concat "<pre class=\"example\">\n" rtn "</pre>\n")))
-	(setq rtn (org-export-number-lines rtn 'html 1 1 num cont rpllbl fmt))
+	  (if textareap
+	      (setq rtn (concat
+			 (format "<p>\n<textarea cols=\"%d\" rows=\"%d\" overflow-x:scroll >\n"
+				 cols rows)
+			 rtn "</textarea>\n</p>\n"))
+	    (setq rtn (concat "<pre class=\"example\">\n" rtn "</pre>\n"))))
+	(unless textareap
+	  (setq rtn (org-export-number-lines rtn 'html 1 1 num
+					     cont rpllbl fmt)))
 	(concat "\n#+BEGIN_HTML\n" (org-add-props rtn '(org-protected t)) "\n#+END_HTML\n\n"))
        ((eq backend 'latex)
 	(setq rtn (org-export-number-lines rtn 'latex 0 0 num cont rpllbl fmt))
@@ -3562,7 +3585,8 @@ lang=\"%s\" xml:lang=\"%s\">
 		  descp (and desc1 (not (equal desc1 desc2)))
 		  desc (or desc1 desc2))
 	    ;; Make an image out of the description if that is so wanted
-	    (when (and descp (org-file-image-p desc))
+	    (when (and descp (org-file-image-p
+			      desc org-export-html-inline-image-extensions))
 	      (save-match-data
 		(if (string-match "^file:" desc)
 		    (setq desc (substring desc (match-end 0)))))
@@ -3596,7 +3620,8 @@ lang=\"%s\" xml:lang=\"%s\">
 	      ;; standard URL, just check if we need to inline an image
 	      (if (and (or (eq t org-export-html-inline-images)
 			   (and org-export-html-inline-images (not descp)))
-		       (org-file-image-p path))
+		       (org-file-image-p
+			path org-export-html-inline-image-extensions))
 		  (setq rpl (org-export-html-format-image
 			     (concat type ":" path)))
 		(setq link (concat type ":" path))
@@ -3640,7 +3665,9 @@ lang=\"%s\" xml:lang=\"%s\">
 			(if (functionp link-validate)
 			    (funcall link-validate filename current-dir)
 			  t))
-		  (setq file-is-image-p (org-file-image-p filename))
+		  (setq file-is-image-p
+			(org-file-image-p
+			 filename org-export-html-inline-image-extensions))
 		  (setq thefile (if abs-p (expand-file-name filename) filename))
 		  (when (and org-export-html-link-org-files-as-html
 			     (string-match "\\.org$" thefile))
@@ -4151,14 +4178,18 @@ lang=\"%s\" xml:lang=\"%s\">
       (push html-table-tag html))
     (concat (mapconcat 'identity html "\n") "\n")))
 
-(defun org-table-clean-before-export (lines)
+(defun org-table-clean-before-export (lines &optional maybe-quoted)
   "Check if the table has a marking column.
 If yes remove the column and the special lines."
   (setq org-table-colgroup-info nil)
   (if (memq nil
 	    (mapcar
 	     (lambda (x) (or (string-match "^[ \t]*|-" x)
-			     (string-match "^[ \t]*| *\\([#!$*_^ /]\\) *|" x)))
+			     (string-match
+			      (if maybe-quoted
+				  "^[ \t]*| *\\\\?\\([\#!$*_^ /]\\) *|"
+				"^[ \t]*| *\\([\#!$*_^ /]\\) *|")
+			      x)))
 	     lines))
       (progn
 	(setq org-table-clean-did-remove-column nil)

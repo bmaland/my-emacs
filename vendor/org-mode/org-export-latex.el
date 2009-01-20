@@ -4,7 +4,7 @@
 ;;
 ;; Emacs Lisp Archive Entry
 ;; Filename: org-export-latex.el
-;; Version: 6.17trans
+;; Version: 6.18
 ;; Author: Bastien Guerry <bzg AT altern DOT org>
 ;; Maintainer: Bastien Guerry <bzg AT altern DOT org>
 ;; Keywords: org, wp, tex
@@ -246,6 +246,16 @@ and `org-export-with-tags' instead."
   "Default option for images."
   :group 'org-export-latex
   :type 'string)
+
+(defcustom org-export-latex-inline-image-extensions
+  '("pdf" "jpeg" "jpg" "png")
+  "Extensions of image files that can be inlined into LaTeX.
+Note that this depends on the way the LaTeX file is processed.
+The default setting (pdf and jpg) assumes that pdflatex is doing the
+processing.  If you are using latex and dvips or something similar,
+only postscript files can be included."
+  :group 'org-export-html
+  :type '(repeat (string :tag "Extension")))
 
 (defcustom org-export-latex-coding-system nil
   "Coding system for the exported LaTex file."
@@ -678,12 +688,22 @@ LEVEL indicates the default depth for export."
 	(org-combine-plists (org-default-export-plist) ext-plist
 			    (org-infile-export-plist))
 	org-export-latex-class
-	(save-excursion
-	  (goto-char (point-min))
-	  (if (and (re-search-forward "^#\\+LaTeX_CLASS:[ \t]*\\([a-zA-Z]+\\)" nil t)
-		   (assoc (match-string 1) org-export-latex-classes))
-	      (match-string 1)
-	    org-export-latex-default-class))
+	(or (and (org-region-active-p)
+		 (save-excursion
+		   (goto-char (region-beginning))
+		   (and (looking-at org-complex-heading-regexp)
+			(org-entry-get nil "LaTeX_CLASS" 'selective))))
+	    (save-excursion
+	      (save-restriction
+		(widen)
+		(goto-char (point-min))
+		(and (re-search-forward "^#\\+LaTeX_CLASS:[ \t]*\\([a-zA-Z]+\\)" nil t)
+		     (match-string 1))))
+	    org-export-latex-default-class)
+	org-export-latex-class
+	(or (car (assoc org-export-latex-class org-export-latex-classes))
+	    (error "No definition for class `%s' in `org-export-latex-classes'"
+		   org-export-latex-class))
 	org-export-latex-header
 	(cadr (assoc org-export-latex-class org-export-latex-classes))
 	org-export-latex-sectioning
@@ -860,7 +880,6 @@ links, keywords, lists, tables, fixed-width"
     (org-export-latex-special-chars
      (plist-get org-export-latex-options-plist :sub-superscript))
     (org-export-latex-links)
-;    (org-trim (buffer-substring-no-properties (point-min) (point-max)))))
     (org-trim (buffer-string))))
 
 (defun org-export-latex-quotation-marks ()
@@ -877,7 +896,7 @@ links, keywords, lists, tables, fixed-width"
 	    (while (re-search-forward (car l) nil t)
 	      (let ((rpl (concat (match-string 1) (cadr l))))
 		(org-export-latex-protect-string rpl)
-		(org-if-unprotected
+		(org-if-unprotected-1
 		 (replace-match rpl t t))))) quote-rpl)))
 
 (defun org-export-latex-special-chars (sub-superscript)
@@ -889,8 +908,6 @@ See the `org-export-latex.el' code for a complete conversion table."
 	  (goto-char (point-min))
 	  (while (re-search-forward c nil t)
 	    ;; Put the point where to check for org-protected
-;	    (unless (or (get-text-property (match-beginning 2) 'org-protected);
-;			(org-at-table-p))
 	    (unless (get-text-property (match-beginning 2) 'org-protected)
 	      (cond ((member (match-string 2) '("\\$" "$"))
 		     (if (equal (match-string 2) "\\$")
@@ -1072,7 +1089,7 @@ The conversion is made depending of STRING-BEFORE and STRING-AFTER."
 	  (setq lines (split-string raw-table "\n" t))
 	  (apply 'delete-region (list beg end))
 	  (when org-export-table-remove-special-lines
-	    (setq lines (org-table-clean-before-export lines)))
+	    (setq lines (org-table-clean-before-export lines 'maybe-quoted)))
 	  ;; make a formatting string to reflect aligment
 	  (setq olines lines)
 	  (while (and (not line-fmt) (setq line (pop olines)))
@@ -1207,9 +1224,10 @@ The conversion is made depending of STRING-BEFORE and STRING-AFTER."
 		   ((equal type "mailto")
 		    (concat type ":" raw-path))
 		   ((equal type "file")
-		    (if (and (or (org-file-image-p (expand-file-name raw-path))
-				 (string-match "\\.\\(pdf\\|jpg\\|ps\\|eps\\)$"
-					       raw-path))
+		    (if (and (org-file-image-p
+			      (expand-file-name
+			       raw-path)
+			      org-export-latex-inline-image-extensions)
 			     (equal desc full-raw-path))
 			(setq imgp t)
 		      (progn (when (string-match "\\(.+\\)::.+" raw-path)
@@ -1227,7 +1245,9 @@ The conversion is made depending of STRING-BEFORE and STRING-AFTER."
 		(if floatp "\\begin{figure}[htb]\n")
 		(format "\\centerline{\\includegraphics[%s]{%s}}\n"
 			(or attr org-export-latex-image-default-option)
-			(expand-file-name raw-path))
+			(if (file-name-absolute-p raw-path)
+			    (expand-file-name raw-path)
+			  raw-path))
 		(if floatp
 		    (format "\\caption{%s%s}\n"
 			    (if label (concat "\\label{" label "}") "")

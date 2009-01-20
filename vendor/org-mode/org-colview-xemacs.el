@@ -5,7 +5,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.17trans
+;; Version: 6.18
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -790,7 +790,7 @@ an integer, select that value."
 This respects the format of the time stamp in S, active or non-active,
 and also including time or not.  S must be just a time stamp, no text
 around it."
-  (when (string-match (concat "^" org-ts-regexp3 "$") s)
+  (when (and s (string-match (concat "^" org-ts-regexp3 "$") s))
     (let* ((time (org-parse-time-string s 'nodefaults))
 	   (active (equal (string-to-char s) ?<))
 	   (fmt (funcall (if (nth 1 time) 'cdr 'car) org-time-stamp-formats))
