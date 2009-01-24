@@ -3,7 +3,7 @@
 ;; Copyright 2008 pluskid
 ;;
 ;; Author: pluskid <pluskid@gmail.com>
-;; Version: 0.5.7
+;; Version: 0.5.9
 ;; X-URL: http://code.google.com/p/yasnippet/
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -202,7 +202,7 @@ to expand.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Internal variables
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defvar yas/version "0.5.7")
+(defvar yas/version "0.5.9")
 
 (defvar yas/snippet-tables (make-hash-table)
   "A hash table of snippet tables corresponding to each major-mode.")
@@ -650,7 +650,7 @@ for each field."
       (goto-char start)
       (insert (yas/calculate-field-value field text))
       (if (eq length 0)
-	  (move-overlay overlay start (+ start (length text))))
+	  (move-overlay overlay start (point)))
       (delete-char length))))
 
 (defun yas/expand-snippet (start end template)
@@ -1594,6 +1594,13 @@ handle the end-of-buffer error fired in it by calling
       ad-do-it
     (error (message (error-message-string err)))))
 
+;; disable c-electric-* serial command in YAS fields
+(add-hook 'c-mode-common-hook
+          '(lambda ()
+	     (make-variable-buffer-local 'yas/keymap)
+             (dolist (k '(":" ">" ";" "<" "{" "}"))
+               (define-key yas/keymap
+                 k 'self-insert-command))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Contents of dropdown-list.el
