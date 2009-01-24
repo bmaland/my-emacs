@@ -61,6 +61,10 @@
 (add-to-list 'load-path "~/.emacs.d/vendor/sml-mode")
 (add-to-list 'load-path "~/.emacs.d/vendor/ri-emacs")
 (add-to-list 'load-path "~/.emacs.d/vendor/org-mode")
+(add-to-list 'load-path "~/.emacs.d/vendor/bbdb")
+
+(require 'bbdb)
+(bbdb-initialize)
 
 (require 'ri)
 (require 'multi-term)

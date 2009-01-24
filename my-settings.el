@@ -43,6 +43,9 @@
       inferior-lisp-program "sbcl --no-linedit"
       multi-term-program "/bin/zsh"
       twittering-username "Chrononaut"
+
+      bbdb-file "~/notat/.bbdb"
+
       display-time-string-forms '((propertize
                                    (concat " " 24-hours ":" minutes ", "
                                            day "." month " ")
