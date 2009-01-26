@@ -27,13 +27,15 @@
              (load "pylint-flymake.el")
              (set (make-variable-buffer-local 'beginning-of-defun-function)
                   'py-beginning-of-def-or-class)
-             (setq outline-regexp "def\\|class ")
              ;; ( is handled by pycomplete.el
              (set-pairs '("{" "[" "\"" "\'"))
              (setq py-indent-offset 4
-                   py-shell-switch-buffers-on-execute nil)
+                   py-shell-switch-buffers-on-execute nil
+                   outline-regexp "def\\|class ")
+
              (local-set-key [return] 'py-newline-and-indent)
              (local-set-key (kbd "C-c C-z") 'py-shell)
+             (local-set-key (kbd "C-h p") 'py-complete-help-thing-at-point)
 
              (when (and buffer-file-name
                         (file-writable-p
@@ -43,6 +45,8 @@
                               'flymake-display-err-menu-for-current-line)
                (flymake-mode t))))
 
+;; NOTE Not sure if I really need this, py-complete works well enough I think.
+;; Should be improved with completion etc
 (defun my-python-documentation (w)
   "Launch PyDOC on the Word at Point"
   (interactive

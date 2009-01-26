@@ -2,7 +2,8 @@
   "Enable things that are convenient across all coding buffers."
   (set (make-local-variable 'comment-auto-fill-only-comments) t)
   (auto-fill-mode t) ;; Comments only
-  (setq save-place t)
+  (setq save-place t
+        show-trailing-whitespace t)
   (pretty-lambdas))
 
 (defun lisp-hook ()

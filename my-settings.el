@@ -152,7 +152,6 @@ div.figure p { text-align: left; margin: 25px; }
 
 (setq-default fill-column 80 ;; how wide the screen should be before word wrapping
               indent-tabs-mode nil
-              show-trailing-whitespace t
               tab-width 2)
 
 (set-default 'imenu-auto-rescan t)
