@@ -115,6 +115,9 @@
 (autoload 'w3m "w3m-load" "" t)
 (autoload 'lisppaste-paste-region "lisppaste" "" t)
 
+(autoload 'doctest-mode "doctest-mode" nil t)
+(add-to-list 'auto-mode-alist '("\\.doctest$" . doctest-mode))
+
 (autoload 'haml-mode "haml-mode" nil t)
 (add-to-list 'auto-mode-alist '("\\.haml$" . haml-mode))
 (autoload 'sass-mode "sass-mode" nil t)
