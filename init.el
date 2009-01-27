@@ -97,6 +97,7 @@
 
 ;; Autoloads
 (autoload 'google-define "google-define")
+(autoload 'sr-speedbar-toggle "sr-speedbar")
 
 (autoload 'run-ruby "inf-ruby"
   "Run an inferior Ruby process")

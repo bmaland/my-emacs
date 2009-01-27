@@ -71,6 +71,7 @@
 (global-set-key (kbd "C-x M-f") 'ido-find-file-other-window)
 (global-set-key (kbd "M-SPC")   'set-mark-command)
 (global-set-key (kbd "C-x m")   'magit-status)
+(global-set-key (kbd "s-s")     'sr-speedbar-toggle)
 
 ;; make cursor movement keys under right hand's home-row.
 (global-set-key (kbd "M-j") 'backward-char) ; was indent-new-comment-line
