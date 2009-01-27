@@ -3,6 +3,7 @@
   (set (make-local-variable 'comment-auto-fill-only-comments) t)
   (auto-fill-mode t) ;; Comments only
   (setq save-place t)
+  (local-set-key [tab] 'indent-or-expand)
   (pretty-lambdas))
 
 (defun lisp-hook ()
@@ -65,6 +66,7 @@
 
 (add-hook 'c-mode-hook
           '(lambda ()
+             (coding-hook)
              (set-pairs '("(" "<" "{" "[" "\"" "\'"))
              (c-set-style "GNU")
              (setq c-basic-offset 2)
@@ -74,6 +76,7 @@
 
 (add-hook 'php-mode-hook
           '(lambda ()
+             (coding-hook)
              (set-pairs '("<" "{" "[" "\"" "\'"))
              (setq c-basic-offset 4)
              (c-set-offset 'inline-open 0)
@@ -82,6 +85,7 @@
 
 (add-hook 'sh-mode-hook
           '(lambda ()
+             (coding-hook)
              (set-pairs '("(" "{" "\"" "\'"))
              (setq sh-basic-offset 2)
              (local-set-key [return] 'reindent-then-newline-and-indent)
@@ -90,6 +94,7 @@
 
 (add-hook 'js2-mode-hook
           '(lambda ()
+             (coding-hook)
              (set-pairs '("(" "{" "[" "\"" "\'"))
              (setq js2-basic-offset 4)
              (define-key js2-mode-map (kbd "C-c l") 'js-lambda)
@@ -98,12 +103,14 @@
 
 (add-hook 'prolog-mode-hook
           (lambda ()
+            (coding-hook)
             (set-pairs '("(" "{" "[" "\"" "'"))
             ;;(modify-syntax-entry ?_ ".")
             (local-set-key [return] 'reindent-then-newline-and-indent)))
 
 (add-hook 'sml-mode-hook
           '(lambda ()
+             (coding-hook)
              (set-pairs '("(" "{" "[" "\"" "\'"))
              (setq sml-electric-semi-mode t)
              (local-set-key [return] 'reindent-then-newline-and-indent)))

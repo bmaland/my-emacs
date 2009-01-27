@@ -1,5 +1,15 @@
 ;;; my-elisp.el --- Various pieces of elisp created by myself and others
 
+(defun indent-or-expand (arg)
+  "Either expand a snippet or the word preceding point, or indent."
+  (interactive "*P")
+  (unless (yas/expand)
+    (if (and
+         (or (bobp) (= ?w (char-syntax (char-before))))
+         (or (eobp) (not (= ?w (char-syntax (char-after))))))
+        (dabbrev-expand arg)
+      (indent-for-tab-command))))
+
 (defun emacswiki ()
   "Docstring"
   (interactive)
