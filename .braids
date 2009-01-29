@@ -1,4 +1,11 @@
 --- 
+vendor/emms: 
+  squashed: true
+  url: git://git.sv.gnu.org/emms.git
+  branch: master
+  type: git
+  revision: 1cb621334a33563996784b14eadc96f2126767f2
+  remote: braid/vendor/emms
 vendor/rhtml: 
   squashed: true
   url: git://github.com/eschulte/rhtml.git
