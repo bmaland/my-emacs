@@ -13,7 +13,19 @@
 ;; autocompleteel-python-code-completion-in-emacs/
 
 (setq interpreter-mode-alist (cons '("python" . python-mode)
-                                   interpreter-mode-alist))
+                                   interpreter-mode-alist)
+
+      comint-completion-autolist t  ;list possibilities on partial
+          ;completion
+      comint-completion-recexact nil  ;use shortest compl. if
+          ;characters cannot be added
+       ;; how many history items are stored in comint-buffers (e.g. py- shell)
+       ;; use the HISTSIZE environment variable that shells use (if  avail.)
+       ;; (default is 32)
+      comint-input-ring-size (string-to-number (or (getenv
+                                                    "HISTSIZE") "100"))
+
+      py-python-command-args '("-pylab"))
 
 (autoload 'pymacs-apply "pymacs")
 (autoload 'pymacs-call  "pymacs")
