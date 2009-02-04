@@ -44,6 +44,7 @@
 (global-set-key "\M-#"          'calc)
 (global-set-key (kbd "C-x gd")  'google-define)
 (global-set-key "\C-xf"         'recentf-ido-find-file)
+(global-set-key "\C-xx"         'file-cache-ido-find-file)
 (global-set-key "\M-`"          'ff-find-other-file)
 (global-set-key "\C-c1"         'find-grep-dired)
 (global-set-key "\C-c2"         'grep-find)

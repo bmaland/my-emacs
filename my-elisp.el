@@ -1,6 +1,7 @@
 ;;; my-elisp.el --- Various pieces of elisp created by myself and others
 
 (defun indent-or-expand (arg)
+  ;; TODO maybe try complete-tag as well
   "Either expand a snippet or the word preceding point, or indent."
   (interactive "*P")
   (unless (yas/expand)
@@ -429,5 +430,33 @@ Subsequent calls expands the selection to larger semantic unit."
     (previous-buffer)
     (while (ignore-buffer (buffer-name))
       (previous-buffer))))
+
+
+;; By MartinNordholts @ http://www.emacswiki.org/emacs/FileNameCache
+(defun file-cache-ido-find-file (file)
+  "Using ido, interactively open file from file cache'.
+First select a file, matched using ido-switch-buffer against the contents
+in `file-cache-alist'. If the file exist in more than one
+directory, select directory. Lastly the file is opened."
+  (interactive (list (file-cache-ido-read "File: "
+                                          (mapcar
+                                           (lambda (x)
+                                             (car x))
+                                           file-cache-alist))))
+  (let* ((record (assoc file file-cache-alist)))
+    (find-file
+     (expand-file-name
+      file
+      (if (= (length record) 2)
+          (car (cdr record))
+        (file-cache-ido-read
+         (format "Find %s in dir: " file) (cdr record)))))))
+
+(defun file-cache-ido-read (prompt choices)
+  (let ((ido-make-buffer-list-hook
+   (lambda ()
+     (setq ido-temp-list choices))))
+    (ido-read-buffer prompt)))
+
 
 (provide 'my-elisp)

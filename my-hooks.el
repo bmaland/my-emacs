@@ -107,7 +107,9 @@
             (coding-hook)
             (set-pairs '("(" "{" "[" "\"" "'"))
             ;;(modify-syntax-entry ?_ ".")
-            (local-set-key [return] 'reindent-then-newline-and-indent)))
+            (local-set-key [return] 'reindent-then-newline-and-indent)
+            (local-set-key (kbd "C-c C-l") 'prolog-consult-file)
+            (local-set-key (kbd "C-c C-z") 'run-prolog)))
 
 (add-hook 'sml-mode-hook
           '(lambda ()
@@ -147,6 +149,10 @@
 
             (local-set-key (kbd "M-s-<left>") 'org-promote-subtree)
             (local-set-key (kbd "M-s-<right>") 'org-demote-subtree)
+            (local-set-key (kbd "S-<right>") 'windmove-right)
+            (local-set-key (kbd "S-<left>") 'windmove-left)
+            (local-set-key (kbd "S-<up>") 'windmove-up)
+            (local-set-key (kbd "S-<down>") 'windmove-down)
             (local-set-key (kbd "C-c d") '(lambda () (interactive)
                                             (org-todo 'done)))
             (local-set-key (kbd "C-c s") '(lambda () (interactive)
@@ -160,7 +166,6 @@
                 (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
 
             (add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
-
             (auto-fill-mode 1)))
 
 (add-hook 'remember-mode-hook 'org-remember-apply-template)

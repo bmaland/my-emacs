@@ -18,9 +18,12 @@
 (require 'magit) ; Can't autoload magit, need some of the functions earlier
 (require 'ack)
 (require 'google-define)
+(require 'filecache)
 
 (load "my-settings.el")
 (add-to-list 'load-path package-user-dir)
+(when (file-exists-p *private-settings*)
+  (load *private-settings*))
 
 (require 'yasnippet)
 (require 'yasnippet-mode)
@@ -62,6 +65,7 @@
 (add-to-list 'load-path "~/.emacs.d/vendor/ri-emacs")
 (add-to-list 'load-path "~/.emacs.d/vendor/org-mode")
 (add-to-list 'load-path "~/.emacs.d/vendor/bbdb")
+(add-to-list 'load-path "~/.emacs.d/vendor/emms/lisp")
 
 (require 'bbdb)
 (bbdb-initialize)
@@ -135,6 +139,7 @@
 (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
 
 (autoload 'ruby-mode "ruby-mode" "Ruby editing mode." t)
+(autoload 'ruby-test-run-file "ruby-test" "Test runner for ruby unit tests." t)
 (add-to-list 'auto-mode-alist '("\\.rb$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.rake$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.gemspec$" . ruby-mode))
@@ -144,7 +149,15 @@
 (add-to-list 'auto-mode-alist '("Capfile" . ruby-mode))
 (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
 
-(add-to-list 'auto-mode-alist '("\.pl$" . prolog-mode))
+(autoload 'run-prolog "prolog" "Start a Prolog sub-process." t)
+(autoload 'prolog-mode "prolog" "Major mode for editing Prolog programs." t)
+(autoload 'mercury-mode "prolog" "Major mode for editing Mercury programs." t)
+(setq prolog-system 'swi)
+
+(setq auto-mode-alist (append '(("\\.pl$" . prolog-mode)
+                                ("\\.m$" . mercury-mode))
+                               auto-mode-alist))
+
 (add-to-list 'auto-mode-alist '("\.org$" . org-mode))
 
 (autoload 'markdown-mode "markdown-mode.el"

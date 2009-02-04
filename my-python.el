@@ -27,6 +27,8 @@
              (require 'ipython)
              (require 'pycomplete)
 
+             (highlight-80+-mode t)
+
              ;; Initialize Rope
              (when (not (fboundp 'ropemacs-mode))
                (pymacs-load "ropemacs" "rope-")
