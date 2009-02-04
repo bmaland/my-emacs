@@ -1,6 +1,8 @@
 (setenv "PATH" (concat (getenv "PATH") ":/usr/local/bin:" (getenv "HOME") "/dotfiles/bin"))
 (setq exec-path (append exec-path '("/usr/local/bin")))
 
+(setq *private-settings* "~/.private.el")
+
 (setq user-full-name "Bjørn Arild Mæland"
       user-mail-address "bjorn.maeland@gmail.com"
 
@@ -54,7 +56,8 @@
 ;; org-mode
 (setq org-directory "~/notat"
       org-default-notes-file "~/notat/.notes"
-      org-agenda-files '("~/notat")
+      org-default-notes-file "~/notat/.notes"
+
       org-deadline-warning-days 7
       org-reverse-note-order nil
       org-log-done 'note
@@ -68,6 +71,19 @@ div.figure p { text-align: left; margin: 25px; }
                       ("\\.x?html?\\'" . "firefox %s")
                       ("\\.pdf\\'" . "evince %s"))
 
+      org-clock-in-switch-to-state "STARTED"
+      org-clock-remove-zero-time-clocks t
+
+      org-tag-alist '(("PROJECT" . ?p) ("HOME" . 104) ("STUDIES" . 115)
+                         ("WORK" . 119) ("URGENT" . ?u) ("ARCHIVE" . ?r)
+                         ("NOTES" . ?n) ("ACTION" . ?a))
+      org-todo-keywords '((sequence "TODO(t)" "MAYBE(m)" "NEXT(n!)"
+                                       "STARTED(s)" "WAITING(w@/!)" "|"
+                                       "DONE(d@)" "CANCELLED(c@)"))
+
+      org-agenda-files '("~/notat")
+      org-agenda-skip-scheduled-if-done t
+      org-agenda-skip-deadline-if-done t
       org-agenda-custom-commands
       '(("w" todo "WAITING"
          ((org-agenda-sorting-strategy '(priority-down))
