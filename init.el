@@ -22,8 +22,6 @@
 
 (load "my-settings.el")
 (add-to-list 'load-path package-user-dir)
-(when (file-exists-p *private-settings*)
-  (load *private-settings*))
 
 (require 'yasnippet)
 (require 'yasnippet-mode)

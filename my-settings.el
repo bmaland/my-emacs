@@ -88,4 +88,4 @@
 (setq-default fill-column 80 ;; how wide the screen should be before word wrapping
               indent-tabs-mode nil
               tab-width 2
-              'imenu-auto-rescan t)
+              imenu-auto-rescan t)

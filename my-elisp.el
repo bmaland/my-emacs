@@ -161,6 +161,7 @@ Subsequent calls expands the selection to larger semantic unit."
              buffer-file-name))))
 
 (defun find-alternative-file-with-su ()
+  "Reopens the current file with su (via tramp)"
   (interactive)
   (when buffer-file-name
     (find-alternate-file
@@ -177,7 +178,7 @@ Subsequent calls expands the selection to larger semantic unit."
            (insert (current-kill 0)))))
 
 (defun my-print-macro-expansion ()
-  "insert the expansion of a macro"
+  "Insert the expansion of a macro"
   (interactive)
   (backward-kill-sexp)
   (undo)
