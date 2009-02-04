@@ -27,6 +27,13 @@ vendor/rhtml:
   type: git
   revision: ccf020045e77cbfa68f5e17307bcc1b0fb27759d
   remote: braid/vendor/rhtml
+vendor/slime: 
+  squashed: true
+  url: git://github.com/nablaone/slime.git
+  branch: master
+  type: git
+  revision: 14d5c9b21cb5db577f190baf45ebdca10c98f976
+  remote: braid/vendor/slime
 yasnippet/snippets/text-mode/sh-mode: 
   squashed: true
   branch: master
