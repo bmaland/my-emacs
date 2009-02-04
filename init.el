@@ -43,9 +43,9 @@
 (auto-compression-mode t)
 
 (if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0))
-(menu-bar-mode (if window-system 1 -1))
 (if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
 (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+(menu-bar-mode -1)
 
 (fset 'yes-or-no-p 'y-or-n-p)
 (random t)
@@ -61,6 +61,7 @@
 (add-to-list 'load-path "~/.emacs.d/vendor/bbdb")
 (add-to-list 'load-path "~/.emacs.d/vendor/emms/lisp")
 (add-to-list 'load-path "~/.emacs.d/vendor/slime")
+;;(add-to-list 'load-path "~/foss/slime")
 
 (require 'ri)
 (require 'multi-term)
@@ -70,28 +71,18 @@
 (textmate-mode)
 
 ;; Slime
-
+(require 'slime)
 (eval-after-load "slime"
   '(progn
      (slime-setup '(slime-fancy slime-asdf slime-banner))
      (setq slime-complete-symbol*-fancy t)
      (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)
      ))
-
-;; Regenerate the autoload file if it doesn't exist or it's too
-;; old. (2 weeks or so)
-(if (or (not (file-exists-p autoload-file))
-        (< (+ (car (nth 5 (file-attributes autoload-file))) 20)
-           (car (current-time))))
-    (let ((generated-autoload-file autoload-file))
-      (message "Updating autoloads...")
-      (update-directory-autoloads "~/.emacs.d/")))
-(load autoload-file)
+(autoload 'slime-selector "slime" t)
 
 ;; Autoloads
 (autoload 'google-define "google-define")
 (autoload 'sr-speedbar-toggle "sr-speedbar")
-(autoload 'slime "slime")
 
 (autoload 'run-ruby "inf-ruby"
   "Run an inferior Ruby process")
@@ -156,10 +147,18 @@
          (cons '("\\.text" . markdown-mode) auto-mode-alist))
 (add-to-list 'auto-mode-alist '("\.markdown$" . markdown-mode))
 
+;; Regenerate the autoload file if it doesn't exist or it's too
+;; old. (2 weeks or so)
+(if (or (not (file-exists-p autoload-file))
+        (< (+ (car (nth 5 (file-attributes autoload-file))) 20)
+           (car (current-time))))
+    (let ((generated-autoload-file autoload-file))
+      (message "Updating autoloads...")
+      (update-directory-autoloads "~/.emacs.d/")))
+(load autoload-file)
+
 ;; I had to do this to use python-mode.el over python.el
 (load "python-mode.el")
-
-(autoload 'slime-selector "slime" t)
 
 (load custom-file 'noerror)
 
@@ -172,10 +171,6 @@
 (require 'my-python)
 (require 'my-hooks)
 (kill-wspace-mode t)
-
-(if (eq window-system 'mac)
-    (load "osx.el")
-  (load "linux.el"))
 
 (let ((system-specific-config (concat "~/.emacs.d/hosts/" system-name ".el")))
   (if (file-exists-p system-specific-config)

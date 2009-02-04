@@ -92,3 +92,8 @@
               indent-tabs-mode nil
               tab-width 2
               imenu-auto-rescan t)
+
+;; Load OS-specific settings
+(if (eq window-system 'mac)
+    (load "osx.el")
+  (load "linux.el"))
