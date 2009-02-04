@@ -1,17 +1,27 @@
-(setenv "PATH" (concat (getenv "PATH") ":/usr/local/bin:" (getenv "HOME") "/dotfiles/bin"))
+(setenv "PATH" (concat (getenv "PATH") ":/usr/local/bin:"
+                       (getenv "HOME") "/dotfiles/bin"))
 (setq exec-path (append exec-path '("/usr/local/bin")))
 
+;;;;Private settings
+;; Here stuff like names, usernames/passwords, etc, can be safely
+;; stored outside of (public) version control.
 (setq *private-settings* "~/.private.el")
+(when (file-exists-p *private-settings*)
+  (load *private-settings*))
 
-(setq user-full-name "Bjørn Arild Mæland"
-      user-mail-address "bjorn.maeland@gmail.com"
+;;;;;org-mode
+;; Org-specific settings are kept in the root of my org-directory.
+;; These has to be individually catered anyway so it doesnt really
+;; make much sense to include them here.
+(setq org-directory "~/notat")
+(when (file-exists-p org-directory)
+  (load (concat org-directory "/.settings.el")))
 
-      inhibit-startup-message t ;; Remove splash screen
+(setq inhibit-startup-message t ;; Remove splash screen
       initial-major-mode 'emacs-lisp-mode ;; Elisp as default for scratch
       default-major-mode 'org-mode
 
       calendar-date-style 'european
-      european-calendar-style t ;; Obsolute since 23.1, but keep for a while
 
       ;; Flymake - only check syntax on save
       flymake-no-changes-timeout 9999
@@ -44,30 +54,14 @@
       tramp-default-method "ssh"
       inferior-lisp-program "sbcl --no-linedit"
       multi-term-program "/bin/zsh"
-      twittering-username "Chrononaut"
-
-      bbdb-file "~/notat/.bbdb"
 
       display-time-string-forms '((propertize
                                    (concat " " 24-hours ":" minutes ", "
                                            day "." month " ")
                                    'face 'egoge-display-time)))
 
-;;;;;org-mode
-;; Org-specific settings are kept in the root of my org-directory.
-;; These has to be individually catered anyway so it doesnt really
-;; make much sense to include them here.
-(setq org-directory "~/notat")
-(when (file-exists-p org-directory)
-  (load (concat org-directory "/.settings.el")))
-
 (setq remember-annotation-functions '(org-remember-annotation)
       remember-handler-functions '(org-remember-handler)
-
-      ;; Jabber
-      jabber-connection-type 'ssl
-      jabber-server "gmail.com"
-      jabber-username "bjorn.maeland"
 
       ;; Files and paths
       bookmark-default-file "~/.emacs.d/bookmarks.bmk"
@@ -91,17 +85,7 @@
                          (name . "^\\*scratch\\*$")
                          (name . "^\\*Messages\\*$")))))))
 
-(setq erc-server "irc.freenode.net"
-       erc-port 6667
-       erc-nick "bjornarild"
-       erc-user-full-name user-full-name
-       erc-email-userid "bjorn"
-       erc-prompt-for-password nil
-       erc-mode-line-format ""
-       erc-autojoin-channels-alist '(("freenode.net" "#emacs")))
-
 (setq-default fill-column 80 ;; how wide the screen should be before word wrapping
               indent-tabs-mode nil
-              tab-width 2)
-
-(set-default 'imenu-auto-rescan t)
+              tab-width 2
+              'imenu-auto-rescan t)
