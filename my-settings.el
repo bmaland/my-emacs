@@ -53,79 +53,13 @@
                                            day "." month " ")
                                    'face 'egoge-display-time)))
 
-;; org-mode
-(setq org-directory "~/notat"
-      org-default-notes-file "~/notat/.notes"
-      org-default-notes-file "~/notat/.notes"
-
-      org-deadline-warning-days 7
-      org-reverse-note-order nil
-      org-log-done 'note
-      org-return-follows-link t
-      org-export-skip-text-before-1st-heading t
-      org-export-with-LaTeX-fragments t
-      org-export-html-style-extra "<style type=\"text/css\">
-div.figure p { text-align: left; margin: 25px; }
-</style>"
-      org-file-apps '((auto-mode . emacs)
-                      ("\\.x?html?\\'" . "firefox %s")
-                      ("\\.pdf\\'" . "evince %s"))
-
-      org-clock-in-switch-to-state "STARTED"
-      org-clock-remove-zero-time-clocks t
-
-      org-tag-alist '(("PROJECT" . ?p) ("HOME" . 104) ("STUDIES" . 115)
-                         ("WORK" . 119) ("URGENT" . ?u) ("ARCHIVE" . ?r)
-                         ("NOTES" . ?n) ("ACTION" . ?a))
-      org-todo-keywords '((sequence "TODO(t)" "MAYBE(m)" "NEXT(n!)"
-                                       "STARTED(s)" "WAITING(w@/!)" "|"
-                                       "DONE(d@)" "CANCELLED(c@)"))
-
-      org-agenda-files '("~/notat")
-      org-agenda-skip-scheduled-if-done t
-      org-agenda-skip-deadline-if-done t
-      org-agenda-custom-commands
-      '(("w" todo "WAITING"
-         ((org-agenda-sorting-strategy '(priority-down))
-          (org-agenda-prefix-format "  Mixed: ")))
-        ("U" tags-tree "+boss-urgent"
-         ((org-show-following-heading nil)
-          (org-show-hierarchy-above nil)))
-        ("N" search ""
-         ((org-agenda-files '("~/notat"))
-          (org-agenda-text-search-extra-files nil))))
-
-      org-remember-templates
-      '(("Todo" ?t "* TODO %^{Brief Description} %^g\nAdded: %U"
-         "~/notat/gtd.org" "Usortert")
-
-        ("Journal" ?j "\n* %^{topic} %T %^g \n%i%?\n"
-         "~/notat/journal.org")
-        )
-
-      org-refile-targets '((nil . (:level . 1)) (nil . (:level . 2))
-                           (("opensource.org" "webprojects.org") . (:tag . "PROJECT")))
-
-      org-publish-project-alist
-      '(
-        ("studier-notes"
-         :base-directory "~/notat/studier/"
-         :base-extension "org"
-         :publishing-directory "~/public_html/studier"
-         :language "nn"
-         :inline-images t
-         :completion-function (lambda ()
-                                (shell-command
-                                 (concat
-                                  "scp -r ~/public_html/studier/*.html "
-                                  "rasmus.uib.no:~/public_html/studier/")))
-         :headline-levels 4
-         :todo-keywords nil ; Skip todo keywords
-         :auto-preamble t
-         :auto-index t
-         :index-title "Notat til emner ved UiB"
-         )
-        ("studier" :components ("studier-notes"))))
+;;;;;org-mode
+;; Org-specific settings are kept in the root of my org-directory.
+;; These has to be individually catered anyway so it doesnt really
+;; make much sense to include them here.
+(setq org-directory "~/notat")
+(when (file-exists-p org-directory)
+  (load (concat org-directory "/.settings.el")))
 
 (setq remember-annotation-functions '(org-remember-annotation)
       remember-handler-functions '(org-remember-handler)
@@ -160,7 +94,7 @@ div.figure p { text-align: left; margin: 25px; }
 (setq erc-server "irc.freenode.net"
        erc-port 6667
        erc-nick "bjornarild"
-       erc-user-full-name "Bjørn Arild Mæland"
+       erc-user-full-name user-full-name
        erc-email-userid "bjorn"
        erc-prompt-for-password nil
        erc-mode-line-format ""
