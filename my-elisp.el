@@ -8,7 +8,7 @@
     (if (and
          (or (bobp) (= ?w (char-syntax (char-before))))
          (or (eobp) (not (= ?w (char-syntax (char-after))))))
-        (dabbrev-expand arg)
+        (hippie-expand arg)
       (indent-for-tab-command))))
 
 (defun emacswiki ()

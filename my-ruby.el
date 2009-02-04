@@ -1,7 +1,26 @@
-(setq rinari-tags-file-name "TAGS")
+(setq rinari-tags-file-name "TAGS"
+      ruby-program-name "irb -f --inf-ruby-mode -rubygems")
+
+(add-hook 'ruby-mode-hook
+          '(lambda ()
+             (require 'ruby-electric)
+             (require 'ruby-style)
+             (require 'rcodetools)
+             (ruby-electric-mode t)
+             (require 'ruby-compilation)
+             (coding-hook)
+             (set-pairs '("(" "{" "[" "\"" "\'" "|"))
+             (inf-ruby-keys)
+             (local-set-key [return] 'ruby-reindent-then-newline-and-indent)
+             (local-set-key (kbd "C-h r") 'ri)
+             (local-set-key (kbd "C-c C-c") 'ruby-compilation-this-buffer)
+             ;;(define-key ruby-mode-map (kbd "C-c M-t") 'ruby-test-file)
+             ;;(define-key ruby-mode-map (kbd "C-c C-M-t") 'ruby-test-one)
+             ;;(local-set-key [tab] 'ri-ruby-complete-symbol)
+             ;;(local-set-key "\C-c\C-a" 'ri-ruby-show-args)
+             ))
 
 ;; Code borrowed from Emacs starter kit
-
 (defun rr (&optional arg)
   "Run a Ruby interactive shell session in a buffer."
   (interactive "P")

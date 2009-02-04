@@ -50,21 +50,6 @@
                 (if (file-exists-p (concat buffer-file-name "c"))
                     (delete-file (concat buffer-file-name "c")))))))
 
-(add-hook 'ruby-mode-hook
-          '(lambda ()
-             (require 'ruby-electric)
-             (ruby-electric-mode t)
-             (require 'ruby-compilation)
-             (coding-hook)
-             (set-pairs '("(" "{" "[" "\"" "\'" "|"))
-             (inf-ruby-keys)
-             (local-set-key [return] 'ruby-reindent-then-newline-and-indent)
-             (local-set-key (kbd "C-h r") 'ri)
-             (local-set-key (kbd "C-c C-c") 'ruby-compilation-this-buffer)
-             (define-key ruby-mode-map (kbd "C-c M-t") 'ruby-test-file)
-             (define-key ruby-mode-map (kbd "C-c C-M-t") 'ruby-test-one)
-             ))
-
 (add-hook 'c-mode-hook
           '(lambda ()
              (coding-hook)
