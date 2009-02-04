@@ -22,8 +22,6 @@
 (global-set-key (kbd "M-3") 'split-window-horizontally) ; was digit-argument
 (global-set-key (kbd "M-o") 'other-window) ; was prefix
 
-(global-set-key (kbd "<f9>") 'kill-this-buffer) ; Close file
-
 ;; File finding
 (global-set-key (kbd "C-x M-f")   'ido-find-file-other-window)
 (global-set-key (kbd "C-x C-M-f") 'find-file-in-project)
@@ -42,7 +40,6 @@
 (global-set-key "\C-\M-r" 'isearch-backward)
 
 (global-set-key "\M-#"          'calc)
-(global-set-key (kbd "C-x gd")  'google-define)
 (global-set-key "\C-xf"         'recentf-ido-find-file)
 (global-set-key "\C-xx"         'file-cache-ido-find-file)
 (global-set-key "\M-`"          'ff-find-other-file)
@@ -51,7 +48,10 @@
 (global-set-key "\C-z"          'undo)
 (global-set-key "\C-x\C-m"      'execute-extended-command)
 (global-set-key "\C-c\C-m"      'execute-extended-command)
+
 (global-set-key "\C-w"          'backward-kill-word)
+(global-set-key (kbd "C-x w")   'backward-kill-sexp)
+
 (global-set-key "\C-cc"         'jao-copy-line)
 (global-set-key "\C-\M-w"       'my-mark-word)
 (global-set-key (kbd "M-@")     'my-mark-word)
@@ -100,8 +100,11 @@
 (global-set-key [(control shift d)] 'duplicate-line)
 (global-set-key [(control shift l)] 'mark-line)
 
-(global-set-key "\C-xgf" 'textmate-goto-file)
-(global-set-key "\C-xgs" 'textmate-goto-symbol)
+;; C-x g isnt a valid prefix in at least Emacs 22.0
+(when (> emacs-major-version 22)
+  (global-set-key (kbd "C-x gf") 'textmate-goto-file)
+  (global-set-key (kbd "C-x gs") 'textmate-goto-symbol)
+  (global-set-key (kbd "C-x gd") 'google-define))
 
 (global-set-key "\C-cT" 'twittering-update-status-interactive)
 
