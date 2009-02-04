@@ -50,10 +50,6 @@
 (fset 'yes-or-no-p 'y-or-n-p)
 (random t)
 
-;; Don't clutter up directories with files~
-(setq backup-directory-alist `(("." . ,(expand-file-name
-                                        "~/.emacs.d/backups"))))
-
 ;; These are damn useful
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
@@ -64,9 +60,7 @@
 (add-to-list 'load-path "~/.emacs.d/vendor/org-mode")
 (add-to-list 'load-path "~/.emacs.d/vendor/bbdb")
 (add-to-list 'load-path "~/.emacs.d/vendor/emms/lisp")
-
-(require 'bbdb)
-(bbdb-initialize)
+(add-to-list 'load-path "~/.emacs.d/vendor/slime")
 
 (require 'ri)
 (require 'multi-term)
@@ -76,16 +70,13 @@
 (textmate-mode)
 
 ;; Slime
-(when (file-directory-p slime-dir)
-  (add-to-list 'load-path slime-dir)
-  (require 'slime)
 
-  (eval-after-load "slime"
-    '(progn
-       (slime-setup '(slime-fancy slime-asdf slime-banner))
-       (setq slime-complete-symbol*-fancy t)
-       (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)
-       )))
+(eval-after-load "slime"
+  '(progn
+     (slime-setup '(slime-fancy slime-asdf slime-banner))
+     (setq slime-complete-symbol*-fancy t)
+     (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)
+     ))
 
 ;; Regenerate the autoload file if it doesn't exist or it's too
 ;; old. (2 weeks or so)
@@ -100,6 +91,7 @@
 ;; Autoloads
 (autoload 'google-define "google-define")
 (autoload 'sr-speedbar-toggle "sr-speedbar")
+(autoload 'slime "slime")
 
 (autoload 'run-ruby "inf-ruby"
   "Run an inferior Ruby process")

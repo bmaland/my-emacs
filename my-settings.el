@@ -17,6 +17,10 @@
 (when (file-exists-p org-directory)
   (load (concat org-directory "/.settings.el")))
 
+;; Don't clutter up directories with files~
+(setq backup-directory-alist `(("." . ,(expand-file-name
+                                        "~/.emacs.d/backups"))))
+
 (setq inhibit-startup-message t ;; Remove splash screen
       initial-major-mode 'emacs-lisp-mode ;; Elisp as default for scratch
       default-major-mode 'org-mode
@@ -66,7 +70,6 @@
       ;; Files and paths
       bookmark-default-file "~/.emacs.d/bookmarks.bmk"
       bookmark-save-flag 1 ;; How many mods between saves
-      slime-dir "~/foss/slime/"
       snippet-dir "~/.emacs.d/yasnippet/snippets/"
       autoload-file "~/.emacs.d/loaddefs.el"
       package-user-dir "~/.emacs.d/elpa"

@@ -130,6 +130,9 @@
 
 (add-hook 'org-mode-hook
           (lambda ()
+            (require 'bbdb)
+            (bbdb-initialize)
+
             (set-pairs '("(" "{" "[" "\""))
 
             (local-set-key (kbd "M-s-<left>") 'org-promote-subtree)
