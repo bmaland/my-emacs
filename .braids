@@ -36,7 +36,7 @@ yasnippet/snippets/text-mode/sh-mode:
   remote: braid/yasnippet/snippets/text-mode/sh-mode
 vendor/ri-emacs: 
   squashed: true
-  url: git://github.com/technomancy/ri-emacs.git
+  url: git://github.com/technomancy/ri.el.git
   branch: master
   type: git
   revision: 737bd672081bec976eefe662909c85f55dfe9083
