@@ -118,6 +118,11 @@
              (set-pairs '("(" "[" "\"" "\'"))
              (local-set-key [return] 'newline-and-indent)))
 
+(add-hook 'yaml-mode-hook
+          '(lambda ()
+             (set-pairs '("(" "[" "\"" "\'"))
+             (local-set-key [return] 'newline-and-indent)))
+
 (add-hook 'nxml-mode-hook
           '(lambda ()
              (set-pairs '("<" "{" "[" "\"" "\'"))
@@ -171,5 +176,12 @@
 (add-hook 'server-done-hook (lambda nil (kill-buffer nil)))
 
 (eval-after-load "sql" '(progn (sql-set-product 'postgresql)))
+
+(eval-after-load "slime"
+  '(progn
+     (slime-setup '(slime-fancy slime-asdf slime-banner))
+     (setq slime-complete-symbol*-fancy t)
+     (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)
+     ))
 
 (provide 'my-hooks)
