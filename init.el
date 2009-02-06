@@ -1,7 +1,16 @@
 (prefer-coding-system 'utf-8)
+(random t)
 
+;; Load paths
 (add-to-list 'load-path "~/.emacs.d")
 (add-to-list 'load-path "~/.emacs.d/vendor")
+(add-to-list 'load-path "~/.emacs.d/vendor/sml-mode")
+(add-to-list 'load-path "~/.emacs.d/vendor/ri-emacs")
+(add-to-list 'load-path "~/.emacs.d/vendor/org-mode")
+(add-to-list 'load-path "~/.emacs.d/vendor/bbdb")
+(add-to-list 'load-path "~/.emacs.d/vendor/emms/lisp")
+(add-to-list 'load-path "~/.emacs.d/vendor/slime")
+(add-to-list 'load-path "~/.emacs.d/elpa")
 
 ;; TODO autoload some of these
 (require 'cl)
@@ -12,76 +21,29 @@
 (require 'ansi-color)
 (require 'recentf)
 (require 'pastie)
-(require 'twittering-mode)
 (require 'conservative-mode)
 (require 'kill-wspace-mode)
 (require 'magit) ; Can't autoload magit, need some of the functions earlier
 (require 'ack)
-(require 'google-define)
 (require 'filecache)
-
-(load "my-settings.el")
-(add-to-list 'load-path package-user-dir)
-
+(require 'textmate)
+(require 'ri)
+(require 'multi-term)
+(require 'slime)
 (require 'yasnippet)
 (require 'yasnippet-mode)
-(yas/initialize)
-(yas/load-directory snippet-dir)
 
 ;; ELPA
 (require 'package)
 (package-initialize)
 
-;; Default minor modes
-(transient-mark-mode t)
-(show-paren-mode t)
-(savehist-mode t)
-(global-font-lock-mode t)
-(ido-mode t)
-(recentf-mode t)
-(display-time-mode t)
-(auto-compression-mode t)
-
-(if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0))
-(if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
-(if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
-(menu-bar-mode -1)
-
-(fset 'yes-or-no-p 'y-or-n-p)
-(random t)
-
-;; These are damn useful
-(put 'upcase-region 'disabled nil)
-(put 'downcase-region 'disabled nil)
-
-;; Load paths
-(add-to-list 'load-path "~/.emacs.d/vendor/sml-mode")
-(add-to-list 'load-path "~/.emacs.d/vendor/ri-emacs")
-(add-to-list 'load-path "~/.emacs.d/vendor/org-mode")
-(add-to-list 'load-path "~/.emacs.d/vendor/bbdb")
-(add-to-list 'load-path "~/.emacs.d/vendor/emms/lisp")
-(add-to-list 'load-path "~/.emacs.d/vendor/slime")
-;;(add-to-list 'load-path "~/foss/slime")
-
-(require 'ri)
-(require 'multi-term)
-(multi-term-keystroke-setup)
-
-(require 'textmate)
-(textmate-mode)
-
-;; Slime
-(require 'slime)
-(eval-after-load "slime"
-  '(progn
-     (slime-setup '(slime-fancy slime-asdf slime-banner))
-     (setq slime-complete-symbol*-fancy t)
-     (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)
-     ))
-(autoload 'slime-selector "slime" t)
+;; I had to do this to use python-mode.el over python.el
+(load "python-mode.el")
 
 ;; Autoloads
-(autoload 'google-define "google-define")
+(autoload 'slime-selector "slime" t)
+(autoload 'google-define "google-define" nil t)
+(autoload 'twittering-mode "twittering-mode" nil t)
 (autoload 'sr-speedbar-toggle "sr-speedbar")
 
 (autoload 'run-ruby "inf-ruby"
@@ -133,7 +95,6 @@
 (autoload 'run-prolog "prolog" "Start a Prolog sub-process." t)
 (autoload 'prolog-mode "prolog" "Major mode for editing Prolog programs." t)
 (autoload 'mercury-mode "prolog" "Major mode for editing Mercury programs." t)
-(setq prolog-system 'swi)
 
 (setq auto-mode-alist (append '(("\\.pl$" . prolog-mode)
                                 ("\\.m$" . mercury-mode))
@@ -149,6 +110,8 @@
 
 ;; Regenerate the autoload file if it doesn't exist or it's too
 ;; old. (2 weeks or so)
+;; NOTE is this really needed anymore?
+(setq autoload-file "~/.emacs.d/loaddefs.el")
 (if (or (not (file-exists-p autoload-file))
         (< (+ (car (nth 5 (file-attributes autoload-file))) 20)
            (car (current-time))))
@@ -157,21 +120,4 @@
       (update-directory-autoloads "~/.emacs.d/")))
 (load autoload-file)
 
-;; I had to do this to use python-mode.el over python.el
-(load "python-mode.el")
-
-(load custom-file 'noerror)
-
-;; Personal customizations
-(require 'my-faces)
-(require 'my-elisp)
-(require 'my-bindings)
-(require 'my-aliases)
-(require 'my-ruby)
-(require 'my-python)
-(require 'my-hooks)
-(kill-wspace-mode t)
-
-(let ((system-specific-config (concat "~/.emacs.d/hosts/" system-name ".el")))
-  (if (file-exists-p system-specific-config)
-      (load system-specific-config)))
+(load "my-settings.el")

@@ -14,12 +14,14 @@
 ;; These has to be individually catered anyway so it doesnt really
 ;; make much sense to include them here.
 (setq org-directory "~/notat")
-(when (file-exists-p org-directory)
+(when (file-exists-p (concat org-directory "/.settings.el"))
   (load (concat org-directory "/.settings.el")))
 
 ;; Don't clutter up directories with files~
 (setq backup-directory-alist `(("." . ,(expand-file-name
                                         "~/.emacs.d/backups"))))
+
+(setq prolog-system 'swi)
 
 (setq inhibit-startup-message t ;; Remove splash screen
       initial-major-mode 'emacs-lisp-mode ;; Elisp as default for scratch
@@ -32,6 +34,10 @@
       flymake-start-syntax-check-on-newline nil
       flymake-start-syntax-check-on-find-file nil
 
+      ido-ignore-buffers               ; ignore these guys
+      '("\\` " "^\*Back" ".*Completion" "^\*Ido")
+
+      ido-case-fold t                   ; be case insensitive
       ido-enable-prefix nil
       ido-enable-flex-matching t
       ido-create-new-buffer 'always
@@ -71,8 +77,6 @@
       bookmark-default-file "~/.emacs.d/bookmarks.bmk"
       bookmark-save-flag 1 ;; How many mods between saves
       snippet-dir "~/.emacs.d/yasnippet/snippets/"
-      autoload-file "~/.emacs.d/loaddefs.el"
-      package-user-dir "~/.emacs.d/elpa"
       custom-file "~/.emacs.d/custom.el")
 
 (setq ibuffer-saved-filter-groups
@@ -93,7 +97,50 @@
               tab-width 2
               imenu-auto-rescan t)
 
+;; Default minor modes
+(yas/initialize)
+(yas/load-directory snippet-dir)
+
+(transient-mark-mode t)
+(show-paren-mode t)
+(savehist-mode t)
+(global-font-lock-mode t)
+(ido-mode t)
+(recentf-mode t)
+(display-time-mode t)
+(auto-compression-mode t)
+(kill-wspace-mode t)
+(textmate-mode t)
+(winner-mode t)
+
+(if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0))
+(if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+(if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+(menu-bar-mode -1)
+
+;; Functions
+(fset 'yes-or-no-p 'y-or-n-p)
+(put 'upcase-region 'disabled nil)
+(put 'downcase-region 'disabled nil)
+
+;;;;Load more specific settings
+
 ;; Load OS-specific settings
 (if (eq window-system 'mac)
     (load "osx.el")
   (load "linux.el"))
+
+;; Load Host-specific settings
+(let ((system-specific-config (concat "~/.emacs.d/hosts/" system-name ".el")))
+  (if (file-exists-p system-specific-config)
+      (load system-specific-config)))
+
+;; Personal customizations
+(load custom-file 'noerror)
+(require 'my-faces)
+(require 'my-elisp)
+(require 'my-bindings)
+(require 'my-aliases)
+(require 'my-ruby)
+(require 'my-python)
+(require 'my-hooks)
