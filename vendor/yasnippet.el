@@ -650,7 +650,7 @@ for each field."
       (goto-char start)
       (insert (yas/calculate-field-value field text))
       (if (eq length 0)
-	  (move-overlay overlay start (point)))
+    (move-overlay overlay start (point)))
       (delete-char length))))
 
 (defun yas/expand-snippet (start end template)
@@ -1257,7 +1257,9 @@ when the condition evaluated to non-nil."
                 (let* ((yas/minor-mode nil)
                        (command (key-binding yas/trigger-key)))
                   (when (commandp command)
-                    (call-interactively command))))))))))
+                    (call-interactively command)))))
+            ;; return nil if no template was found
+            nil)))))
 
 (defun yas/next-field-group ()
   "Navigate to next field group.  If there's none, exit the snippet."
@@ -1350,7 +1352,7 @@ up the snippet does not delete it!"
 (defun yas/get-registered-snippets ()
   (when (null yas/registered-snippets)
     (setq yas/registered-snippets
-	  (make-hash-table :test 'eq)))
+    (make-hash-table :test 'eq)))
   yas/registered-snippets)
 
 (defun yas/register-snippet (snippet)
@@ -1597,7 +1599,7 @@ handle the end-of-buffer error fired in it by calling
 ;; disable c-electric-* serial command in YAS fields
 (add-hook 'c-mode-common-hook
           '(lambda ()
-	     (make-variable-buffer-local 'yas/keymap)
+       (make-variable-buffer-local 'yas/keymap)
              (dolist (k '(":" ">" ";" "<" "{" "}"))
                (define-key yas/keymap
                  k 'self-insert-command))))
