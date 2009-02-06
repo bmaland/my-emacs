@@ -1,3 +1,5 @@
+(multi-term-keystroke-setup)
+
 ;; Align your code in a pretty way.
 (global-set-key (kbd "C-x \\") 'align-regexp)
 
@@ -103,6 +105,7 @@
 (when (> emacs-major-version 22)
   (global-set-key (kbd "C-x gf") 'textmate-goto-file)
   (global-set-key (kbd "C-x gs") 'textmate-goto-symbol)
+  (global-set-key (kbd "C-x ga") 'ack-in-project)
   (global-set-key (kbd "C-x gd") 'google-define))
 
 (global-set-key "\C-cT" 'twittering-update-status-interactive)
