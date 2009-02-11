@@ -1,4 +1,11 @@
 --- 
+vendor/swank-clojure: 
+  squashed: true
+  url: git://github.com/jochu/swank-clojure.git
+  branch: master
+  type: git
+  revision: 581954d1fc0cb115a87233426bae5d53455eb4bb
+  remote: braid/vendor/swank-clojure
 vendor/clojure-mode: 
   squashed: true
   url: git://github.com/jochu/clojure-mode.git
