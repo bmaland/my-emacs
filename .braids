@@ -1,50 +1,50 @@
 --- 
 vendor/emms: 
   squashed: true
-  branch: master
   url: git://git.sv.gnu.org/emms.git
+  branch: master
   type: git
   revision: 9fa028e62643365f1429aeb5d9e985ed81668748
   remote: braid/vendor/emms
-vendor/rhtml: 
-  squashed: true
-  url: git://github.com/eschulte/rhtml.git
-  branch: master
-  type: git
-  revision: ccf020045e77cbfa68f5e17307bcc1b0fb27759d
-  remote: braid/vendor/rhtml
-yasnippet/snippets/text-mode/emacs-lisp-mode: 
-  squashed: true
-  url: git://github.com/Chrononaut/yasnippet-emacs-lisp-mode.git
-  branch: master
-  type: git
-  revision: 2c58b23cd4301ffbc530cc90cfe0f74e95cd2bad
-  remote: braid/yasnippet/snippets/text-mode/emacs-lisp-mode
 yasnippet/snippets/text-mode/ruby-mode: 
   squashed: true
-  url: git://github.com/Chrononaut/yasnippet-ruby-mode.git
   branch: master
+  url: git://github.com/Chrononaut/yasnippet-ruby-mode.git
   type: git
   revision: a8cab00c313a43278704c103519404734973c10f
   remote: braid/yasnippet/snippets/text-mode/ruby-mode
+yasnippet/snippets/text-mode/emacs-lisp-mode: 
+  squashed: true
+  branch: master
+  url: git://github.com/Chrononaut/yasnippet-emacs-lisp-mode.git
+  type: git
+  revision: 2c58b23cd4301ffbc530cc90cfe0f74e95cd2bad
+  remote: braid/yasnippet/snippets/text-mode/emacs-lisp-mode
+vendor/rhtml: 
+  squashed: true
+  branch: master
+  url: git://github.com/eschulte/rhtml.git
+  type: git
+  revision: ccf020045e77cbfa68f5e17307bcc1b0fb27759d
+  remote: braid/vendor/rhtml
 vendor/slime: 
   squashed: true
   branch: master
   url: git://github.com/nablaone/slime.git
   type: git
-  revision: 14d5c9b21cb5db577f190baf45ebdca10c98f976
+  revision: a597b010db80f9f709afc49288c76fbc581e2fb1
   remote: braid/vendor/slime
 yasnippet/snippets/text-mode/sh-mode: 
   squashed: true
-  url: git://github.com/Chrononaut/yasnippet-sh-mode.git
   branch: master
+  url: git://github.com/Chrononaut/yasnippet-sh-mode.git
   type: git
   revision: 959ba8492654fca91e3c94113e3e50c33ceee8a2
   remote: braid/yasnippet/snippets/text-mode/sh-mode
 vendor/ri-emacs: 
   squashed: true
-  url: git://github.com/technomancy/ri.el.git
   branch: master
+  url: git://github.com/technomancy/ri.el.git
   type: git
   revision: 737bd672081bec976eefe662909c85f55dfe9083
   remote: braid/vendor/ri-emacs
