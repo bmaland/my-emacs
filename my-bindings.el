@@ -53,6 +53,7 @@
 
 (global-set-key "\C-w"          'backward-kill-word)
 (global-set-key (kbd "C-x w")   'backward-kill-sexp)
+(global-set-key (kbd "M-SPC")   'delete-horizontal-space)
 
 (global-set-key "\C-cc"         'jao-copy-line)
 (global-set-key "\C-\M-w"       'my-mark-word)

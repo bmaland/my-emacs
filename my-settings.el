@@ -21,6 +21,8 @@
 (setq backup-directory-alist `(("." . ,(expand-file-name
                                         "~/.emacs.d/backups"))))
 
+(setq x-select-enable-clipboard t)
+
 (setq prolog-system 'swi)
 
 (setq inhibit-startup-message t ;; Remove splash screen
@@ -59,7 +61,6 @@
       shift-select-mode nil
       browse-url-browser-function 'browse-url-firefox
       prolog-program-name "pl"
-      server-window #'switch-to-buffer-other-frame
       vc-follow-symlinks nil
       tramp-default-method "ssh"
       inferior-lisp-program "sbcl --no-linedit"

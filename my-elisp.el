@@ -1,5 +1,20 @@
 ;;; my-elisp.el --- Various pieces of elisp created by myself and others
 
+(defun xle-create-parser ()
+  "Restart XLE and create a parser using the grammar of this file."
+  (interactive)
+  (let ((filename-split  (split-string (car (last (split-string (buffer-file-name) "/"))) "-")))
+    ;; for some reason let-variables don't last past the xle-restart, so use setq:
+    (setq gram-file (concat (car (split-string (car filename-split) ".lfg$")) ".lfg")))
+  (run-xle)
+  (xle-restart)
+  (let ((xle-command (concat "create-parser "
+                             (read-from-minibuffer "Name of parser to create: " gram-file))))
+    (send-string (current-buffer) (concat "puts \{" xle-command "\}"))
+    (send-string (current-buffer) "\n")
+    (send-string (current-buffer) xle-command)
+    (send-string (current-buffer) "\n")))
+
 (defun indent-or-expand (arg)
   ;; TODO maybe try complete-tag as well
   "Either expand a snippet or the word preceding point, or indent."
