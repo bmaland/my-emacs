@@ -1,4 +1,11 @@
 --- 
+vendor/clojure-mode: 
+  squashed: true
+  url: git://github.com/jochu/clojure-mode.git
+  branch: master
+  type: git
+  revision: b2e2e3f19d51fc1969952ad484642655b3fa0984
+  remote: braid/vendor/clojure-mode
 vendor/emms: 
   squashed: true
   url: git://git.sv.gnu.org/emms.git
