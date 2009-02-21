@@ -1,11 +1,12 @@
 ;;; org-colview.el --- Column View in Org-mode
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.18
+;; Version: 6.23a
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -148,7 +149,7 @@ This is the compiled version of the format.")
 	 (face1 (list color 'org-agenda-column-dateline ref-face))
 	 (pl (or (get-text-property (point-at-bol) 'prefix-length) 0))
 	 (cphr (get-text-property (point-at-bol) 'org-complex-heading-regexp))
-	 pom property ass width f string ov column val modval s1 s2 title)
+	 pom property ass width f string ov column val modval s2 title)
     ;; Check if the entry is in another buffer.
     (unless props
       (if (eq major-mode 'org-agenda-mode)
@@ -382,8 +383,7 @@ If yes, throw an error indicating that changing it does not make sense."
 Where possible, use the standard interface for changing this line."
   (interactive)
   (org-columns-check-computed)
-  (let* ((external-key key)
-	 (col (current-column))
+  (let* ((col (current-column))
 	 (key (or key (get-char-property (point) 'org-columns-key)))
 	 (value (get-char-property (point) 'org-columns-value))
 	 (bol (point-at-bol)) (eol (point-at-eol))
@@ -404,10 +404,9 @@ Where possible, use the standard interface for changing this line."
       (setq eval '(org-with-point-at pom
 		    (org-edit-headline))))
      ((equal key "TODO")
-      (setq eval '(org-with-point-at pom
-		    (let ((current-prefix-arg
-			   (if external-key current-prefix-arg '(4))))
-		      (call-interactively 'org-todo)))))
+      (setq eval '(org-with-point-at
+		   pom
+		   (call-interactively 'org-todo))))
      ((equal key "PRIORITY")
       (setq eval '(org-with-point-at pom
 		    (call-interactively 'org-priority))))
@@ -1057,7 +1056,7 @@ of fields."
 		      row))
 	  (setq row (nreverse row))
 	  (unless (and skip-empty-rows
-		       (eq 1 (length (delete "" (delete-dups row)))))
+		       (eq 1 (length (delete "" (delete-dups (copy-sequence row))))))
 	    (push row tbl))))
       (append (list title 'hline) (nreverse tbl)))))
 

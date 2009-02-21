@@ -4,7 +4,7 @@
 ;; Author: David O'Toole <dto@gnu.org>
 ;; Maintainer: Bastien Guerry <bzg AT altern DOT org>
 ;; Keywords: hypermedia, outlines, wp
-;; Version: 6.18
+;; Version: 6.23a
 
 ;; This file is part of GNU Emacs.
 ;;
@@ -454,7 +454,9 @@ matching filenames."
 	 (include-list (plist-get project-plist :include))
 	 (recurse (plist-get project-plist :recursive))
 	 (extension (or (plist-get project-plist :base-extension) "org"))
-	 (match (concat "^[^\\.].*\\.\\(" extension "\\)$")))
+	 (match (if (eq extension 'any)
+                    "^[^\\.]"
+		  (concat "^[^\\.].*\\.\\(" extension "\\)$"))))
     (setq org-publish-temp-files nil)
     (org-publish-get-base-files-1 base-dir recurse match
 				  ;; FIXME distinguish exclude regexp

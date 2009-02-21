@@ -5,6 +5,7 @@
   ;; If there is more than one, they won't work right.
  '(case-fold-search t)
  '(column-number-mode t)
+ '(frame-background-mode (quote dark))
  '(load-home-init-file t t)
  '(make-backup-files nil)
  '(minibuffer-max-depth nil)
@@ -14,7 +15,8 @@
  '(require-final-newline t)
  '(ruby-electric-expand-delimiters-list nil)
  '(safe-local-variable-values (quote ((Package . cl-USER) (Syntax . Common-Lisp))))
- '(uniquify-buffer-name-style (quote forward) nil (uniquify)))
+ '(uniquify-buffer-name-style (quote forward) nil (uniquify))
+ '(w3m-use-cookies t))
 (custom-set-faces
   ;; custom-set-faces was added by Custom.
   ;; If you edit it by hand, you could mess it up, so be careful.

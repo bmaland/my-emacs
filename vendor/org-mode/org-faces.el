@@ -1,11 +1,12 @@
 ;;; org-faces.el --- Face definitions for Org-mode.
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.18
+;; Version: 6.23a
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -396,6 +397,22 @@ changes."
   :group 'org-faces
   :version "22.1")
 
+(defface org-clock-overlay ;; copied from secondary-selection
+  (org-compatible-face nil
+    '((((class color) (min-colors 88) (background light))
+       (:background "yellow1"))
+      (((class color) (min-colors 88) (background dark))
+       (:background "SkyBlue4"))
+      (((class color) (min-colors 16) (background light))
+       (:background "yellow"))
+      (((class color) (min-colors 16) (background dark))
+       (:background "SkyBlue4"))
+      (((class color) (min-colors 8))
+       (:background "cyan" :foreground "black"))
+      (t (:inverse-video t))))
+    "Basic face for displaying the secondary selection."
+    :group 'org-faces)
+
 (defface org-agenda-structure ;; originally copied from font-lock-function-name-face
   (org-compatible-face nil
     '((((class color) (min-colors 88) (background light)) (:foreground "Blue1"))
@@ -439,6 +456,11 @@ belong to the weekend.")
   "Face for items scheduled for a certain day."
   :group 'org-faces)
 
+(defface org-agenda-dimmed-todo-face
+  '((((background light)) (:foreground "grey50"))
+    (((background dark)) (:foreground "grey50")))
+  "Face used to dimm blocked tasks in the agenda."
+  :group 'org-faces)
 
 (defface org-scheduled-previously
   (org-compatible-face nil
