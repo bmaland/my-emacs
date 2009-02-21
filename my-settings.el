@@ -67,8 +67,7 @@
       multi-term-program "/bin/zsh"
 
       display-time-string-forms '((propertize
-                                   (concat " " 24-hours ":" minutes ", "
-                                           day "." month " ")
+                                   (concat " " 24-hours ":" minutes " ")
                                    'face 'egoge-display-time)))
 
 (setq remember-annotation-functions '(org-remember-annotation)
@@ -88,7 +87,9 @@
                ("elisp" (mode . emacs-lisp-mode))
                ("org" (mode . org-mode))
                ("erc" (mode . erc-mode))
-               ("gtalk" (mode . jabber-chat-mode))
+               ("gtalk" (or
+                         (mode . jabber-chat-mode)
+                         (name . "*-jabber-roster-*")))
                ("emacs" (or
                          (name . "^\\*scratch\\*$")
                          (name . "^\\*Messages\\*$")))))))
