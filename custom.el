@@ -16,7 +16,15 @@
  '(ruby-electric-expand-delimiters-list nil)
  '(safe-local-variable-values (quote ((Package . cl-USER) (Syntax . Common-Lisp))))
  '(uniquify-buffer-name-style (quote forward) nil (uniquify))
- '(w3m-use-cookies t))
+ '(w3m-use-cookies t)
+ '(comint-scroll-to-bottom-on-input t)  ; always insert at the bottom
+ '(comint-scroll-to-bottom-on-output t) ; always add output at the bottom
+ '(comint-scroll-show-maximum-output t) ; scroll to show max possible output
+ '(comint-completion-autolist t)        ; show completion list when ambiguous
+ '(comint-input-ignoredups t)           ; no duplicates in command history
+ '(comint-completion-addsuffix t)       ; insert space/slash after file completion
+ )
+
 (custom-set-faces
   ;; custom-set-faces was added by Custom.
   ;; If you edit it by hand, you could mess it up, so be careful.
