@@ -1,5 +1,15 @@
 ;;; my-elisp.el --- Various pieces of elisp created by myself and others
 
+(defun get-classpath-list ()
+  "Returns CLASSPATH as a list"
+  (let ((classpath (getenv "CLASSPATH")))
+    (when classpath
+      (if (or
+           (eq 'windows-nt system-type)
+           (eq 'ms-dos system-type))
+          (split-string classpath ";")
+        (split-string classpath ":")))))
+
 (defun xle-create-parser ()
   "Restart XLE and create a parser using the grammar of this file."
   (interactive)

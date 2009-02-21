@@ -5,11 +5,14 @@
 (add-to-list 'load-path "~/.emacs.d")
 (add-to-list 'load-path "~/.emacs.d/vendor")
 (add-to-list 'load-path "~/.emacs.d/vendor/sml-mode")
+(add-to-list 'load-path "~/.emacs.d/vendor/clojure-mode")
+(add-to-list 'load-path "~/.emacs.d/vendor/swank-clojure")
 (add-to-list 'load-path "~/.emacs.d/vendor/ri-emacs")
 (add-to-list 'load-path "~/.emacs.d/vendor/org-mode")
 (add-to-list 'load-path "~/.emacs.d/vendor/bbdb")
 (add-to-list 'load-path "~/.emacs.d/vendor/emms/lisp")
 (add-to-list 'load-path "~/.emacs.d/vendor/slime")
+(add-to-list 'load-path "~/.emacs.d/vendor/jabber")
 (add-to-list 'load-path "~/.emacs.d/elpa")
 
 ;; TODO autoload some of these
@@ -45,6 +48,9 @@
 (autoload 'google-define "google-define" nil t)
 (autoload 'twittering-mode "twittering-mode" nil t)
 (autoload 'sr-speedbar-toggle "sr-speedbar")
+
+(autoload 'clojure-mode "clojure-mode" nil t)
+(add-to-list 'auto-mode-alist '("\\.clj$" . clojure-mode))
 
 (autoload 'run-ruby "inf-ruby"
   "Run an inferior Ruby process")
