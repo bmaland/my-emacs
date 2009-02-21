@@ -2,21 +2,30 @@
 
 ;; Copyright (C) 1992,1993,1994  Tim Peters
 
-;; Author: 2003-2008 https://launchpad.net/python-mode
+;; Author: 2003-2009 https://launchpad.net/python-mode
 ;;         1995-2002 Barry A. Warsaw
 ;;         1992-1994 Tim Peters
 ;; Maintainer: python-mode@python.org
 ;; Created:    Feb 1992
 ;; Keywords:   python languages oop
 
-(defconst py-version "5.0.0"
+(defconst py-version "5.1.0+"
   "`python-mode' version number.")
 
-;; This software is provided as-is, without express or implied warranty.
-;; Permission to use, copy, modify, distribute or sell this software, without
-;; fee, for any purpose and by any individual or organization, is hereby
-;; granted, provided that the above copyright notice and this paragraph appear
-;; in all copies.
+;; This file is part of python-mode.el.
+;;
+;; python-mode.el is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by the Free
+;; Software Foundation, either version 3 of the License, or (at your option)
+;; any later version.
+;;
+;; python-mode.el is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+;; for more details.
+;;
+;; You should have received a copy of the GNU General Public License along
+;; with python-mode.el.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -27,7 +36,12 @@
 ;; doesn't even use Emacs any more <wink>.  In 2003, python-mode.el was moved
 ;; to its own SourceForge project apart from the Python project, and in 2008
 ;; it was moved to Launchpad for all project administration.  python-mode.el
-;; is maintained by the volunteers at the python-mode@python.org mailing list.
+;; is maintained by the volunteers at the python-mode@python.org mailing
+;; list.
+
+;; python-mode.el is different than, and pre-dates by many years, the
+;; python.el that comes with FSF Emacs.  We'd like to merge the two modes but
+;; have few cycles to do so.  Volunteers are welcome.
 
 ;; pdbtrack support contributed by Ken Manheimer, April 2001.  Skip Montanaro
 ;; has also contributed significantly to python-mode's development.
@@ -412,13 +426,13 @@ support for features needed by `python-mode'.")
 
 (defvar python-font-lock-keywords
   (let ((kw1 (mapconcat 'identity
-                        '("and"      "assert"   "break"   "class"
-                          "continue" "def"      "del"     "elif"
-                          "else"     "except"   "for"     "None"
-                          "from"     "global"   "if"      "import"
-                          "in"       "is"       "lambda"  "not"
-                          "or"       "pass"     "raise"   "as"
-                          "return"   "while"    "with"    "yield"
+                        '("and"      "assert"   "break"     "class"
+                          "continue" "def"      "del"       "elif"
+                          "else"     "except"   "for"       "from"
+                          "global"   "if"       "import"    "in"
+                          "is"       "lambda"   "not"       "or"
+                          "pass"     "raise"    "as"        "return"
+                          "while"    "with"    "yield"
                           )
                         "\\|"))
         (kw2 (mapconcat 'identity
@@ -485,7 +499,7 @@ support for features needed by `python-mode'.")
      '("\\<def[ \t]+\\([a-zA-Z_]+[a-zA-Z0-9_]*\\)"
        1 font-lock-function-name-face)
      ;; pseudo-keywords
-     '("\\<\\(self\\|Ellipsis\\|True\\|False\\)\\>"
+     '("\\<\\(self\\|Ellipsis\\|True\\|False\\|None\\)\\>"
        1 py-pseudo-keyword-face)
      ;; XXX, TODO, and FIXME tags
      '("XXX\\|TODO\\|FIXME" 0 py-XXX-tag-face t)
