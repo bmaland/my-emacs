@@ -9,7 +9,7 @@
 
 (defun lisp-hook ()
   "Shared between lisp mode and emacs lisp mode"
-  (defalias 'ms 'mark-sexp)
+  (local-set-key (kbd "C-c m") 'mark-sexp)
 
   (local-set-key [return] 'reindent-then-newline-and-indent)
   (local-set-key "\C-j" 'eval-print-last-sexp)
@@ -25,9 +25,9 @@
 
 (add-hook 'slime-repl-mode-hook
           (lambda ()
-            (local-set-key "\C-xp" 'slime-close-all-parens-in-sexp)
-            (local-set-key [up] 'slime-repl-previous-input)
-            (local-set-key [down] 'slime-repl-next-input)
+            (local-set-key "\C-cp" 'slime-close-all-parens-in-sexp)
+            (local-set-key (kbd "<tab>") 'slime-indent-and-complete-symbol)
+            (local-set-key (kbd "<return>") 'newline-and-indent)
             ))
 
 (add-hook 'lisp-mode-hook
@@ -49,6 +49,12 @@
               (lambda ()
                 (if (file-exists-p (concat buffer-file-name "c"))
                     (delete-file (concat buffer-file-name "c")))))))
+
+(add-hook 'clojure-mode-hook
+          '(lambda ()
+             (coding-hook)
+             (lisp-hook)
+             ))
 
 (add-hook 'c-mode-hook
           '(lambda ()
@@ -182,6 +188,7 @@
      (slime-setup '(slime-fancy slime-asdf slime-banner))
      (setq slime-complete-symbol*-fancy t)
      (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)
+     (setq slime-net-coding-system 'utf-8-unix)
      ))
 
 (provide 'my-hooks)

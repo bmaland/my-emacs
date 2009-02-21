@@ -39,6 +39,7 @@
              (require 'ipython)
              (require 'pycomplete)
 
+             (eldoc-mode 1)
              (highlight-80+-mode t)
 
              ;; Initialize Rope
