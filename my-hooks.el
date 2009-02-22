@@ -14,6 +14,7 @@
   (local-set-key [return] 'reindent-then-newline-and-indent)
   (local-set-key "\C-j" 'eval-print-last-sexp)
   (local-set-key "\M-." 'find-function)
+  (local-set-key "\C-cp" 'slime-close-all-parens-in-sexp)
 
   (local-set-key [(meta up)] 'beginning-of-defun)
   (local-set-key [(meta down)] 'end-of-defun)
@@ -26,14 +27,14 @@
 (add-hook 'slime-repl-mode-hook
           (lambda ()
             (local-set-key "\C-cp" 'slime-close-all-parens-in-sexp)
-            (local-set-key (kbd "<tab>") 'slime-indent-and-complete-symbol)
-            (local-set-key (kbd "<return>") 'newline-and-indent)
             ))
 
 (add-hook 'lisp-mode-hook
           '(lambda ()
              (coding-hook)
              (lisp-hook)
+             (setq slime-complete-symbol*-fancy t)
+             (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)
              ))
 
 (add-hook 'emacs-lisp-mode-hook
@@ -54,6 +55,7 @@
           '(lambda ()
              (coding-hook)
              (lisp-hook)
+             (require 'swank-clojure-autoload)
              ))
 
 (add-hook 'c-mode-hook
@@ -186,8 +188,6 @@
 (eval-after-load "slime"
   '(progn
      (slime-setup '(slime-fancy slime-asdf slime-banner))
-     (setq slime-complete-symbol*-fancy t)
-     (setq slime-complete-symbol-function 'slime-fuzzy-complete-symbol)
      (setq slime-net-coding-system 'utf-8-unix)
      ))
 
