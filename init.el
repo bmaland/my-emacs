@@ -48,6 +48,7 @@
 (autoload 'google-define "google-define" nil t)
 (autoload 'twittering-mode "twittering-mode" nil t)
 (autoload 'sr-speedbar-toggle "sr-speedbar")
+(autoload 'bit-mode "bigram-input-translation" nil t)
 
 (autoload 'clojure-mode "clojure-mode" nil t)
 (add-to-list 'auto-mode-alist '("\\.clj$" . clojure-mode))
