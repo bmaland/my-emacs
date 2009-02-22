@@ -1,3 +1,55 @@
+2009-02-17  Helmut Eller  <heller@common-lisp.net>
+
+	* swank.lisp (dispatch-event [:emacs-rex]): Reply a :invalid-rpc
+	message if the specified thread doesn't exist.
+	* slime.el (slime-dispatch-event): Handle :invalid-rpc.
+	(slime-init-connection-state): Bind slime-current-thread
+	to avoid problems with dead threads.
+
+2009-02-14  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el (slime-reader-conditionals-regexp): New variable. Taken
+	from `slime-forward-reader-conditional'.
+	(slime-pretty-package-name): Fix modeline display for buffer
+	containing forms like (in-package "#+foo :A #-foo :B"). Also do
+	not call `read' on the name; the function does not need to return
+	a symbol, and `read' may choke on non-elisp syntax.
+
+2009-02-14  Helmut Eller  <heller@common-lisp.net>
+
+	Don't signal conditions in interrupt handler to
+	avoid problems with naive code like
+	 (handler-case foo (condition bar))
+
+	* swank-backend.lisp (*interrupt-queued-handler*): Use a dynamic
+	variable instead.
+	(slime-interrupt-queued): Deleted.
+	* swank-cmucl.lisp, swank.lisp: Ditto.
+
+2009-02-14  Helmut Eller  <heller@common-lisp.net>
+
+	* slime.el (slime-restart-or-init-modeline-update-timer): Don't
+	run the timer repeatedly.
+	(slime-change-directory): Also change the directory in the
+	connection-buffer.
+
+2009-02-11  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el (slime-current-tlf, slime-current-form-path): New
+	functions; can be handy when inspecting source-locations while
+	debugging M-.
+
+2009-02-11  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el: Barf if emacs-major-version <= 20. We support 21 and up.
+	(slime-emacs-20-p): Removed.
+
+	* slime.el (slime-forward-reader-comment): Removed.
+	(slime-forward-any-comment): New; superset of above.
+	(slime-forward-reader-conditional): Make it understand SBCL's
+	#!+,#!- so it works in source files of SBCL itself, too.
+	(slime-current-parser-state): New.
+
 2009-02-07  Tobias C. Rittweiler  <tcr@freebits.de>
 
 	In Xref, list IR1-conversion functions with :DEF-IR1-TRANSLATOR as

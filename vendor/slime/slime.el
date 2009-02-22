@@ -47,6 +47,10 @@
 ;;;; Dependencies and setup
 
 (eval-and-compile
+  (when (<= emacs-major-version 20)
+    (error "Slime requires an Emacs version of 21, or above")))
+
+(eval-and-compile
   (require 'cl)
   (unless (fboundp 'define-minor-mode)
     (require 'easy-mmode)
@@ -464,7 +468,7 @@ The string is periodically updated by an idle timer."))
   (when slime-modeline-update-timer
     (cancel-timer slime-modeline-update-timer))
   (setq slime-modeline-update-timer
-        (run-with-idle-timer 0.5 0.5 'slime-update-all-modelines)))
+        (run-with-idle-timer 0.1 nil 'slime-update-all-modelines)))
 
 (slime-restart-or-init-modeline-update-timer)
 
@@ -722,8 +726,7 @@ corresponding values in the CDR of VALUE."
 Single-line messages use the echo area."
   (apply slime-message-function format args))
 
-(when (or (featurep 'xemacs)
-          (= emacs-major-version 20))
+(when (or (featurep 'xemacs))
   (setq slime-message-function 'slime-format-display-message))
 
 (defun slime-format-display-message (format &rest args)
@@ -1986,8 +1989,9 @@ This is automatically synchronized from Lisp.")
   ;; function may be called from a timer, and if we setup the REPL
   ;; from a timer then it mysteriously uses the wrong keymap for the
   ;; first command.
-  (slime-eval-async '(swank:connection-info)
-                    (slime-curry #'slime-set-connection-info proc)))
+  (let ((slime-current-thread t))
+    (slime-eval-async '(swank:connection-info)
+                    (slime-curry #'slime-set-connection-info proc))))
 
 (defun slime-set-connection-info (connection info)
   "Initialize CONNECTION with INFO received from Lisp."
@@ -2163,8 +2167,8 @@ dispatched on CLAUSES.  The result is either a sexp of the
 form (:ok VALUE) or (:abort).  CLAUSES is executed
 asynchronously.
 
-Note: don't use backquote syntax for SEXP, because Emacs20 cannot
-deal with that."
+Note: don't use backquote syntax for SEXP, because various Emacs
+versions cannot deal with that."
   (let ((result (gensym)))
     `(lexical-let ,(loop for var in saved-vars
                          collect (etypecase var
@@ -2394,9 +2398,11 @@ Debugged requests are ignored."
              (princ (format "Invalid protocol message:\n%s\n\n%S"
                             condition packet))
              (goto-char (point-min)))
-           (error "Invalid protocol message")))))
-  ;; Canonicalized return value. See comment in `slime-eval-async'.
-  :slime-dispatch-event)
+           (error "Invalid protocol message"))
+          ((:invalid-rpc id message)
+           (setf (slime-rex-continuations)
+                 (remove* id (slime-rex-continuations) :key #'car))
+           (error "Invalid rpc: %s" message))))))
 
 (defun slime-send (sexp)
   "Send SEXP directly over the wire on the current connection."
@@ -2977,8 +2983,7 @@ The overlay has several properties:
       (putp 'slime note)
       (putp 'face (slime-severity-face severity))
       (putp 'severity severity)
-      (unless (slime-emacs-20-p)
-	(putp 'mouse-face 'highlight))
+      (putp 'mouse-face 'highlight)
       (putp 'help-echo message)
       overlay)))
 
@@ -3056,6 +3061,47 @@ Severity is ordered as :NOTE < :STYLE-WARNING < :WARNING < :ERROR."
   "Visit a full source path including the top-level form."
   (goto-char (point-min))
   (slime-forward-source-path source-path))
+
+;;; The following two functions can be handy when inspecting
+;;; source-location while debugging `M-.'.
+;;;
+(defun slime-current-tlf-number ()
+  "Return the current toplevel number."
+  (interactive)
+  (let ((original-pos (car (slime-region-for-defun-at-point)))
+        (n 0))
+    (save-excursion
+      ;; We use this and no repeated `beginning-of-defun's to get
+      ;; reader conditionals right.
+      (goto-char (point-min))
+      (while (progn (slime-forward-sexp)
+                    (< (point) original-pos))
+        (incf n)))
+    n))
+
+;;; This is similiar to `slime-enclosing-form-paths' in the
+;;; `slime-parse' contrib except that this does not do any duck-tape
+;;; parsing, and gets reader conditionals right.
+(defun slime-current-form-path ()
+  "Returns the path from the beginning of the current toplevel
+form to the atom at point, or nil if we're in front of a tlf."
+  (interactive)
+  (let ((source-path nil))
+    (save-excursion
+      ;; Moving forward to get reader conditionals right.
+      (loop for inner-pos = (point)
+            for outer-pos = (nth-value 1 (syntax-ppss))
+            while outer-pos do
+            (goto-char outer-pos)
+            (unless (eq (char-before) ?#) ; when at #(...) continue.
+              (forward-char)
+              (let ((n 0))
+                (while (progn (slime-forward-sexp)
+                              (< (point) inner-pos))
+                  (incf n))
+                (push n source-path)
+                (goto-char outer-pos)))))
+    source-path))
 
 (defun slime-forward-positioned-source-path (source-path)
   "Move forward through a sourcepath from a fixed position.
@@ -4401,6 +4447,7 @@ Return whatever swank:set-default-directory returns."
   (let ((dir (expand-file-name directory)))
     (prog1 (slime-eval `(swank:set-default-directory
                          ,(slime-to-lisp-filename dir)))
+      (slime-with-connection-buffer nil (cd-absolute dir))
       (run-hook-with-args 'slime-change-directory-hooks dir))))
  
 (defun slime-cd (directory)
@@ -7795,7 +7842,8 @@ CONTINUES  ... how often the continue restart should be invoked"
   (with-current-buffer (sldb-get-default-buffer)
     (sldb-quit))
   (slime-sync-to-top-level 1))
-    
+
+;;; FIXME: reconnection is broken since the recent io-redirection changes.    
 (def-slime-test disconnect
     ()
     "Close the connetion.
@@ -7916,10 +7964,11 @@ package is used."
 (put 'slime-point-moves-p 'lisp-indent-function 0)
 
 (defun slime-forward-sexp (&optional count)
-  "Like `forward-sexp', but understands reader-conditionals (#- and #+)."
+  "Like `forward-sexp', but understands reader-conditionals (#- and #+),
+and skips comments."
   (dotimes (i (or count 1))
     (while (slime-point-moves-p (slime-forward-blanks)
-                                (slime-forward-reader-comment)
+                                (slime-forward-any-comment)
                                 (slime-forward-reader-conditional)))
     (forward-sexp)))
 
@@ -7931,23 +7980,20 @@ package is used."
              ;; newlines aren't in lisp-mode's whitespace syntax class
              (when (eolp) (forward-char))))))
 
-;; Emacs 21's forward-sexp understands #| |# comments in lisp-mode
-;; buffers, but (at least) Emacs 20's doesn't, so here it is.
-(defun slime-forward-reader-comment ()
-  "Move forward over #|...|# reader comments. The comments may be nested."
-  (when (looking-at "#|")
-    (goto-char (match-end 0))
-    (while (not (looking-at "|#"))
-      (re-search-forward (regexp-opt '("|#" "#|")))
-      (goto-char (match-beginning 0))
-      (when (looking-at "#|")           ; nested comment
-        (slime-forward-reader-comment)))
-    (goto-char (match-end 0))))
+(defun slime-forward-any-comment ()
+  "Skip the whole comment at point, or the comment where point is
+within. This includes nested comments (#| ... |#)."
+  (forward-comment (buffer-size)) ; We may be exactly in front of a semicolon.
+  (when-let (comment-start (nth 8 (slime-current-parser-state)))
+    (goto-char comment-start)
+    (forward-comment (buffer-size))))
 
 (defun slime-forward-reader-conditional ()
   "Move past any reader conditional (#+ or #-) at point."
-  (when (or (looking-at "#\\+")
-            (looking-at "#-"))
+  (when (or (looking-at "#[\\+\\-]")
+            ;; #!+, #!- are SBCL specific reader-conditional syntax.
+            ;; We need this for the source files of SBCL itself.
+            (looking-at "#![\\+\\-]"))
     (goto-char (match-end 0))
     (let* ((plus-conditional-p (eq (char-before) ?+))
            (result (slime-eval-feature-conditional (read (current-buffer)))))
@@ -8030,9 +8076,9 @@ The result is unspecified if there isn't a symbol under the point."
     (save-excursion
       (let ((string (thing-at-point 'slime-symbol)))
         (and string
-             ;; In Emacs20 (thing-at-point 'symbol) returns "" instead
-             ;; of nil when called from an empty (or
-             ;; narrowed-to-empty) buffer.
+             ;; (thing-at-point 'symbol) returns "" instead of nil
+             ;; when called from an empty (or narrowed-to-empty)
+             ;; buffer.
              (not (equal string ""))
              (substring-no-properties string))))))
 
@@ -8069,15 +8115,23 @@ The result is unspecified if there isn't a symbol under the point."
 (when (featurep 'xemacs)
   (require 'overlay))
 
+(if (and (featurep 'emacs) (>= emacs-major-version 22))
+    ;;;  N.B. The 2nd, and 6th return value cannot be relied upon.
+    (defun slime-current-parser-state () (syntax-ppss))
+    (defun slime-current-parser-state ()
+      (let ((original-pos (point)))
+        (save-excursion
+          (beginning-of-defun)
+          (parse-partial-sexp (point) original-pos)))))
+
 (defun slime-split-string (string &optional separators omit-nulls)
-  "This is like `split-string' in Emacs22, but also works in
-Emacs20 and 21."
+  "This is like `split-string' in Emacs22, but also works in 21."
   (let ((splits (split-string string separators)))
     (if omit-nulls
         (setq splits (remove "" splits))
       ;; SPLIT-STRING in Emacs before 22.x automatically removed nulls
       ;; at beginning and end, so we gotta add them here again.
-      (when (or (slime-emacs-20-p) (slime-emacs-21-p))
+      (when (slime-emacs-21-p)
         (when (find (elt string 0) separators)
           (push "" splits))
         (when (find (elt string (1- (length string))) separators)
@@ -8402,10 +8456,6 @@ If they are not, position point at the first syntax error found."
                ,@body)
            (and ,temp-message ,current-message
                 (message "%s" ,current-message)))))))
-
-(defun slime-emacs-20-p ()
-  (and (not (featurep 'xemacs))
-       (= emacs-major-version 20)))
 
 (defun slime-emacs-21-p ()
   (and (not (featurep 'xemacs))
