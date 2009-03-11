@@ -415,8 +415,9 @@
 	     #'twittering-cache-status-datum
 	     (reverse (twittering-xmltree-to-status
 		       body)))
-	    (twittering-render-friends-timeline)
-	    (message (if suc-msg suc-msg "Success: Get.")))
+	    (twittering-render-friends-timeline))
+      ;; no noise please
+	    ;;(message (if suc-msg suc-msg "Success: Get.")))
 	   (t (message status))))
       (message "Failure: Bad http response.")))
   )
