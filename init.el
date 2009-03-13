@@ -13,6 +13,7 @@
 (add-to-list 'load-path "~/.emacs.d/vendor/emms/lisp")
 (add-to-list 'load-path "~/.emacs.d/vendor/slime")
 (add-to-list 'load-path "~/.emacs.d/vendor/jabber")
+(add-to-list 'load-path "~/.emacs.d/vendor/color-theme")
 (add-to-list 'load-path "~/.emacs.d/elpa")
 
 ;; TODO autoload some of these
@@ -35,6 +36,7 @@
 (require 'slime)
 (require 'yasnippet)
 (require 'yasnippet-mode)
+(require 'color-theme-autoloads "color-theme-autoloads")
 
 ;; ELPA
 (require 'package)

@@ -127,6 +127,15 @@
 
 ;;;;Load more specific settings
 
+(when (bound-and-true-p window-system)
+  (require 'color-theme)
+  (color-theme-initialize)
+  (load "~/.emacs.d/vendor/color-theme/themes/color-theme-tango-2.el")
+  (color-theme-tango-2)
+
+  (global-hl-line-mode t)
+  (set-face-background 'hl-line "#232323"))
+
 ;; Load OS-specific settings
 (if (eq window-system 'mac)
     (load "osx.el")

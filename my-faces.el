@@ -50,8 +50,4 @@
           (font-lock-add-keywords mode my-extra-keywords))
         programming-modes)
 
-(when (bound-and-true-p window-system)
-  (global-hl-line-mode t)
-  (set-face-background 'hl-line "#232323"))
-
 (provide 'my-faces)

@@ -4,8 +4,7 @@
   (auto-fill-mode t) ;; Comments only
   (setq save-place t
         show-trailing-whitespace t)
-  (local-set-key [tab] 'indent-or-expand)
-  (pretty-lambdas))
+  (local-set-key [tab] 'indent-or-expand))
 
 (defun lisp-hook ()
   "Shared between lisp mode and emacs lisp mode"
@@ -175,6 +174,13 @@
           (lambda ()
             (set-pairs '("(" "{" "[" "\""))
             (auto-fill-mode 1)
+            (setq tab-width 4)))
+
+(add-hook 'text-mode-hook
+          (lambda ()
+            (set-pairs '("(" "{" "[" "\""))
+            (auto-fill-mode 1)
+            (bit-mode t)
             (setq tab-width 4)))
 
 (add-hook 'ibuffer-mode-hook
