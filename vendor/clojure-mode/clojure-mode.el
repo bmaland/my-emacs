@@ -145,7 +145,6 @@ All commands in `lisp-mode-shared-map' are inherited by this map.")
     (modify-syntax-entry ?\[ "(]" table)
     (modify-syntax-entry ?\] ")[" table)
     (modify-syntax-entry ?^ "'" table)
-    (modify-syntax-entry ?= "'" table)
     table))
 
 
@@ -318,7 +317,7 @@ elements of a def* forms."
       (,(concat
          "(\\(?:clojure/\\)?" 
          (regexp-opt
-          '("let" "do"
+          '("let" "letfn" "do"
             "cond" "condp"
             "for" "loop" "recur"
             "when" "when-not" "when-let" "when-first"
@@ -529,12 +528,15 @@ check for contextual indenting."
   (catch 2)
   (defmuti 1)
   (do 0)
-  (for 1)    ; FIXME (for seqs expr) and (for seqs filter expr)
+  (for 1)
   (if 1)
+  (if-not 1)
   (let 1)
+  (letfn 1)
   (loop 1)
   (struct-map 1)
   (assoc 1)
+  (condp 2)
 
   (fn 'defun))
 
