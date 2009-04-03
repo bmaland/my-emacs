@@ -99,6 +99,7 @@
             (coding-hook)
             (set-pairs '("(" "{" "[" "\"" "'"))
             ;;(modify-syntax-entry ?_ ".")
+            (setq comment-start "%%")
             (local-set-key [return] 'reindent-then-newline-and-indent)
             (local-set-key (kbd "C-c C-l") 'prolog-consult-file)
             (local-set-key (kbd "C-c C-z") 'run-prolog)))
