@@ -23,33 +23,33 @@
        ;; use the HISTSIZE environment variable that shells use (if  avail.)
        ;; (default is 32)
       comint-input-ring-size (string-to-number (or (getenv
-                                                    "HISTSIZE") "100"))
+                                                    "HISTSIZE") "100")))
 
-      py-python-command-args '("-pylab"))
+      ;;py-python-command-args '("-pylab"))
 
-(autoload 'pymacs-apply "pymacs")
-(autoload 'pymacs-call  "pymacs")
-(autoload 'pymacs-eval  "pymacs" nil t)
-(autoload 'pymacs-exec  "pymacs" nil t)
-(autoload 'pymacs-load  "pymacs" nil t)
+;; (autoload 'pymacs-apply "pymacs")
+;; (autoload 'pymacs-call  "pymacs")
+;; (autoload 'pymacs-eval  "pymacs" nil t)
+;; (autoload 'pymacs-exec  "pymacs" nil t)
+;; (autoload 'pymacs-load  "pymacs" nil t)
 
 (add-hook 'python-mode-hook
           '(lambda ()
              (coding-hook)
-             (require 'ipython)
+             ;(require 'ipython)
              (require 'pycomplete)
 
              (eldoc-mode 1)
              (highlight-80+-mode t)
 
              ;; Initialize Rope
-             (when (not (fboundp 'ropemacs-mode))
-               (pymacs-load "ropemacs" "rope-")
-               (setq ropemacs-enable-autoimport 1))
+             ;; (when (not (fboundp 'ropemacs-mode))
+             ;;   (pymacs-load "ropemacs" "rope-")
+             ;;   (setq ropemacs-enable-autoimport 1))
 
              (c-subword-mode t)
-             (load-library "pylint")
-             (load "pylint-flymake.el")
+             ;; (load-library "pylint")
+             ;; (load "pylint-flymake.el")
              (set (make-variable-buffer-local 'beginning-of-defun-function)
                   'py-beginning-of-def-or-class)
              ;; ( is handled by pycomplete.el
@@ -60,7 +60,7 @@
 
              (local-set-key [return] 'py-newline-and-indent)
              (local-set-key (kbd "C-c C-z") 'py-shell)
-             (local-set-key "\t" 'ryan-python-tab)
+             ;;(local-set-key "\t" 'ryan-python-tab)
              (local-set-key (kbd "C-h p") 'py-complete-help-thing-at-point)
 
              (when (and buffer-file-name
