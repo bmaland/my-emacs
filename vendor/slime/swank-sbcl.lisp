@@ -382,11 +382,12 @@ information."
                        (sb-ext:compiler-note :note)
                        (style-warning        :style-warning)
                        (warning              :warning)
+                       (reader-error         :read-error)
                        (error                :error))
            :short-message (brief-compiler-message-for-emacs condition)
            :references (condition-references (real-condition condition))
            :message (long-compiler-message-for-emacs condition context)
-           :location (compiler-note-location context))))
+           :location (compiler-note-location condition context))))
 
 (defun real-condition (condition)
   "Return the encapsulated condition or CONDITION itself."
@@ -399,28 +400,53 @@ information."
       (externalize-reference
        (sb-int:reference-condition-references condition))))
 
-(defun compiler-note-location (context)
-  (if context
-      (locate-compiler-note
-       (sb-c::compiler-error-context-file-name context)
-       (compiler-source-path context)
-       (sb-c::compiler-error-context-original-source context))
-      (list :error "No error location available")))
+(defun compiler-note-location (condition context)
+  (flet ((bailout ()
+           (list :error "No error location available")))
+    (cond (context
+           (locate-compiler-note
+            (sb-c::compiler-error-context-file-name context)
+            (compiler-source-path context)
+            (sb-c::compiler-error-context-original-source context)))
+          ((typep condition 'reader-error)
+           (let* ((stream (stream-error-stream condition))
+                  (file   (pathname stream)))
+             (unless (open-stream-p stream)
+               (bailout))
+             (if (compiling-from-buffer-p file)
+                 ;; The stream position for e.g. "comma not inside backquote"
+                 ;; is at the character following the comma, :offset is 0-based,
+                 ;; hence the 1-.
+                 (make-location (list :buffer *buffer-name*)
+                                (list :offset *buffer-offset*
+                                      (1- (file-position stream))))
+                 (progn
+                   (assert (compiling-from-file-p file))
+                   ;; No 1- because :position is 1-based.
+                   (make-location (list :file (namestring file))
+                                  (list :position (file-position stream)))))))
+          (t (bailout)))))
+
+(defun compiling-from-buffer-p (filename)
+  (and (not (eq filename :lisp)) *buffer-name*))
+
+(defun compiling-from-file-p (filename)
+  (and (pathnamep filename) (null *buffer-name*)))
+
+(defun compiling-from-generated-code-p (filename source)
+  (and (eq filename :lisp) (stringp source)))
 
 (defun locate-compiler-note (file source-path source)
-  (cond ((and (not (eq file :lisp)) *buffer-name*)
-         ;; Compiling from a buffer
+  (cond ((compiling-from-buffer-p file)
          (make-location (list :buffer *buffer-name*)
                         (list :offset  *buffer-offset* 
                               (source-path-string-position
                                source-path *buffer-substring*))))
-        ((and (pathnamep file) (null *buffer-name*))
-         ;; Compiling from a file
+        ((compiling-from-file-p file)
          (make-location (list :file (namestring file))
                         (list :position (1+ (source-path-file-position
                                              source-path file)))))
-        ((and (eq file :lisp) (stringp source))
-         ;; Compiling macro generated code
+        ((compiling-from-generated-code-p file source)
          (make-location (list :source-form source)
                         (list :position 1)))
         (t

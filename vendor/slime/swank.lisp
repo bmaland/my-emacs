@@ -29,7 +29,7 @@
            ;; These are user-configurable variables:
            #:*communication-style*
            #:*dont-close*
-           #:*fasl-directory*
+           #:*fasl-pathname-function*
            #:*log-events*
            #:*log-output*
            #:*use-dedicated-output-stream*
@@ -1330,16 +1330,18 @@ The processing is done in the extent of the toplevel restart."
 
 (defun simple-serve-requests (connection)
   (unwind-protect 
-       (call-with-user-break-handler
-        (lambda () 
-          (invoke-or-queue-interrupt #'dispatch-interrupt-event))
-        (lambda ()
-          (with-simple-restart (close-connection "Close SLIME connection")
-            ;;(handle-requests connection)
-            (let* ((stdin (real-input-stream *standard-input*))
-                   (*standard-input* (make-repl-input-stream connection 
-                                                             stdin)))
-              (simple-repl)))))
+       (with-connection (connection)
+         (call-with-user-break-handler
+          (lambda () 
+            (invoke-or-queue-interrupt #'dispatch-interrupt-event))
+          (lambda ()
+            (with-simple-restart (close-connection "Close SLIME connection")
+              ;;(handle-requests connection)
+              (let* ((stdin (real-input-stream *standard-input*))
+                     (*standard-input* (make-repl-input-stream connection 
+                                                               stdin)))
+                (with-swank-error-handler (connection)
+                  (simple-repl)))))))
     (close-connection connection nil (safe-backtrace))))
 
 (defun simple-repl ()
@@ -1360,18 +1362,24 @@ The processing is done in the extent of the toplevel restart."
 (defun make-repl-input-stream (connection stdin)
   (make-input-stream
    (lambda ()
+     (log-event "pull-input: ~a ~a ~a~%"
+                (connection.socket-io connection)
+                (if (open-stream-p (connection.socket-io connection))
+                    :socket-open :socket-closed)
+                (if (open-stream-p stdin) 
+                    :stdin-open :stdin-closed))
      (loop
-      (with-connection (connection)
-        (let* ((socket (connection.socket-io connection))
-               (inputs (list socket stdin))
-               (ready (wait-for-input inputs)))
-          (cond ((eq ready :interrupt)
-                 (check-slime-interrupts))
-                ((member socket ready)
-                 (handle-requests connection t))
-                ((member stdin ready)
-                 (return (read-non-blocking stdin)))
-                (t (assert (null ready))))))))))
+      
+      (let* ((socket (connection.socket-io connection))
+             (inputs (list socket stdin))
+             (ready (wait-for-input inputs)))
+        (cond ((eq ready :interrupt)
+               (check-slime-interrupts))
+              ((member socket ready)
+               (handle-requests connection t))
+              ((member stdin ready)
+               (return (read-non-blocking stdin)))
+              (t (assert (null ready)))))))))
 
 (defun read-non-blocking (stream)
   (with-output-to-string (str)
@@ -1775,16 +1783,15 @@ NIL if streams are not globally redirected.")
   (send-to-emacs object))
 
 (defun encode-message (message stream)
-  (let* ((string (prin1-to-string-for-emacs message))
-         (length (length string)))
-    (assert (<= length #xffffff))
-    (log-event "WRITE: ~A~%" string)
-    (let ((*print-pretty* nil))
-      (format stream "~6,'0x" length))
-    (write-string string stream)
-    ;;(terpri stream)
-    (finish-output stream)))
-
+  (handler-bind ((error (lambda (c) (error (make-swank-error c)))))
+    (let* ((string (prin1-to-string-for-emacs message))
+           (length (length string))) 
+      (log-event "WRITE: ~A~%" string)
+      (let ((*print-pretty* nil))
+        (format stream "~6,'0x" length))
+      (write-string string stream)
+      (finish-output stream))))
+  
 (defun prin1-to-string-for-emacs (object)
   (with-standard-io-syntax
     (let ((*print-case* :downcase)
@@ -2479,8 +2486,9 @@ after Emacs causes a restart to be invoked."
     (force-user-output)
     (call-with-debugging-environment
      (lambda ()
-       (with-bindings *sldb-printer-bindings*
-         (sldb-loop *sldb-level*))))))
+       ;; We used to have (WITH-BINDING *SLDB-PRINTER-BINDINGS* ...)
+       ;; here, but that truncated the result of an eval-in-frame.
+       (sldb-loop *sldb-level*)))))
 
 (defun sldb-loop (level)
   (unwind-protect
@@ -2488,7 +2496,8 @@ after Emacs causes a restart to be invoked."
         (with-simple-restart (abort "Return to sldb level ~D." level)
           (send-to-emacs 
            (list* :debug (current-thread-id) level
-                  (debugger-info-for-emacs 0 *sldb-initial-frames*)))
+                  (with-bindings *sldb-printer-bindings*
+                    (debugger-info-for-emacs 0 *sldb-initial-frames*))))
           (send-to-emacs 
            (list :debug-activate (current-thread-id) level nil))
           (loop 
@@ -2756,17 +2765,17 @@ Record compiler notes signalled as `compiler-condition's."
            (declare (ignore output-pathname warnings?))
            (not failure?)))))))
 
-(defvar *fasl-directory* nil
-  "Directory where swank should place fasl files.")
+(defvar *fasl-pathname-function* nil
+  "In non-nil, use this function to compute the name for fasl-files.")
 
 (defun fasl-pathname (input-file options)
-  (cond ((getf options :fasl-directory)
+  (cond (*fasl-pathname-function*
+         (funcall *fasl-pathname-function* input-file options))
+        ((getf options :fasl-directory)
          (let* ((str (getf options :fasl-directory))
                 (dir (filename-to-pathname str)))
            (assert (char= (aref str (1- (length str))) #\/))
            (compile-file-pathname input-file :output-file dir)))
-        (*fasl-directory*
-         (compile-file-pathname input-file :output-file *fasl-directory*))
         (t
          (compile-file-pathname input-file))))
 
@@ -2894,6 +2903,9 @@ the filename of the module (or nil if the file doesn't exist).")
 
 (defslimefun swank-compiler-macroexpand (string)
   (apply-macro-expander #'compiler-macroexpand string))
+
+(defslimefun swank-format-string-expand (string)
+  (apply-macro-expander #'format-string-expand string))
 
 (defslimefun disassemble-symbol (name)
   (with-buffer-syntax ()
@@ -3473,6 +3485,12 @@ Return NIL if LIST is circular."
 ;;;;; Hashtables
 
 
+(defun hash-table-to-alist (ht)
+  (let ((result '()))
+    (maphash #'(lambda (key value)
+                 (setq result (acons key value result)))
+             ht)
+    result))
 
 (defmethod emacs-inspect ((ht hash-table))
   (append
@@ -3489,13 +3507,17 @@ Return NIL if LIST is circular."
      `((:action "[clear hashtable]" 
                 ,(lambda () (clrhash ht))) (:newline)
        "Contents: " (:newline)))
-   (loop for key being the hash-keys of ht
-         for value being the hash-values of ht
-         append `((:value ,key) " = " (:value ,value)
-                  " " (:action "[remove entry]"
-                               ,(let ((key key))
-                                     (lambda () (remhash key ht))))
-                  (:newline)))))
+   (let ((content (hash-table-to-alist ht)))
+     (cond ((every (lambda (x) (typep (first x) '(or string symbol))) content)
+            (setf content (sort content 'string< :key #'first)))
+           ((every (lambda (x) (typep (first x) 'number)) content)
+            (setf content (sort content '< :key #'first))))
+     (loop for (key . value) in content appending
+           `((:value ,key) " = " (:value ,value)
+             " " (:action "[remove entry]"
+                          ,(let ((key key))
+                                (lambda () (remhash key ht))))
+             (:newline))))))
 
 ;;;;; Arrays
 

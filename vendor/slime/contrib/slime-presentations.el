@@ -400,7 +400,7 @@ Also return the start position, end position, and buffer of the presentation."
     (slime-M-.-presentation presentation start end (current-buffer))))
 
 (defun slime-edit-presentation (name &optional where)
-  (if (or current-prefix-arg (not (equal (slime-symbol-name-at-point) name)))
+  (if (or current-prefix-arg (not (equal (slime-symbol-at-point) name)))
       nil ; NAME came from user explicitly, so decline.
       (multiple-value-bind (presentation start end whole-p)
 	  (slime-presentation-around-or-before-point (point))
@@ -840,7 +840,7 @@ even on Common Lisp implementations without weak hash tables."
 (defun slime-presentation-sldb-insert-frame-variable-value (value frame index)
   (slime-insert-presentation
    (in-sldb-face local-value value)
-   `(:frame-var ,slime-current-thread ,(car frame) ,i) t))
+   `(:frame-var ,slime-current-thread ,(car frame) ,index) t))
 
 ;;; Initialization
 

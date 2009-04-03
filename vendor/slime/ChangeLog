@@ -1,3 +1,289 @@
+2009-03-27  Helmut Eller  <heller@common-lisp.net>
+
+	* swank.lisp (encode-message): Handle errors during write, e.g.
+	closed sockets.
+
+2009-03-27  Helmut Eller  <heller@common-lisp.net>
+
+	* slime.el (slime-setup-contribs): Moved over from
+	slime-autoloads.el
+
+2009-03-27  Helmut Eller  <heller@common-lisp.net>
+	* swank-openmcl.lisp (toggle-trace): Replace ccl::%trace with
+	ccl:trace-function.
+	(kill-thread): Use an implementation that doesn't raise a
+	serious-conditions.
+
+2009-03-27  Helmut Eller  <heller@common-lisp.net>
+
+	* slime.el ([test] macroexpand): Fix more case issues.
+
+2009-03-25  Helmut Eller  <heller@common-lisp.net>
+
+	* slime.el ([test] macroexpand): Ignore case.
+
+2009-03-09  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el (slime-define-channel-type): Indulge in pretty colors.
+	(slime-define-channel-method): You, too!
+
+	(slime-handle-indentation-update): Always put an indentation
+	update on 'slime-indent; for slime-indentation-fu.
+
+2009-03-09  Anton Vodonosov <avodonosov@yandex.ru>
+
+	Use correct encoding and eol conventions for socket streams.
+
+	* swank-abcl.lisp (accept-connection): Honor external-format
+	argument.
+	(*external-format-to-coding-system*, find-external-format): New.
+
+2009-03-09  Helmut Eller  <heller@common-lisp.net>
+
+	* slime.el (slime-with-xref-buffer): Use buffer-names like
+	"*slime xref...*" so that slime-kill-all-buffers can pick
+	it up easily.
+
+2009-03-09  Helmut Eller  <heller@common-lisp.net>
+
+	* hyperspec.el (common-lisp-hyperspec-lookup-reader-macro): Use
+	case-insensitive completion.
+	(hyperspec-lookup-reader-macro): New alias.
+	Suggested by Stas Boukarev.
+
+2009-03-09  Helmut Eller  <heller@common-lisp.net>
+
+	Make fasl-pathname fully customizable not only the direcrory part.
+
+	* swank.lisp (*fasl-pathname-function*): New variable.
+	(*fasl-directory*): Deleted.
+
+2009-03-08  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el (slime-choose-overlay-for-read-error): Extracted and
+	extended from `slime-choose-overlay-region'. Differentiate between
+	symbol-related reader-errors (package not found &c) and
+	character-related reader-errors.
+	(slime-choose-overlay-region): Use it.
+
+2009-03-08  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el (make-slime-buffer-location, make-slime-file-location):
+	Do not default to (:hints), but to nil, as expected in the
+	slime-side source-location machinery.
+
+2009-03-08  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el (slime-choose-overlay-region): Special case :read-error
+	notes regardless of position kind.
+
+	* swank-sbcl.lisp (signal-compiler-condition): Return :READ-ERROR
+	as severity for reader-errors.
+	(compiler-note-location): Fix off-by-one when compiling from
+	buffer.
+
+2009-03-08  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* swank-sbcl.lisp (compiling-from-buffer-p),
+	(compiling-from-file-p)
+	(compiling-from-generated-code-p): New helpers; extracted from
+	LOCATE-COMPILER-NOTE.
+	(locate-compiler-note): Use them.
+	(compiler-note-location): Use them, too, to handle reader-errors
+	when compiling from file. This completes 2009-02-27.
+
+	Reported by Christian Lynbech.
+
+2009-03-07  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el ([portability] getf): Redefine `getf' on Emacs21 to
+	work on malformed plists like it does on later Emacsen. This made
+	the `find-local-definitions' test case fail on Emacs21.
+
+2009-03-04  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el (slime-check-fancy-symbol-name): Use
+	`slime-test-expect' instead of `slime-check'.
+	([test] fancy-symbol-names): Extend test case; check for
+	"Foo" in #<Foo| {...}>.
+	(slime-symbol-constituent-at-pos): Check for #<.
+
+2009-03-04  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el (slime-wait-condition): Remove `save-excursion'; it
+	made the `repl-test' test case fail because this test tries to set
+	point to the new prompt in vain.
+
+2009-03-03  Helmut Eller  <heller@common-lisp.net>
+
+	* slime.el (slime-pretty-package-name): Simplify.
+
+2009-03-03  Helmut Eller  <heller@common-lisp.net>
+
+	Use a separate key, C-c C-d #, to lookup reader-macros.
+
+	* hyperspec.el (common-lisp-hyperspec-lookup-reader-macro): New
+	command.
+	(common-lisp-hyperspec-reader-macros): New variable.
+	(common-lisp-hyperspec-reader-macro-at-point): Moved over from
+	slime.el
+	* slime.el (slime-doc-bindings): Bind C-c C-d #.
+	(slime-hyperspec-lookup): Don't consider reader-macros.
+
+2009-03-02  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* hyperspec.el (common-lisp-hyperspec-symbols): Add entries for
+	reader macros even when `common-lisp-hyperspec-symbol-table' is
+	bound to some value.
+
+2009-02-27  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el ([test] macroexpand): New test case.
+	(slime-buffer-visible-p): New helper.
+	(slime-execute-as-command): New helper.
+
+2009-02-27  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* hyperspec.el (common-lisp-hyperspec-symbols): Add links to
+	reader macros.
+
+	* slime.el (slime-reader-macro-at-point): New function.
+	(slime-hyperspec-lookup): Call it.
+
+	Adapted from Stas Boukarev.
+
+2009-02-27  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el: Rename `slime-symbol-name-at-point' to
+	`slime-symbol-at-point'.
+
+2009-02-27  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el ([portability] lisp-mode-syntax-table): On Emacs21,
+	make @ a prefix character like it's from Emacs22
+	onward. `slime-symbol-name-at-point' was written with that
+	assumption.
+
+2009-02-27  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el (slime-current-parser-state): Wrap `syntax-ppss' in a
+	`save-match-data'. This issue has been reported to the Emacs
+	maintainers.
+
+2009-02-27  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el (slime-defun-if-undefined),
+	(slime-defmacro-if-undefined): Renamed to
+	`slime-DEFUN-if-undefined' and `slime-DEFMACRO-if-undefined' to
+	better differentiate between the two.
+
+	(slime-indulge-pretty-colors): New function. You can now put a
+	symbol on the plist of `slime-indulge-pretty-colors' to make the
+	symbol be fontified like `defun'. This is done for
+	`slime-def-connection-var', and the two symbols above.
+
+2009-02-27  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el (slime-defmacro-if-undefined): New. Analogous to
+	`slime-defun-if-undefined'.
+	([portablity]] with-selected-window) Use it.
+	([portability] with-temo-buffer): Likewise.
+
+	Patch by Theam Yong Chew.
+
+2009-02-27  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	C-c C-c on (defun foo () ,bar) did not result in a compiler note
+	overlay on SBCL.
+
+	* swank-sbcl.lisp (compiler-note-location): Make it take a
+	condition; if the condition is a READER-ERROR, the passed
+	compiler-error-context is very likely NIL---we have not proceeded
+	beyond reading, so we aren't within the compiler yet. In that
+	case, we use the stream position of the stream behind the
+	READER-ERROR instead.
+
+2009-02-26  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* doc/slime.texi: Fix typos, and add keybindings not listed there.
+
+	Patch by Stas Boukarev.
+
+2009-02-26  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el (sldb-backward-frame): Only move backward when we're
+	below the backtrace marker.
+
+2009-02-26  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* swank.lisp (debug-in-emacs): Moved (WITH-BINDINGS
+	*SLDB-PRINTER-BINDINGS* ...), from here...
+	(sldb-loop): ... to here. Otherwise results from a user doing an
+	eval-in-frame were truncated.
+
+	Reported by Jeff Workman.
+
+2009-02-26  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* swank.lisp (hash-table-to-alist): New function.
+	([method] emacs-inspect (hash-table)): Sort keys if they're all
+	numbers, symbols, or strings.
+
+	Adapted from Willem Broekema.
+
+2009-02-26  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* swank-backend.lisp (warn-unimplemented-interfaces):
+	Bind *PRINT-PRETTY* to T. Otherwise no sugar formatting on CCL.
+
+2009-02-26  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el (slime-pretty-package-name): Signalled an error on
+	simple symbols; fix that!
+
+	Reported by Geoff Wozniak.
+
+2009-02-26  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el (slime-current-form-path): Use
+	`slime-current-parser-state'.
+
+2009-02-26  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el ([test] fancy-symbol-names): New, hopefully
+	comprehensive, test for funky symbol names.
+	(slime-check-fancy-symbol-name): Helper.
+	(slime-exit-vertical-bars): New function to move out from |foo|.
+	(slime-symbol-constituent-at): New predicate to test whether the
+	character at point is a valid symbol constituent.
+	(slime-beginning-of-symbol, slime-end-of-symbol): Rewritten using
+	above two functions and `forward-sexp' that correctly parses
+	escapes etc.
+	(slime-sexp-at-point): Consider thing at point a symbol first.
+
+2009-02-24  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime.el (slime-forward-cruft): Forward whitespace, reader
+	conditonals, comments. Splitted from `slime-forward-sexp'.
+	(slime-pretty-package-name): Use it.
+
+2009-02-24  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	Re-checkin my change from 2009-02-14. It seems I didn't actually
+	commit it.
+
+2009-02-22  Tobias C. Rittweiler  <tcr@freebits.de>
+
+        `M-x slime-format-string-expand' displays the expansion of a
+        format string.
+
+        * slime.el (slime-string-at-point) New.
+        (slime-string-at-point-or-error): New.
+        (slime-format-string-expand): New; use them.
+
+        * swank-backend.lisp (format-string-expand): New interface.
+        * swank.lisp (swank-format-string-expand): New; use it.
+
 2009-02-17  Helmut Eller  <heller@common-lisp.net>
 
 	* swank.lisp (dispatch-event [:emacs-rex]): Reply a :invalid-rpc

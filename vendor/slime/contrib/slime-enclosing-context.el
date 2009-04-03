@@ -54,7 +54,7 @@ points where their bindings are established as second value."
 		 (ignore-errors
 		   (loop 
 		    (down-list) 
-		    (push (slime-parse-symbol-name-at-point 1) binding-names)
+		    (push (slime-symbol-at-point) binding-names)
 		    (push (save-excursion (backward-up-list) (point)) 
 			  binding-start-points)
 		    (up-list)))))
@@ -81,8 +81,8 @@ points where their bindings are established as second value."
 		 (ignore-errors 
 		   (loop
 		    (down-list) 
-		    (destructuring-bind (name arglist)
-			(slime-ensure-list (slime-parse-sexp-at-point 2))
+		    (destructuring-bind (name arglist) 
+                        (slime-parse-sexp-at-point 2)
 		      (assert (slime-has-symbol-syntax-p name)) (assert arglist)
 		      (push name names)
 		      (push arglist arglists)
@@ -94,14 +94,31 @@ points where their bindings are established as second value."
 	      (nreverse start-points)))))
 
 
+(defun slime-enclosing-bound-macros ()
+  (multiple-value-call #'slime-find-bound-macros (slime-enclosing-form-specs)))
+
+(defun slime-find-bound-macros (ops indices points)
+  ;; Kludgy!
+  (let ((slime-function-binding-ops-alist '((macrolet &bindings &body))))
+    (slime-find-bound-functions ops indices points)))
+
+
 (def-slime-test enclosing-context.1
     (buffer-sexpr wished-bound-names wished-bound-functions)
     "Check that finding local definitions work."
     '(("(flet ((,nil ()))
 	 (let ((bar 13)
 	       (,foo 42))
-	   *HERE*))" 
-       (",nil" "bar" ",foo")
+	   *HERE*))"
+       ;; We used to return ,foo here, but we do not anymore.  We
+       ;; still return ,nil for the `slime-enclosing-bound-functions',
+       ;; though. The first one is used for local M-., whereas the
+       ;; latter is used for local autodoc. It does not seem too
+       ;; important for local M-. to work on such names. \(The reason
+       ;; that it does not work anymore, is that
+       ;; `slime-symbol-at-point' now does TRT and does not return a
+       ;; leading comma anymore.\)
+       ("bar" nil nil)
        ((",nil" "()")))
       ("(flet ((foo ()))
          (quux)

@@ -173,8 +173,9 @@ Backends implement these functions using DEFIMPLEMENTATION."
 (defun warn-unimplemented-interfaces ()
   "Warn the user about unimplemented backend features.
 The portable code calls this function at startup."
-  (warn "These Swank interfaces are unimplemented:~% ~:<~{~A~^ ~:_~}~:>"
-        (list (sort (copy-list *unimplemented-interfaces*) #'string<))))
+  (let ((*print-pretty* t))
+    (warn "These Swank interfaces are unimplemented:~% ~:<~{~A~^ ~:_~}~:>"
+          (list (sort (copy-list *unimplemented-interfaces*) #'string<)))))
 
 (defun import-to-swank-mop (symbol-list)
   (dolist (sym symbol-list)
@@ -580,6 +581,10 @@ NIL."
 		   (frob new-form t)
 		   (values new-form expanded)))))
     (frob form env)))
+
+(definterface format-string-expand (control-string)
+  "Expand the format string CONTROL-STRING."
+  (macroexpand `(formatter ,control-string)))
 
 (definterface describe-symbol-for-emacs (symbol)
    "Return a property list describing SYMBOL.
