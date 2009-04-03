@@ -6,12 +6,12 @@
   (:require (swank.util.concurrent [mbox :as mb])))
 
 ;; Protocol version
-(def *protocol-version* (ref nil))
+(defonce *protocol-version* (ref nil))
 
 ;; Emacs packages
 (def *current-package*)
 
-(def *active-threads* (ref ()))
+(defonce *active-threads* (ref ()))
 
 (defn maybe-ns [package]
   (cond
@@ -38,7 +38,7 @@
      ~@body))
 
 ;; Exceptions for debugging
-(def *debug-quit-exception* (Exception. "Debug quit"))
+(defonce *debug-quit-exception* (Exception. "Debug quit"))
 (def #^Throwable *current-exception*)
 
 ;; Handle Evaluation
@@ -66,10 +66,10 @@
    evaluates them (will block if no mbox message is available)."
   ([] (continuously (eval-from-control))))
 
-(defn- exception-causes [#^Throwable t]
+(defn exception-causes [#^Throwable t]
   (lazy-seq
-   (cons t (when-let [cause (.getCause t)]
-             (exception-causes cause)))))
+    (cons t (when-let [cause (.getCause t)]
+              (exception-causes cause)))))
 
 (defn- debug-quit-exception? [t]
   (some #(identical? *debug-quit-exception* %) (exception-causes t)))

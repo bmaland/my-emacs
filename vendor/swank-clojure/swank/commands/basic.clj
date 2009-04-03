@@ -97,11 +97,6 @@
              :references nil
              :short-message ~(.toString t)))
 
-(defn- exception-causes [#^Throwable t]
-  (lazy-seq
-   (cons t (when-let [cause (.getCause t)]
-             (exception-causes t)))))
-
 (defn- compile-file-for-emacs*
   "Compiles a file for emacs. Because clojure doesn't compile, this is
    simple an alias for load file w/ timing and messages. This function
@@ -259,7 +254,10 @@
 
 (defn- slime-search-paths []
   (concat (get-path-prop "user.dir" "java.class.path" "sun.boot.class.path")
-          (map #(.getPath #^java.net.URL %) (.getURLs (clojure.lang.RT/baseLoader)))))
+          (let [loader (clojure.lang.RT/baseLoader)]
+            (when (instance? java.net.URLClassLoader loader)
+              (map #(.getPath #^java.net.URL %)
+                   (.getURLs #^java.net.URLClassLoader (cast java.net.URLClassLoader (clojure.lang.RT/baseLoader))))))))
 
 (defn- namespace-to-path [ns]
   (let [#^String ns-str (name (ns-name ns))]
