@@ -14,6 +14,7 @@
 (add-to-list 'load-path "~/.emacs.d/vendor/slime")
 (add-to-list 'load-path "~/.emacs.d/vendor/jabber")
 (add-to-list 'load-path "~/.emacs.d/vendor/color-theme")
+(add-to-list 'load-path "~/.emacs.d/vendor/ess/lisp")
 (add-to-list 'load-path "~/.emacs.d/elpa")
 
 ;; TODO autoload some of these
@@ -106,6 +107,7 @@
 (autoload 'mercury-mode "prolog" "Major mode for editing Mercury programs." t)
 
 (setq auto-mode-alist (append '(("\\.pl$" . prolog-mode)
+                                ("\\.dcg$" . prolog-mode)
                                 ("\\.m$" . mercury-mode))
                                auto-mode-alist))
 
