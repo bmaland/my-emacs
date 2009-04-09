@@ -20,6 +20,13 @@ vendor/clojure-mode:
   type: git
   revision: a51f8ff21940c50b2598ca4db96277459467baa8
   remote: braid/vendor/clojure-mode
+vendor/rspec-mode.el: 
+  squashed: true
+  url: git://github.com/Chrononaut/rspec-mode.el.git
+  branch: master
+  type: git
+  revision: 7ca71b395ca864ca13f591d210e74da7a584d246
+  remote: braid/vendor/rspec-mode.el
 yasnippet/snippets/text-mode/ruby-mode: 
   squashed: true
   branch: master
