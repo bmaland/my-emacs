@@ -15,6 +15,7 @@
 (add-to-list 'load-path "~/.emacs.d/vendor/jabber")
 (add-to-list 'load-path "~/.emacs.d/vendor/color-theme")
 (add-to-list 'load-path "~/.emacs.d/vendor/ess/lisp")
+(add-to-list 'load-path "~/.emacs.d/vendor/w3m")
 (add-to-list 'load-path "~/.emacs.d/elpa")
 
 ;; TODO autoload some of these
@@ -47,6 +48,7 @@
 (load "python-mode.el")
 
 ;; Autoloads
+(autoload 'w3m-load "w3m" t)
 (autoload 'slime-selector "slime" t)
 (autoload 'google-define "google-define" nil t)
 (autoload 'twittering-mode "twittering-mode" nil t)
