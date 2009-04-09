@@ -16,6 +16,7 @@
 (add-to-list 'load-path "~/.emacs.d/vendor/color-theme")
 (add-to-list 'load-path "~/.emacs.d/vendor/ess/lisp")
 (add-to-list 'load-path "~/.emacs.d/vendor/w3m")
+(add-to-list 'load-path "~/.emacs.d/vendor/rspec-mode.el")
 (add-to-list 'load-path "~/.emacs.d/elpa")
 
 ;; TODO autoload some of these
@@ -52,6 +53,7 @@
 (autoload 'slime-selector "slime" t)
 (autoload 'google-define "google-define" nil t)
 (autoload 'twittering-mode "twittering-mode" nil t)
+(autoload 'rspec-mode "rspec-mode" nil t)
 (autoload 'sr-speedbar-toggle "sr-speedbar")
 (autoload 'bit-mode "bigram-input-translation" nil t)
 
@@ -95,7 +97,6 @@
 
 (autoload 'ruby-mode "ruby-mode" "Ruby editing mode." t)
 (autoload 'ruby-test-run-file "ruby-test" "Test runner for ruby unit tests." t)
-(add-to-list 'auto-mode-alist '("\\.rb$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.rake$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.gemspec$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.sake$" . ruby-mode))
