@@ -20,13 +20,13 @@ vendor/swank-clojure:
   type: git
   revision: 7717c97c2880ce097d024134cfe7ee4ecd9c78a3
   remote: braid/vendor/swank-clojure
-vendor/rspec-mode.el: 
+vendor/rspec-mode: 
   squashed: true
   url: git://github.com/Chrononaut/rspec-mode.el.git
   branch: master
   type: git
   revision: 7ca71b395ca864ca13f591d210e74da7a584d246
-  remote: braid/vendor/rspec-mode.el
+  remote: braid/vendor/rspec-mode
 yasnippet/snippets/text-mode/ruby-mode: 
   squashed: true
   branch: master
