@@ -1,5 +1,7 @@
 (multi-term-keystroke-setup)
 
+(define-key global-map "\C-cr" 'org-remember)
+
 ;; Align your code in a pretty way.
 (global-set-key (kbd "C-x \\") 'align-regexp)
 
@@ -10,7 +12,7 @@
 (global-set-key "\C-x\C-i" 'ido-imenu)
 
 ;; Movement for windows and buffers
-(windmove-default-keybindings) ;; Shift+direction
+;;(windmove-default-keybindings) ;; Shift+direction
 
 (global-set-key [(control tab)]               'next-multiframe-window)
 (global-set-key [(control shift iso-lefttab)] 'previous-multiframe-window)
@@ -75,17 +77,6 @@
 (global-set-key (kbd "M-SPC")   'set-mark-command)
 (global-set-key (kbd "C-x m")   'magit-status)
 (global-set-key (kbd "s-s")     'sr-speedbar-toggle)
-
-;; make cursor movement keys under right hand's home-row.
-(global-set-key (kbd "M-j") 'backward-char) ; was indent-new-comment-line
-(global-set-key (kbd "M-l") 'forward-char)
-(global-set-key (kbd "M-i") 'previous-line) ; was tab-to-tab-stop
-(global-set-key (kbd "M-k") 'next-line) ; was kill-sentence
-
-;; Org
-(define-key global-map "\C-cl" 'org-store-link)
-(define-key global-map "\C-ca" 'org-agenda)
-(define-key global-map (kbd "C-c r") 'org-remember)
 
 ;; Quod Libet
 (global-set-key [f10] 'quodlibet-prev)
