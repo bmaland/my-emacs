@@ -15,6 +15,7 @@
  '(load-home-init-file t t)
  '(make-backup-files nil)
  '(minibuffer-max-depth nil)
+ '(org-archive-location "%s::* Archive")
  '(pc-select-meta-moves-sexps t)
  '(pc-select-selection-keys-only t)
  '(pc-selection-mode t)

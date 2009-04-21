@@ -16,7 +16,7 @@
 (add-to-list 'load-path "~/.emacs.d/vendor/color-theme")
 (add-to-list 'load-path "~/.emacs.d/vendor/ess/lisp")
 (add-to-list 'load-path "~/.emacs.d/vendor/w3m")
-(add-to-list 'load-path "~/.emacs.d/vendor/rspec-mode.el")
+(add-to-list 'load-path "~/.emacs.d/vendor/rspec-mode")
 (add-to-list 'load-path "~/.emacs.d/elpa")
 
 ;; TODO autoload some of these
