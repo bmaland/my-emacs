@@ -142,7 +142,10 @@
   (load "linux.el"))
 
 ;; Load Host-specific settings
-(let ((system-specific-config (concat "~/.emacs.d/hosts/" system-name ".el")))
+(let ((system-specific-config
+       (concat "~/.emacs.d/hosts/"
+               (replace-regexp-in-string "\\..*" "" system-name)
+               ".el")))
   (if (file-exists-p system-specific-config)
       (load system-specific-config)))
 
