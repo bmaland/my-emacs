@@ -31,7 +31,7 @@
 
       (set-default-font "-apple-monaco-medium-r-normal--14-120-72-72-m-120-iso10646-1"))
   ;; Carbon Emacs
-  (setq mac-option-modifier 'meta)
+  ;;(setq mac-option-modifier 'meta)
 
   ;; Fullscreen for Carbon Emacs
   (defun toggle-fullscreen ()
