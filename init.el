@@ -121,6 +121,7 @@
 (setq auto-mode-alist
          (cons '("\\.text" . markdown-mode) auto-mode-alist))
 (add-to-list 'auto-mode-alist '("\.markdown$" . markdown-mode))
+(add-to-list 'auto-mode-alist '("\.md$" . markdown-mode))
 
 ;; Regenerate the autoload file if it doesn't exist or it's too
 ;; old. (2 weeks or so)
