@@ -1,16 +1,12 @@
 ;; Requirements:
 ;; Pymacs from http://pymacs.progiciels-bpi.ca/archives/Pymacs.tar.gz
 ;;
-;; Then, copy pycomplete.py to somewhere in your Python path (site-packages)
-;; This file is included in the ~/.emacs.d/vendor directory.
-;;
 ;; For flymake, pylint must be installed and the epylint wrapper must be
 ;; somewhere in PATH. On Arch Linux, epylint is included in the pylint
 ;; package.
 ;;
 ;; Also, ropemacs:
-;; http://www.enigmacurry.com/2009/01/21/
-;; autocompleteel-python-code-completion-in-emacs/
+;; http://www.enigmacurry.com/2009/01/21/autocompleteel-python-code-completion-in-emacs/
 
 (setq interpreter-mode-alist (cons '("python" . python-mode)
                                    interpreter-mode-alist)
@@ -25,19 +21,21 @@
       comint-input-ring-size (string-to-number (or (getenv
                                                     "HISTSIZE") "100")))
 
-      ;;py-python-command-args '("-pylab"))
+;;py-python-command-args '("-pylab"))
 
-;; (autoload 'pymacs-apply "pymacs")
-;; (autoload 'pymacs-call  "pymacs")
-;; (autoload 'pymacs-eval  "pymacs" nil t)
-;; (autoload 'pymacs-exec  "pymacs" nil t)
-;; (autoload 'pymacs-load  "pymacs" nil t)
+(setq pymacs-load-path '("~/.emacs.d/vendor"))
+
+(autoload 'pymacs-apply "pymacs")
+(autoload 'pymacs-call  "pymacs")
+(autoload 'pymacs-eval  "pymacs" nil t)
+(autoload 'pymacs-exec  "pymacs" nil t)
+(autoload 'pymacs-load  "pymacs" nil t)
 
 (add-hook 'python-mode-hook
           '(lambda ()
              (coding-hook)
              ;(require 'ipython)
-             (require 'pycomplete)
+             (require 'pycomplete+)
 
              (eldoc-mode 1)
              (highlight-80+-mode t)
