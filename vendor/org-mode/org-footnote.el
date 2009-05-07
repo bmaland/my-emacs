@@ -5,7 +5,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.23a
+;; Version: 6.26trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -362,7 +362,7 @@ referenced sequence."
 	   (and idef
 		org-footnote-fill-after-inline-note-extraction
 		(fill-paragraph)))
-	 (if (not a) (push (list ref marker def) ref-table))))
+	 (if (not a) (push (list ref marker def (if idef t nil)) ref-table))))
       
       ;; First find and remove the footnote section
       (goto-char (point-min))
@@ -402,11 +402,12 @@ referenced sequence."
       (goto-char (or ins-point (point-max)))
       (setq ref-table (reverse ref-table))
       (when sort-only
-	;; remove anonymous fotnotes from the list
+	;; remove anonymous and inline footnotes from the list
 	(setq ref-table
 	      (delq nil (mapcar
 			 (lambda (x) (and (car x)
 					  (not (equal (car x) "fn:"))
+					  (not (nth 3 x))
 					  x))
 			 ref-table))))
       ;; Make sure each footnote has a description, or an error message.

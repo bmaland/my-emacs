@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.23a
+;; Version: 6.26trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -270,7 +270,7 @@ this heading."
 	    ;; No specific heading, just go to end of file.
 	    (goto-char (point-max)) (insert "\n"))
 	  ;; Paste
-	  (org-paste-subtree (org-get-valid-level level 1))
+	  (org-paste-subtree (org-get-valid-level level (and heading 1)))
 
 	  ;; Mark the entry as done
 	  (when (and org-archive-mark-done

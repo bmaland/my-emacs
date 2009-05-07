@@ -7,7 +7,7 @@
 ;;	   Bastien Guerry <bzg AT altern DOT org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.23a
+;; Version: 6.26trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -49,6 +49,8 @@
 (declare-function org-timer-item "org-timer" (&optional arg))
 (declare-function org-combine-plists "org" (&rest plists))
 (declare-function org-entry-get "org" (pom property &optional inherit))
+(declare-function org-narrow-to-subtree "org" ())
+(declare-function org-show-subtree "org" ())
 
 (defgroup org-plain-lists nil
   "Options concerning plain lists in Org-mode."
@@ -160,7 +162,7 @@ list, obtained by prompting the user."
        (cond
 	((eq llt t)  "\\([ \t]*\\([-+]\\|\\([0-9]+[.)]\\)\\)\\|[ \t]+\\*\\)\\( \\|$\\)")
 	((= llt ?.)  "\\([ \t]*\\([-+]\\|\\([0-9]+\\.\\)\\)\\|[ \t]+\\*\\)\\( \\|$\\)")
-	((= llt ?\)) "\\([ \t]*\\([-+]\\|\\([0-9]+))\\)\\|[ \t]+\\*\\)\\( \\|$\\)")
+	((= llt ?\)) "\\([ \t]*\\([-+]\\|\\([0-9]+)\\)\\)\\|[ \t]+\\*\\)\\( \\|$\\)")
 	(t (error "Invalid value of `org-plain-list-ordered-item-terminator'")))))))
 
 (defun org-at-item-bullet-p ()
@@ -209,7 +211,9 @@ Return t when things worked, nil when we are not in an item."
 					descp))))
 	   (eow (save-excursion (beginning-of-line 1) (looking-at "[ \t]*")
 				(match-end 0)))
-	   (blank-a (cdr (assq 'plain-list-item org-blank-before-new-entry)))
+	   (blank-a (if org-empty-line-terminates-plain-lists
+			nil
+		      (cdr (assq 'plain-list-item org-blank-before-new-entry))))
 	   (blank (if (eq blank-a 'auto) empty-line-p blank-a))
 	   pos)
       (if descp (setq checkbox nil))
@@ -317,6 +321,21 @@ text below the heading."
 	  (beginning-of-line 2)))))
   (org-update-checkbox-count-maybe))
 
+(defun org-reset-checkbox-state-subtree ()
+  "Reset all checkboxes in an entry subtree."
+  (interactive "*")
+  (save-restriction
+    (save-excursion
+      (org-narrow-to-subtree)
+      (org-show-subtree)
+      (goto-char (point-min))
+      (let ((end (point-max)))
+	(while (< (point) end)
+	  (when (org-at-item-checkbox-p)
+	    (replace-match "[ ]" t t))
+	  (beginning-of-line 2))))
+    (org-update-checkbox-count-maybe)))
+
 (defun org-checkbox-blocked-p ()
   "Is the current checkbox blocked from for being checked now?
 A checkbox is blocked if all of the following conditions are fulfilled:
@@ -369,8 +388,16 @@ the whole buffer."
        (outline-next-heading)
        (setq beg (point) end (point-max)))
      (goto-char end)
-     ;; find each statistic cookie
-     (while (re-search-backward re-find beg t)
+     ;; find each statistics cookie
+     (while (and (re-search-backward re-find beg t)
+		 (not (save-match-data
+			(and (org-on-heading-p)
+
+			     (equal (downcase
+				     (or (org-entry-get
+					  nil "COOKIE_DATA")
+					 ""))
+				    "todo")))))
        (setq beg-cookie (match-beginning 1)
 	     end-cookie (match-end 1)
 	     cstat (+ cstat (if end-cookie 1 0))

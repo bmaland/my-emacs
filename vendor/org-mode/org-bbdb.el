@@ -7,7 +7,7 @@
 ;;         Thomas Baumann <thomas dot baumann at ch dot tum dot de>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.23a
+;; Version: 6.26trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -49,25 +49,37 @@
 ;; %%(org-bbdb-anniversaries)
 ;;
 ;;
-;; The anniversaries are stored in BBDB in the field `anniversary'
-;; in the format
+;; To add an anniversary to a BBDB record, press `C-o' in the record.
+;; You will be prompted for the field name, in this case it must be
+;; "anniversary".  If this is the first time you are using this field,
+;; you need to confirm that it should be created.
 ;;
-;;     YYYY-MM-DD{ CLASS-OR-FORMAT-STRING}*
-;;     {\nYYYY-MM-DD CLASS-OR-FORMAT-STRING}*
+;; The format of an anniversary field stored in BBDB is the following
+;; (items in {} are optional):
+;;
+;;     YYYY-MM-DD{ CLASS-OR-FORMAT-STRING}
+;;     {\nYYYY-MM-DD CLASS-OR-FORMAT-STRING}...
 ;;
 ;; CLASS-OR-FORMAT-STRING is one of two things:
 ;;
-;;  * an identifier for a class of anniversaries (eg. birthday or
-;;    wedding) from `org-bbdb-anniversary-format-alist'.
-;;  * the (format) string displayed in the diary.
+;;  - an identifier for a class of anniversaries (eg. birthday or
+;;    wedding) from `org-bbdb-anniversary-format-alist' which then
+;;    defines the format tring for this class
+;;  - the (format) string displayed in the diary.
 ;;
-;; It defaults to the value of `org-bbdb-default-anniversary-format'
-;; ("birthday" by default).
+;; You can enter multiple anniversaries for a single BBDB record by
+;; separating them with a newline character.  At the BBDB prompt for
+;; the field value, type `C-q C-j' to enter a newline between two
+;; anniversaries.
+;;
+;; If you omit the CLASS-OR-FORMAT-STRING entirely, it defaults to the
+;; value of `org-bbdb-default-anniversary-format' ("birthday" by
+;; default).
 ;;
 ;; The substitutions in the format string are (in order):
-;;  * the name of the record containing this anniversary
-;;  * the number of years
-;;  * an ordinal suffix (st, nd, rd, th) for the year
+;;  - the name of the record containing this anniversary
+;;  - the number of years
+;;  - an ordinal suffix (st, nd, rd, th) for the year
 ;;
 ;; See the documentation of `org-bbdb-anniversary-format-alist' for
 ;; further options.
@@ -225,7 +237,7 @@ italicised, in all other cases it is left unchanged."
 (defun org-bbdb-anniv-extract-date (time-str)
   "Convert YYYY-MM-DD to (month date year).
 Argument TIME-STR is the value retrieved from BBDB."
-  (multiple-value-bind (y m d) (bbdb-split time-str "-")
+  (multiple-value-bind (y m d) (values-list (bbdb-split time-str "-"))
     (list (string-to-number m)
 	  (string-to-number d)
 	  (string-to-number y))))
@@ -258,7 +270,7 @@ The anniversaries are assumed to be stored `org-bbdb-anniversary-field'."
         (while annivs
           (setq split (org-bbdb-anniv-split (pop annivs)))
           (multiple-value-bind (m d y)
-              (funcall org-bbdb-extract-date-fun (car split))
+              (values-list (funcall org-bbdb-extract-date-fun (car split)))
             (setq tmp (gethash (list m d) org-bbdb-anniv-hash))
             (puthash (list m d) (cons (list y
                                             (bbdb-record-name rec)

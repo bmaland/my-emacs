@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.23a
+;; Version: 6.26trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -31,7 +31,12 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'cl))
+
 (require 'org-macs)
+
+(declare-function find-library-name             "find-func"  (library))
 
 (defconst org-xemacs-p (featurep 'xemacs)) ; not used by org.el itself
 (defconst org-format-transports-properties-p
@@ -294,6 +299,16 @@ that can be added."
   (if (featurep 'xemacs)
       (org-no-properties (substring string (or from 0) to))
     (substring-no-properties string from to)))
+
+(defun org-find-library-name (library)
+  (if (fboundp 'find-library-name)
+      (file-name-directory (find-library-name library))
+    ; XEmacs does not have `find-library-name'
+    (flet ((find-library-name-helper (filename ignored-codesys)
+				     filename)
+	   (find-library-name (library)
+	    (find-library library nil 'find-library-name-helper)))
+      (file-name-directory (find-library-name library)))))
 
 (defun org-count-lines (s)
   "How many lines in string S?"
