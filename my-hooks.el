@@ -143,6 +143,7 @@
 
 (add-hook 'org-mode-hook
           (lambda ()
+            (reftex-mode t)
             (require 'bbdb)
             (bbdb-initialize)
 
@@ -163,8 +164,7 @@
                 (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
 
             (add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
-            (auto-fill-mode 1)
-            (reftex-mode t)))
+            (auto-fill-mode 1)))
 
 ;; (defun org-mode-reftex-setup ()
 ;;   (load-library "reftex")
