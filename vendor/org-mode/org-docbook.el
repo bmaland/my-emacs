@@ -4,7 +4,7 @@
 ;;
 ;; Emacs Lisp Archive Entry
 ;; Filename: org-docbook.el
-;; Version: 6.26trans
+;; Version: 6.27trans
 ;; Author: Baoqiu Cui <cbaoqiu AT yahoo DOT com>
 ;; Maintainer: Baoqiu Cui <cbaoqiu AT yahoo DOT com>
 ;; Keywords: org, wp, docbook
@@ -263,7 +263,8 @@ $ emacs --batch
 No file is created."
   (interactive)
   (org-export-as-docbook nil nil "*Org DocBook Export*")
-  (switch-to-buffer-other-window "*Org DocBook Export*"))
+  (when org-export-show-temporary-export-buffer
+    (switch-to-buffer-other-window "*Org DocBook Export*")))
 
 ;;;###autoload
 (defun org-replace-region-by-docbook (beg end)
@@ -369,7 +370,7 @@ in a window.  A non-interactive call will only return the buffer."
 					to-buffer body-only pub-dir)
   "Export the current buffer as a DocBook file.
 If there is an active region, export only the region.  When
-HIDDEN is non-nil, don't display the HTML buffer.  EXT-PLIST is a
+HIDDEN is obsolete and does nothing.  EXT-PLIST is a
 property list with external parameters overriding org-mode's
 default settings, but still inferior to file-local settings.
 When TO-BUFFER is non-nil, create a buffer with that name and
@@ -419,9 +420,10 @@ publishing directory."
 			     (+ (funcall outline-level)
 				(if org-odd-levels-only 1 0)))
 			 0))
-	 (opt-plist (if subtree-p
-			(org-export-add-subtree-options opt-plist rbeg)
-		      opt-plist))
+	 (opt-plist (setq org-export-opt-plist
+			  (if subtree-p
+			      (org-export-add-subtree-options opt-plist rbeg)
+			    opt-plist)))
 	 ;; The following two are dynamically scoped into other
 	 ;; routines below.
 	 (org-current-export-dir
@@ -1116,7 +1118,8 @@ publishing directory."
 	(insert "</article>"))
       (or to-buffer (save-buffer))
       (goto-char (point-min))
-      (message "Exporting... done")
+      (or (org-export-push-to-kill-ring "DocBook")
+	  (message "Exporting... done"))
       (if (eq to-buffer 'string)
 	  (prog1 (buffer-substring (point-min) (point-max))
 	    (kill-buffer (current-buffer)))

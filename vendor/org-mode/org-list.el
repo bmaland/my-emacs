@@ -7,7 +7,7 @@
 ;;	   Bastien Guerry <bzg AT altern DOT org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.26trans
+;; Version: 6.27trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -109,6 +109,12 @@ use \\[org-ctrl-c-ctrl-c] to trigger renumbering."
 When this is set, checkbox statistics is updated each time you either insert
 a new checkbox with \\[org-insert-todo-heading] or toggle a checkbox
 with \\[org-ctrl-c-ctrl-c\\]."
+  :group 'org-plain-lists
+  :type 'boolean)
+
+(defcustom org-hierarchical-checkbox-statistics t
+  "Non-nil means, checkbox statistics counts only the state of direct children.
+When nil, all boxes below the cookie are counted."
   :group 'org-plain-lists
   :type 'boolean)
 
@@ -358,10 +364,16 @@ A checkbox is blocked if all of the following conditions are fulfilled:
 	      (org-current-line)
 	    nil))))))
 
+(defvar org-checkbox-statistics-hook nil
+  "Hook that is run whenever Org thinks checkbox statistics should be updated.
+This hook runs even if `org-provide-checkbox-statistics' is nil, to it can
+be used to implement alternative ways of collecting statistics information.")
+
 (defun org-update-checkbox-count-maybe ()
   "Update checkbox statistics unless turned off by user."
   (when org-provide-checkbox-statistics
-    (org-update-checkbox-count)))
+    (org-update-checkbox-count))
+  (run-hooks 'org-checkbox-statistics-hook))
 
 (defun org-update-checkbox-count (&optional all)
  "Update the checkbox statistics in the current section.
@@ -381,6 +393,10 @@ the whole buffer."
 	  (re-find (concat re "\\|" re-box))
 	  beg-cookie end-cookie is-percent c-on c-off lim
 	  eline curr-ind next-ind continue-from startsearch
+	  (recursive
+	   (or (not org-hierarchical-checkbox-statistics)
+	       (string-match "\\<recursive\\>"
+			     (or (org-entry-get nil "COOKIE_DATA") ""))))
 	  (cstat 0)
 	  )
      (when all
@@ -392,12 +408,11 @@ the whole buffer."
      (while (and (re-search-backward re-find beg t)
 		 (not (save-match-data
 			(and (org-on-heading-p)
-
-			     (equal (downcase
-				     (or (org-entry-get
-					  nil "COOKIE_DATA")
-					 ""))
-				    "todo")))))
+			     (string-match "\\<todo\\>"
+					   (downcase
+					    (or (org-entry-get
+						 nil "COOKIE_DATA")
+						"")))))))
        (setq beg-cookie (match-beginning 1)
 	     end-cookie (match-end 1)
 	     cstat (+ cstat (if end-cookie 1 0))
@@ -419,7 +434,10 @@ the whole buffer."
 	       (org-beginning-of-item)
 	       (setq curr-ind (org-get-indentation))
 	       (setq next-ind curr-ind)
-	       (while (and (bolp) (org-at-item-p) (= curr-ind next-ind))
+	       (while (and (bolp) (org-at-item-p)
+			   (if recursive
+			       (<= curr-ind next-ind)
+			     (= curr-ind next-ind)))
 		 (save-excursion (end-of-line) (setq eline (point)))
 		 (if (re-search-forward re-box eline t)
 		     (if (member (match-string 2) '("[ ]" "[-]"))
@@ -427,7 +445,11 @@ the whole buffer."
 		       (setq c-on (1+ c-on))
 		       )
 		   )
-		 (org-end-of-item)
+		 (if (not recursive)
+		     (org-end-of-item)
+		   (end-of-line)
+		   (when (re-search-forward org-list-beginning-re lim t)
+		     (beginning-of-line)))
 		 (setq next-ind (org-get-indentation))
 		 )))
 	 (goto-char continue-from)
@@ -876,7 +898,9 @@ I.e. to the text after the last item."
 	(catch 'next
 	  (beginning-of-line 2)
 	  (if (looking-at "[ \t]*$")
-	      (throw (if (eobp) 'exit 'next) t))
+	      (if (eobp)
+		  (progn (setq pos (point)) (throw 'exit t))
+		(throw 'next t)))
 	  (skip-chars-forward " \t") (setq ind1 (current-column))
 	  (if (or (< ind1 ind)
 		  (and (= ind1 ind)
@@ -1033,7 +1057,8 @@ INDENT is the indentation of the list."
 		 (looking-at (concat "^" indent "[ \t]+\\|^$")))
 	(if (eq (point) (point-max))
 	    (throw 'exit (point-max)))
-	(forward-line 1))) (point)))
+	(forward-line 1)))
+    (point)))
 
 (defun org-list-insert-radio-list ()
   "Insert a radio list template appropriate for this major mode."

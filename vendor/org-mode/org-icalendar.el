@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.26trans
+;; Version: 6.27trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -97,11 +97,17 @@ all-tags    All tags, including inherited ones."
 	   (const :tag "All tags, including inherited ones" all-tags))))
 
 (defcustom org-icalendar-include-todo nil
-  "Non-nil means, export to iCalendar files should also cover TODO items."
+  "Non-nil means, export to iCalendar files should also cover TODO items.
+Valid values are:
+nil         don't inlcude any TODO items
+t           include all TODO items that are not in a DONE state
+unblocked   include all TODO idems that are not blocked
+all         include both done and not done items."
   :group 'org-export-icalendar
   :type '(choice
 	  (const :tag "None" nil)
 	  (const :tag "Unfinished" t)
+	  (const :tag "Unblocked" unblocked)
 	  (const :tag "All" all)))
 
 (defcustom org-icalendar-include-sexps t
@@ -135,11 +141,13 @@ or if they are only using it locally."
   :group 'org-export-icalendar
   :type 'boolean)
 
-(defcustom org-icalendar-timezone ""
+(defcustom org-icalendar-timezone (getenv "TZ")
   "The time zone string for iCalendar export.
-When nil of the empty string, use the abbreviation retrived from Emacs."
+When nil of the empty string, use the abbreviation retrieved from Emacs."
   :group 'org-export-icalendar
-  :type 'string)
+  :type '(choice
+	  (const :tag "Unspecified" nil)
+	  (string :tag "Time zone")))
 
 ;;; iCalendar export
 
@@ -366,7 +374,8 @@ END:VEVENT\n"
 	  (catch :skip
 	    (org-agenda-skip)
 	    (when (boundp 'org-icalendar-verify-function)
-	      (unless (funcall org-icalendar-verify-function)
+	      (unless (save-match-data
+			(funcall org-icalendar-verify-function))
 		(outline-next-heading)
 		(backward-char 1)
 		(throw :skip nil)))
@@ -374,10 +383,25 @@ END:VEVENT\n"
 	    (setq status (if (member state org-done-keywords)
 			     "COMPLETED" "NEEDS-ACTION"))
 	    (when (and state
-		       (or (not (member state org-done-keywords))
-			   (eq org-icalendar-include-todo 'all))
-		       (not (member org-archive-tag (org-get-tags-at)))
-		       )
+		       (cond
+			;; check if the state is one we should use
+			((eq org-icalendar-include-todo 'all)
+			 ;; all should be included
+			 t)
+			((eq org-icalendar-include-todo 'unblocked)
+			 ;; only undone entries that are not blocked
+			 (and (member state org-not-done-keywords)
+			      (or (not org-blocker-hook)
+				  (save-match-data
+				    (run-hook-with-args-until-failure
+				     'org-blocker-hook
+				     (list :type 'todo-state-change
+					   :position (point-at-bol)
+					   :from 'todo
+					   :to 'done))))))
+			((eq org-icalendar-include-todo t)
+			 ;; include everything that is not done
+			 (member state org-not-done-keywords))))
 	      (setq hd (match-string 3)
 		    summary (org-icalendar-cleanup-string
 			     (org-entry-get nil "SUMMARY"))

@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.26trans
+;; Version: 6.27trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -56,7 +56,6 @@ in this way, it will be wrapped."
   :group 'org-export-ascii
   :type 'boolean)
 
-
 ;;; ASCII export
 
 (defvar org-ascii-current-indentation nil) ; For communication
@@ -67,7 +66,8 @@ in this way, it will be wrapped."
 No file is created.  The prefix ARG is passed through to `org-export-as-ascii'."
   (interactive "P")
   (org-export-as-ascii arg nil nil "*Org ASCII Export*")
-  (switch-to-buffer-other-window "*Org ASCII Export*"))
+  (when org-export-show-temporary-export-buffer
+    (switch-to-buffer-other-window "*Org ASCII Export*")))
 
 ;;;###autoload
 (defun org-replace-region-by-ascii (beg end)
@@ -245,12 +245,9 @@ publishing directory."
     (setq org-min-level (org-get-min-level lines level-offset))
     (setq org-last-level org-min-level)
     (org-init-section-numbers)
-
-    (switch-to-buffer buffer)
-
     (setq lang-words (or (assoc language org-export-language-setup)
 			 (assoc "en" org-export-language-setup)))
-    (switch-to-buffer-other-window buffer)
+    (set-buffer buffer)
     (erase-buffer)
     (fundamental-mode)
     ;; create local variables for all options, to make sure all called
@@ -372,7 +369,7 @@ publishing directory."
 	    (if org-export-ascii-links-to-notes
 		(push (cons desc0 link) link-buffer)
 	      (setq rpl (concat rpl " (" link ")")
-		    wrap (+ (length line) (- (length (match-string 0)))
+		    wrap (+ (length line) (- (length (match-string 0 line)))
 			    (length desc)))))
 	  (setq line (replace-match rpl t t line))))
       (when custom-times
@@ -456,12 +453,13 @@ publishing directory."
 	(goto-char beg)))
     (or to-buffer (save-buffer))
     (goto-char (point-min))
-    (prog1 (if (eq to-buffer 'string)
-	       (prog1 (buffer-substring (point-min) (point-max))
-		 (kill-buffer (current-buffer)))
-	     (current-buffer))
-      (when hidden
-	(delete-window)))))
+    (or (org-export-push-to-kill-ring "ASCII")
+	(message "Exporting... done"))
+    ;; Return the buffer or a string, according to how this function was called
+    (if (eq to-buffer 'string)
+	(prog1 (buffer-substring (point-min) (point-max))
+	  (kill-buffer (current-buffer)))
+      (current-buffer))))
 
 (defun org-export-ascii-preprocess (parameters)
   "Do extra work for ASCII export"

@@ -4,7 +4,7 @@
 ;;
 ;; Emacs Lisp Archive Entry
 ;; Filename: org-latex.el
-;; Version: 6.26trans
+;; Version: 6.27trans
 ;; Author: Bastien Guerry <bzg AT altern DOT org>
 ;; Maintainer: Carsten Dominik <carsten.dominik AT gmail DOT com>
 ;; Keywords: org, wp, tex
@@ -56,6 +56,9 @@
 (defvar org-export-latex-append-header nil)
 (defvar org-export-latex-options-plist nil)
 (defvar org-export-latex-todo-keywords-1 nil)
+(defvar org-export-latex-complex-heading-re nil)
+(defvar org-export-latex-not-done-keywords nil)
+(defvar org-export-latex-done-keywords nil)
 (defvar org-export-latex-display-custom-times nil)
 (defvar org-export-latex-all-targets-re nil)
 (defvar org-export-latex-add-level 0)
@@ -197,6 +200,23 @@ For example \orgTITLE for #+TITLE."
   :group 'org-export-latex
   :type 'string)
 
+(defcustom org-export-latex-todo-keyword-markup "\\textbf{%s}"
+  "Markup for TODO keywords, as a printf format.
+This can be a single format for all keywords, a cons cell with separate
+formats for not-done and done states, or an association list with setup
+for individual keywords.  If a keyword shows up for which there is no
+markup defined, the first one in the association list will be used."
+  :group 'org-export-latex
+  :type '(choice 
+	  (string :tag "Default")
+	  (cons :tag "Distinguish undone and done"
+		(string :tag "Not-DONE states")
+		(string :tag "DONE states"))
+	  (repeat :tag "Per keyword markup"
+		  (cons
+		   (string :tag "Keyword")
+		   (string :tag "Markup")))))
+	   
 (defcustom org-export-latex-timestamp-markup "\\textit{%s}"
   "A printf format string to be applied to time stamps."
   :group 'org-export-latex
@@ -209,6 +229,11 @@ For example \orgTITLE for #+TITLE."
 
 (defcustom org-export-latex-tables-verbatim nil
   "When non-nil, tables are exported verbatim."
+  :group 'org-export-latex
+  :type 'boolean)
+
+(defcustom org-export-latex-tables-centered t
+  "When non-nil, tables are exported in a center environment."
   :group 'org-export-latex
   :type 'boolean)
 
@@ -235,9 +260,9 @@ a string to be used instead of \\section{%s}.  In this latter case,
 the %s stands here for the inserted headline and is mandatory."
   :group 'org-export-latex
   :type '(choice (const :tag "Ignore" nil)
-		 (symbol :tag "Convert as descriptive list" description)
-		 (symbol :tag "Convert as itemized list" itemize)
-		 (symbol :tag "Convert as enumerated list" enumerate)
+		 (const :tag "Convert as descriptive list" description)
+		 (const :tag "Convert as itemized list" itemize)
+		 (const :tag "Convert as enumerated list" enumerate)
 		 (string :tag "Use a section string" :value "\\subparagraph{%s}")))
 
 (defcustom org-export-latex-list-parameters
@@ -338,7 +363,8 @@ emacs   --batch
 No file is created.  The prefix ARG is passed through to `org-export-as-latex'."
   (interactive "P")
   (org-export-as-latex arg nil nil "*Org LaTeX Export*")
-  (switch-to-buffer-other-window "*Org LaTeX Export*"))
+  (when org-export-show-temporary-export-buffer
+    (switch-to-buffer-other-window "*Org LaTeX Export*")))
 
 ;;;###autoload
 (defun org-replace-region-by-latex (beg end)
@@ -406,8 +432,9 @@ If there is an active region, export only the region.  The prefix
 ARG specifies how many levels of the outline should become
 headlines.  The default is 3.  Lower levels will be exported
 depending on `org-export-latex-low-levels'.  The default is to
-convert them as description lists.  When HIDDEN is non-nil, don't
-display the LaTeX buffer.  EXT-PLIST is a property list with
+convert them as description lists.
+HIDDEN is obsolete and does nothing.
+EXT-PLIST is a property list with
 external parameters overriding org-mode's default settings, but
 still inferior to file-local settings.  When TO-BUFFER is
 non-nil, create a buffer with that name and export to that
@@ -484,6 +511,11 @@ when PUB-DIR is set, use this as the publishing directory."
 		     (region-p nil)
 		     (t (plist-get opt-plist :skip-before-1st-heading))))
 	 (text (plist-get opt-plist :text))
+	 (org-export-preprocess-hook
+	  (cons
+	   `(lambda () (org-set-local 'org-complex-heading-regexp
+				      ,org-export-latex-complex-heading-re))
+	   org-export-preprocess-hook))
 	 (first-lines (if skip "" (org-export-latex-first-lines
 				   opt-plist
 				   (if subtree-p
@@ -552,9 +584,21 @@ when PUB-DIR is set, use this as the publishing directory."
 
     ;; finalization
     (unless body-only (insert "\n\\end{document}"))
+
+    ;; Relocate the table of contents
+    (goto-char (point-min))
+    (when (re-search-forward "\\[TABLE-OF-CONTENTS\\]" nil t)
+      (goto-char (point-min))
+      (while (re-search-forward "\\\\tableofcontents\\>[ \t]*\n?" nil t)
+	(replace-match ""))
+      (goto-char (point-min))
+      (and (re-search-forward "\\[TABLE-OF-CONTENTS\\]" nil t)
+	   (replace-match "\\tableofcontents" t t)))
+
     (or to-buffer (save-buffer))
     (goto-char (point-min))
-    (message "Exporting to LaTeX...done")
+    (or (org-export-push-to-kill-ring "LaTeX")
+	(message "Exporting to LaTeX...done"))
     (prog1
 	(if (eq to-buffer 'string)
 	    (prog1 (buffer-substring (point-min) (point-max))
@@ -770,6 +814,9 @@ If NUM, export sections as numerical sections."
 EXT-PLIST is an optional additional plist.
 LEVEL indicates the default depth for export."
   (setq org-export-latex-todo-keywords-1 org-todo-keywords-1
+	org-export-latex-done-keywords org-done-keywords
+	org-export-latex-not-done-keywords org-not-done-keywords
+	org-export-latex-complex-heading-re org-complex-heading-regexp
 	org-export-latex-display-custom-times org-display-custom-times
 	org-export-latex-all-targets-re
 	(org-make-target-link-regexp (org-all-targets))
@@ -868,10 +915,9 @@ If END is non-nil, it is the end of the region."
   (save-excursion
     (goto-char (or beg (point-min)))
     (let* ((pt (point))
-	   (end (or end
-		    (if (re-search-forward "^\\*+ " nil t)
-			(goto-char (match-beginning 0))
-		      (goto-char (point-max))))))
+	   (end (if (re-search-forward "^\\*+ " end t)
+		    (goto-char (match-beginning 0))
+		  (goto-char (point-max)))))
       (prog1
 	  (org-export-latex-content
 	   (org-export-preprocess-string
@@ -944,12 +990,21 @@ links, keywords, lists, tables, fixed-width"
   "Maybe remove keywords depending on rules in REMOVE-LIST."
   (goto-char (point-min))
   (let ((re-todo (mapconcat 'identity org-export-latex-todo-keywords-1 "\\|"))
-	(case-fold-search nil))
+	(case-fold-search nil)
+	(todo-markup org-export-latex-todo-keyword-markup)
+	fmt)
     ;; convert TODO keywords
     (when (re-search-forward (concat "^\\(" re-todo "\\)") nil t)
       (if (plist-get remove-list :todo)
 	  (replace-match "")
-	(replace-match (format "\\textbf{%s}" (match-string 1)) t t)))
+	(setq fmt (cond
+		   ((stringp todo-markup) todo-markup)
+		   ((and (consp todo-markup) (stringp (car todo-markup)))
+		    (if (member (match-string 1) org-export-latex-done-keywords)
+			(cdr todo-markup) (car todo-markup)))
+		   (t (cdr (or (assoc (match-string 1) todo-markup)
+			       (car todo-markup))))))
+	(replace-match (format fmt (match-string 1)) t t)))
     ;; convert priority string
     (when (re-search-forward "\\[\\\\#.\\]" nil t)
       (if (plist-get remove-list :priority)
@@ -1261,7 +1316,8 @@ The conversion is made depending of STRING-BEFORE and STRING-AFTER."
 			   (if label (concat "\\\label{" label "}") "")
 			   (or caption "")))
 		      (if longtblp "\\\\\n" "\n")
-		      (if (not longtblp) "\\begin{center}\n")
+		      (if (and org-export-latex-tables-centered (not longtblp))
+			  "\\begin{center}\n")
 		      (if (not longtblp) (concat "\\begin{tabular}{" align "}\n"))
 		      (orgtbl-to-latex
 		       lines
@@ -1275,7 +1331,8 @@ The conversion is made depending of STRING-BEFORE and STRING-AFTER."
 \\endlastfoot" (length org-table-last-alignment))
 					   nil)))
 		      (if (not longtblp) (concat "\n\\end{tabular}"))
-		      (if longtblp "\n" "\n\\end{center}\n")
+		      (if longtblp "\n" (if org-export-latex-tables-centered
+					    "\n\\end{center}\n" "\n"))
 		      (if longtblp
 			  "\\end{longtable}"
 			(if floatp "\\end{table}"))))
@@ -1404,6 +1461,7 @@ The conversion is made depending of STRING-BEFORE and STRING-AFTER."
 
 (defvar org-latex-entities)   ; defined below
 (defvar org-latex-entities-regexp)   ; defined below
+(defvar org-latex-entities-exceptions)   ; defined below
 
 (defun org-export-latex-preprocess (parameters)
   "Clean stuff in the LaTeX export."
@@ -1503,9 +1561,13 @@ The conversion is made depending of STRING-BEFORE and STRING-AFTER."
 
   ;; Protect LaTeX entities
   (goto-char (point-min))
-  (while (re-search-forward org-latex-entities-regexp nil t)
-    (add-text-properties (match-beginning 0) (match-end 0)
-			 '(org-protected t)))
+  (let (a)
+    (while (re-search-forward org-latex-entities-regexp nil t)
+      (if (setq a (assoc (match-string 0) org-latex-entities-exceptions))
+	  (replace-match (org-add-props (nth 1 a) nil 'org-protected t)
+			 t t)
+	(add-text-properties (match-beginning 0) (match-end 0)
+			     '(org-protected t)))))
 
   ;; Replace radio links
   (goto-char (point-min))
@@ -1685,6 +1747,7 @@ The conversion is made depending of STRING-BEFORE and STRING-AFTER."
    "\\medskip"
    "\\multicolumn"
    "\\multiput"
+   ("\\nbsp" "~")
    "\\newcommand"
    "\\newcounter"
    "\\newenvironment"
@@ -1756,9 +1819,14 @@ The conversion is made depending of STRING-BEFORE and STRING-AFTER."
    "\\vspace")
  "A list of LaTeX commands to be protected when performing conversion.")
 
+(defvar org-latex-entities-exceptions nil)
+
 (defconst org-latex-entities-regexp
   (let (names rest)
     (dolist (x org-latex-entities)
+      (when (consp x)
+	(add-to-list 'org-latex-entities-exceptions x)
+	(setq x (car x)))
       (if (string-match "[a-z][A-Z]$" x)
 	  (push x names)
 	(push x rest)))

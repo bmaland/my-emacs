@@ -22,7 +22,7 @@
 \\usepackage[T1]{fontenc}
 \\usepackage{graphicx}
 \\usepackage{longtable}
-\\usepackage{hyperref}" ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}") ("\\paragraph{%s}" . "\\paragraph*{%s}") ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))("report" "\\documentclass[11pt]{report}
+\\usepackage{hyperref}" ("\\section{%s}" . "\\section*{%s}") ("\\subsection{%s}" . "\\subsection*{%s}") ("\\subsubsection{%s}" . "\\subsubsection*{%s}") ("\\paragraph{%s}" . "\\paragraph*{%s}") ("\\subparagraph{%s}" . "\\subparagraph*{%s}")) ("report" "\\documentclass[11pt]{report}
 \\usepackage[utf8]{inputenc}
 \\usepackage[T1]{fontenc}
 \\usepackage{graphicx}
@@ -39,7 +39,7 @@
  '(pc-select-selection-keys-only t)
  '(pc-selection-mode t)
  '(require-final-newline t)
- '(safe-local-variable-values (quote ((Package . cl-USER) (Syntax . Common-Lisp))))
+ '(safe-local-variable-values (quote ((org-time-stamp-custom-formats quote ("<%m/%d/%y %a>" . "<%m/%d/%y %a %H:%M>")) (tex-main-file . "semopg.tex") (ruby-compilation-executable . "ruby") (ruby-compilation-executable . "ruby1.8") (ruby-compilation-executable . "ruby1.9") (ruby-compilation-executable . "rbx") (ruby-compilation-executable . "jruby") (Package . cl-USER) (Syntax . Common-Lisp))))
  '(uniquify-buffer-name-style (quote forward) nil (uniquify))
  '(w3m-cookie-accept-domains (quote (".github.com" ".google.com" ".google.no")))
  '(w3m-default-display-inline-images t)

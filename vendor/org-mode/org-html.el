@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.26trans
+;; Version: 6.27trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -58,6 +58,20 @@ by the footnotes themselves."
   "The extension for exported HTML files."
   :group 'org-export-html
   :type 'string)
+
+(defcustom org-export-html-xml-declaration
+  '(("html" . "<?xml version=\"1.0\" encoding=\"%s\"?>")
+    ("php" . "<?php echo '<?xml version=\"1.0\" encoding=\"%s\" ?>'; ?>"))    
+  "The extension for exported HTML files.
+%s will be replaced with the charset of the exported file.
+This may be a string, or an alist with export extensions
+and corresponding declarations."
+  :group 'org-export-html
+  :type '(choice
+	  (string :tag "Single declaration")
+	  (repeat :tag "Dependent on extension"
+		  (cons (string :tag "Extension")
+			(string :tag "Declaration")))))
 
 (defcustom org-export-html-style-include-scripts t
   "Non-nil means, include the javascript snippets in exported HTML files.
@@ -255,9 +269,11 @@ borders and spacing."
   :group 'org-export-html
   :type 'string)
 
-(defcustom org-export-table-header-tags '("<th>" . "</th>")
+(defcustom org-export-table-header-tags '("<th scope=\"%s\">" . "</th>")
   "The opening tag for table header fields.
-This is customizable so that alignment options can be specified."
+This is customizable so that alignment options can be specified.
+%s will be filled with the scope of the field, either row or col.
+See also the variable `org-export-html-table-use-header-tags-for-first-column'."
   :group 'org-export-tables
   :type '(cons (string :tag "Opening tag") (string :tag "Closing tag")))
 
@@ -266,6 +282,12 @@ This is customizable so that alignment options can be specified."
 This is customizable so that alignment options can be specified."
   :group 'org-export-tables
   :type '(cons (string :tag "Opening tag") (string :tag "Closing tag")))
+
+(defcustom org-export-html-table-use-header-tags-for-first-column nil
+  "Non-nil means, format column one in tables with header tags.
+When nil, also column one will use data tags."
+  :group 'org-export-tables
+  :type 'boolean)
 
 (defcustom org-export-html-validation-link nil
   "Non-nil means, add validationlink to postamble of HTML exported files."
@@ -315,6 +337,20 @@ in all modes you want.  Then, use the command
   "The prefix for CSS class names for htmlize font specifications."
   :group 'org-export-htmlize
   :type 'string)
+
+(defcustom org-export-htmlized-org-css-url nil
+  "URL pointing to a CSS file defining text colors for htmlized Emacs buffers.
+Normally when creating an htmlized version of an Org buffer, htmlize will
+create CSS to define the font colors.  However, this does not work when
+converting in batch mode, and it also can look bad if different people
+with different fontification setup work on the same website.
+When this variable is non-nil, creating an htmlized version of an Org buffer
+using `org-export-as-org' will remove the internal CSS section and replace it
+with a link to this URL."
+  :group 'org-export-htmlize
+  :type '(choice
+	  (const :tag "Keep internal css" nil)
+	  (string :tag "URL or local href")))
 
 ;;; Variables, constants, and parameter plists
 
@@ -370,7 +406,8 @@ emacs   --batch
 No file is created.  The prefix ARG is passed through to `org-export-as-html'."
   (interactive "P")
   (org-export-as-html arg nil nil "*Org HTML Export*")
-  (switch-to-buffer-other-window "*Org HTML Export*"))
+  (when org-export-show-temporary-export-buffer
+    (switch-to-buffer-other-window "*Org HTML Export*")))
 
 ;;;###autoload
 (defun org-replace-region-by-html (beg end)
@@ -437,7 +474,7 @@ in a window.  A non-interactive call will only return the buffer."
 If there is an active region, export only the region.  The prefix
 ARG specifies how many levels of the outline should become
 headlines.  The default is 3.  Lower levels will become bulleted
-lists.  When HIDDEN is non-nil, don't display the HTML buffer.
+lists.  HIDDEN is obsolete and does nothing.
 EXT-PLIST is a property list with external parameters overriding
 org-mode's default settings, but still inferior to file-local
 settings.  When TO-BUFFER is non-nil, create a buffer with that
@@ -468,6 +505,7 @@ PUB-DIR is set, use this as the publishing directory."
 	   (org-combine-plists (org-default-export-plist)
 			       ext-plist
 			       (org-infile-export-plist))))
+	 (body-only (or body-only (plist-get opt-plist :body-only)))
 	 (style (concat (if (plist-get opt-plist :style-include-default)
 			    org-export-html-style-default)
 			(plist-get opt-plist :style)
@@ -647,7 +685,8 @@ PUB-DIR is set, use this as the publishing directory."
       (unless body-only
 	;; File header
 	(insert (format
-		 "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"
+		 "%s
+<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"
                \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">
 <html xmlns=\"http://www.w3.org/1999/xhtml\"
 lang=\"%s\" xml:lang=\"%s\">
@@ -664,6 +703,14 @@ lang=\"%s\" xml:lang=\"%s\">
 <body>
 <div id=\"content\">
 "
+		 (format
+		  (or (and (stringp org-export-html-xml-declaration)
+			   org-export-html-xml-declaration)
+		      (cdr (assoc html-extension org-export-html-xml-declaration))
+		      (cdr (assoc "html" org-export-html-xml-declaration))
+
+		      "")
+		  (or charset "iso-8859-1"))
 		 language language (org-html-expand title)
 		 (or charset "iso-8859-1")
 		 date author description keywords
@@ -1335,7 +1382,8 @@ lang=\"%s\" xml:lang=\"%s\">
 			  (make-string n ?x)))))
       (or to-buffer (save-buffer))
       (goto-char (point-min))
-      (message "Exporting... done")
+      (or (org-export-push-to-kill-ring "HTML")
+	  (message "Exporting... done"))
       (if (eq to-buffer 'string)
 	  (prog1 (buffer-substring (point-min) (point-max))
 	    (kill-buffer (current-buffer)))
@@ -1478,11 +1526,20 @@ lang=\"%s\" xml:lang=\"%s\">
 			 (if (and (< i nlines)
 				  (string-match org-table-number-regexp x))
 			     (incf (aref fnum i)))
-			 (if head
-			     (concat (car org-export-table-header-tags) x
-				     (cdr org-export-table-header-tags))
+			 (cond
+			  (head
+			   (concat
+			    (format (car org-export-table-header-tags) "col")
+			    x
+			    (cdr org-export-table-header-tags)))
+			  ((and (= i 0) org-export-html-table-use-header-tags-for-first-column)
+			   (concat
+			    (format (car org-export-table-header-tags) "row")
+			    x
+			    (cdr org-export-table-header-tags)))
+			  (t
 			   (concat (car org-export-table-data-tags) x
-				   (cdr org-export-table-data-tags))))
+				   (cdr org-export-table-data-tags)))))
 		       fields "")
 		      "</tr>")
 	      html)))
@@ -1533,7 +1590,7 @@ This has the advantage that Org-mode's HTML conversions can be used.
 But it has the disadvantage, that no cell- or row-spanning is allowed."
   (let (line field-buffer
 	     (head org-export-highlight-first-table-line)
-	     fields html empty)
+	     fields html empty i)
     (setq html (concat html-table-tag "\n"))
     (while (setq line (pop lines))
       (setq empty "&nbsp;")
@@ -1551,8 +1608,10 @@ But it has the disadvantage, that no cell- or row-spanning is allowed."
 		       (lambda (x)
 			 (if (equal x "") (setq x empty))
 			 (if head
-			     (concat (car org-export-table-header-tags) x
-				     (cdr org-export-table-header-tags))
+			     (concat
+			      (format (car org-export-table-header-tags) "col")
+			      x
+			      (cdr org-export-table-header-tags))
 			   (concat (car org-export-table-data-tags) x
 				   (cdr org-export-table-data-tags))))
 		       field-buffer "\n")

@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.26trans
+;; Version: 6.27trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -402,7 +402,7 @@ changes."
   :group 'org-faces)
 
 (defface org-code
-  (org-compatible-face nil
+  (org-compatible-face 'shadow
     '((((class color grayscale) (min-colors 88) (background light))
        (:foreground "grey50"))
       (((class color grayscale) (min-colors 88) (background dark))
@@ -415,8 +415,28 @@ changes."
   :group 'org-faces
   :version "22.1")
 
+(defface org-meta-line
+  (org-compatible-face 'font-lock-comment-face nil)
+  "Face for meta lines startin with \"#+\"."
+  :group 'org-faces
+  :version "22.1")
+
+(defface org-block
+  (org-compatible-face 'shadow
+    '((((class color grayscale) (min-colors 88) (background light))
+       (:foreground "grey50"))
+      (((class color grayscale) (min-colors 88) (background dark))
+       (:foreground "grey70"))
+      (((class color) (min-colors 8) (background light))
+       (:foreground "green"))
+      (((class color) (min-colors 8) (background dark))
+       (:foreground "yellow"))))
+  "Face text in #+begin ... #+end blocks."
+  :group 'org-faces
+  :version "22.1")
+
 (defface org-verbatim
-  (org-compatible-face nil
+  (org-compatible-face 'shadow
     '((((class color grayscale) (min-colors 88) (background light))
        (:foreground "grey50" :underline t))
       (((class color grayscale) (min-colors 88) (background dark))
@@ -460,6 +480,13 @@ changes."
   (copy-face 'org-agenda-structure 'org-agenda-date)
   (set-face-doc-string 'org-agenda-date
 		       "Face used in agenda for normal days."))
+
+(unless (facep 'org-agenda-date-today)
+  (copy-face 'org-agenda-date 'org-agenda-date-today)
+  (set-face-doc-string 'org-agenda-date-today
+ 		       "Face used in agenda for today.")
+  (when (fboundp 'set-face-attribute)
+    (set-face-attribute 'org-agenda-date-today nil :weight 'bold :italic 't)))
 
 (unless (facep 'org-agenda-date-weekend)
   (copy-face 'org-agenda-date 'org-agenda-date-weekend)

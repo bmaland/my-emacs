@@ -4,7 +4,7 @@
 ;; Author: David O'Toole <dto@gnu.org>
 ;; Maintainer: Carsten Dominik <carsten DOT dominik AT gmail DOT com>
 ;; Keywords: hypermedia, outlines, wp
-;; Version: 6.26trans
+;; Version: 6.27trans
 
 ;; This file is part of GNU Emacs.
 ;;
@@ -233,7 +233,7 @@ If there is no timestamp, create one."
     (if (and (fboundp 'set-file-times)
 	     (not newly-created-timestamp))
 	(set-file-times timestamp-file)
-      (call-process "touch" nil 0 nil timestamp-file))))
+      (call-process "touch" nil 0 nil (expand-file-name timestamp-file)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Mapping files to project names
@@ -430,6 +430,11 @@ See `org-publish-org-to' to the list of arguments."
 See `org-publish-org-to' to the list of arguments."
   (org-publish-org-to "html" plist filename pub-dir))
 
+(defun org-publish-org-to-org (plist filename pub-dir)
+  "Publish an org file to HTML.
+See `org-publish-org-to' to the list of arguments."
+  (org-publish-org-to "org" plist filename pub-dir))
+
 (defun org-publish-attachment (plist filename pub-dir)
   "Publish a file with no transformation of any kind.
 See `org-publish-org-to' to the list of arguments."
@@ -595,18 +600,18 @@ Default for INDEX-FILENAME is 'sitemap.org'."
 ;;;###autoload
 (defun org-publish (project &optional force)
   "Publish PROJECT."
-  (interactive "P")
+  (interactive
+   (list
+    (assoc (org-ido-completing-read
+	    "Publish project: "
+	    org-publish-project-alist nil t)
+	   org-publish-project-alist)
+    current-prefix-arg))
   (setq org-publish-initial-buffer (current-buffer))
   (save-window-excursion
-    (let* ((force current-prefix-arg)
-	   (org-publish-use-timestamps-flag
+    (let* ((org-publish-use-timestamps-flag
 	    (if force nil org-publish-use-timestamps-flag)))
-      (org-publish-projects
-       (list (or project
-		 (assoc (org-ido-completing-read
-			 "Publish project: "
-			 org-publish-project-alist nil t)
-			org-publish-project-alist)))))))
+      (org-publish-projects (list project)))))
 
 ;;;###autoload
 (defun org-publish-all (&optional force)

@@ -40,6 +40,7 @@
 (require 'yasnippet)
 (require 'yasnippet-mode)
 (require 'color-theme-autoloads "color-theme-autoloads")
+(require 'ess-site)
 
 ;; ELPA
 (require 'package)
