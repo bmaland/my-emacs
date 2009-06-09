@@ -10,7 +10,6 @@
 (add-to-list 'load-path "~/.emacs.d/vendor/ri-emacs")
 (add-to-list 'load-path "~/.emacs.d/vendor/org-mode")
 (add-to-list 'load-path "~/.emacs.d/vendor/bbdb")
-(add-to-list 'load-path "~/.emacs.d/vendor/emms/lisp")
 (add-to-list 'load-path "~/.emacs.d/vendor/slime")
 (add-to-list 'load-path "~/.emacs.d/vendor/jabber")
 (add-to-list 'load-path "~/.emacs.d/vendor/color-theme")
