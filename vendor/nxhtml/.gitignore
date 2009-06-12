@@ -1,0 +1,5 @@
+nxhtml/doc/*
+nxhtml/html-toc/*
+nxhtml/html-wtoc/*
+tests/*
+etc/*

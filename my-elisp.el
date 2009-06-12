@@ -1,5 +1,9 @@
 ;;; my-elisp.el --- Various pieces of elisp created by myself and others
 
+(defun load-nxhtml ()
+  (interactive)
+  (load "~/.emacs.d/vendor/nxhtml/autostart.el"))
+
 (defun get-classpath-list ()
   "Returns CLASSPATH as a list"
   (let ((classpath (getenv "CLASSPATH")))
