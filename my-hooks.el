@@ -182,6 +182,12 @@
             (auto-fill-mode 1)
             (setq tab-width 4)))
 
+(add-hook 'magit-log-edit-mode-hook
+          (lambda ()
+            (set-pairs '("(" "{" "[" "\""))
+            (auto-fill-mode 0)
+            (bit-mode 0)))
+
 (add-hook 'text-mode-hook
           (lambda ()
             (set-pairs '("(" "{" "[" "\""))
