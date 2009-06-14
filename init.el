@@ -97,6 +97,7 @@
 
 (autoload 'ruby-mode "ruby-mode" "Ruby editing mode." t)
 (autoload 'ruby-test-run-file "ruby-test" "Test runner for ruby unit tests." t)
+(add-to-list 'auto-mode-alist '("\\.rb$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.rake$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.gemspec$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.sake$" . ruby-mode))
@@ -104,6 +105,9 @@
 (add-to-list 'auto-mode-alist '("Rakefile" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Capfile" . ruby-mode))
 (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
+
+(add-to-list 'auto-mode-alist '("_spec.rb$" . rspec-mode))
+(add-to-list 'auto-mode-alist '("_behavior.rb$" . rspec-mode))
 
 (autoload 'run-prolog "prolog" "Start a Prolog sub-process." t)
 (autoload 'prolog-mode "prolog" "Major mode for editing Prolog programs." t)
