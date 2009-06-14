@@ -2,7 +2,7 @@
 ;;
 ;; Author: Lennart Borgman (lennart O borgman A gmail O com)
 ;; Created: Sat Apr 21 2007
-(defconst nxhtml-menu:version "1.80") ;;Version:
+(defconst nxhtml-menu:version "1.81") ;;Version:
 ;; Last-Updated: 2009-05-29 Fri
 ;; URL:
 ;; Keywords:
@@ -824,6 +824,12 @@
 ;;;           (list 'menu-item "Allow attr=\"<?php...?>\" etc"
 ;;;                 'nxhtml-strval-mode
 ;;;                 :button '(:toggle . nxhtml-strval-mode)))
+        (define-key val-map [mumamo-alt-php-tags]
+          (list 'menu-item "Use <?php -> (?php"
+                'mumamo-alt-php-tags-mode
+                :button '(:toggle . mumamo-alt-php-tags-mode)
+                ))
+        (define-key val-map [mumamo-alt-tags-separator] (list 'menu-item "--"))
         (define-key val-map [nxhtml-toggle-warnings]
           (list 'menu-item "Hide Validation Errors"
                 'nxhtml-toggle-visible-warnings

@@ -162,7 +162,7 @@ Report a bug in nXhtml.
 
 ;;;### (autoloads (nxhtml-overview nxhtml-global-minor-mode nxhtml-browse-region
 ;;;;;;  nxhtml-browse-file nxhtml-edit-with-gimp) "../nxhtml/nxhtml-menu"
-;;;;;;  "nxhtml/nxhtml-menu.el" (18980 8880))
+;;;;;;  "nxhtml/nxhtml-menu.el" (18981 17066))
 ;;; Generated autoloads from nxhtml/nxhtml-menu.el
 
 (autoload 'nxhtml-edit-with-gimp "../nxhtml/nxhtml-menu" "\
@@ -340,12 +340,14 @@ This mode may be turned on automatically in two ways:
 ;;;;;;  eruby-nxhtml-mumamo-mode jsp-nxhtml-mumamo-mode smarty-nxhtml-mumamo-mode
 ;;;;;;  mjt-nxhtml-mumamo-mode genshi-nxhtml-mumamo-mode django-nxhtml-mumamo-mode
 ;;;;;;  embperl-nxhtml-mumamo-mode nxhtml-mumamo-mode) "../nxhtml/nxhtml-mumamo"
-;;;;;;  "nxhtml/nxhtml-mumamo.el" (18790 45398))
+;;;;;;  "nxhtml/nxhtml-mumamo.el" (18981 9199))
 ;;; Generated autoloads from nxhtml/nxhtml-mumamo.el
 
 (autoload 'nxhtml-mumamo-mode "../nxhtml/nxhtml-mumamo" "\
 Turn on multiple major modes for (X)HTML with main mode `nxhtml-mode'.
-This covers inlined style and javascript and PHP." t)
+This covers inlined style and javascript and PHP.
+
+See also `mumamo-alt-php-tags-mode'." t)
 
 (autoload 'embperl-nxhtml-mumamo-mode "../nxhtml/nxhtml-mumamo" "\
 Turn on multiple major modes for Embperl files with main mode `nxhtml-mode'.
@@ -414,7 +416,7 @@ See `nxml-where-mode' for more information on Nxml-Where mode.
 ;;;***
 
 ;;;### (autoloads (rngalt-set-validation-header) "../nxhtml/rngalt"
-;;;;;;  "nxhtml/rngalt.el" (18969 63118))
+;;;;;;  "nxhtml/rngalt.el" (18980 36140))
 ;;; Generated autoloads from nxhtml/rngalt.el
 
 (autoload 'rngalt-set-validation-header "../nxhtml/rngalt" "\
@@ -1397,7 +1399,7 @@ Below are some examples.  To test them mark an example and do
   Size: 400 130
   Data: 300 1000 30000
   Type: bar-chart-horizontal
-  Chart-title: \"Vad killen i slips tjÃ¤nar jÃ¤mfÃ¶rt med dig och mig\"
+  Chart-title: \"Vad killen i slips tjänar jämfört med dig och mig\"
   Google-chart-raw: \"&chds=0,30000&chco=00cd00|ff4500|483d8b&chxt=y,x&chxl=0:|Killen+i+slips|Partiledarna|Du+och+jag&chf=bg,s,ffd700\"
 
 
@@ -1652,7 +1654,7 @@ entities, so you should even be able to do html-within-html
 fontified display.
 
 You should, however, note that random control or eight-bit
-characters such as ^L () or Â¤ (\244) won't get mapped yet.
+characters such as ^L () or ¤ (\244) won't get mapped yet.
 
 If the SRCDIR and FILE arguments are set, lookup etags derived
 entries in the `hfy-tags-cache' and add html anchors and
@@ -1700,8 +1702,8 @@ before applying.
 
 ;;;***
 
-;;;### (autoloads (mlinks-mode) "mlinks" "util/mlinks.el" (18979
-;;;;;;  51770))
+;;;### (autoloads (mlinks-mode) "mlinks" "util/mlinks.el" (18981
+;;;;;;  49853))
 ;;; Generated autoloads from util/mlinks.el
 
 (autoload 'mlinks-mode "mlinks" "\
@@ -1714,7 +1716,7 @@ The hyperlinks can be hilighted when point is over them.  Use
 `mlinks-toggle-hilight' to toggle this feature for the current
 buffer.
 
-All keybindings in this mode are by default done under the prefiÂ§x
+All keybindings in this mode are by default done under the prefi§x
 key
 
   C-c RET
@@ -1736,7 +1738,7 @@ By default the link moved to will be active, see
 ;;;***
 
 ;;;### (autoloads (mumamo-multi-major-modep mumamo-mark-for-refontification)
-;;;;;;  "mumamo" "util/mumamo.el" (18980 7354))
+;;;;;;  "mumamo" "util/mumamo.el" (18994 46864))
 ;;; Generated autoloads from util/mumamo.el
 
 (autoload 'mumamo-mark-for-refontification "mumamo" "\
@@ -1757,7 +1759,7 @@ Return t if VALUE is a multi major mode function.
 ;;;;;;  eruby-mumamo-mode jsp-html-mumamo-mode smarty-html-mumamo-mode
 ;;;;;;  mjt-html-mumamo-mode genshi-html-mumamo-mode django-html-mumamo-mode
 ;;;;;;  embperl-html-mumamo-mode nxml-mumamo-mode html-mumamo-mode)
-;;;;;;  "mumamo-fun" "util/mumamo-fun.el" (18975 5780))
+;;;;;;  "mumamo-fun" "util/mumamo-fun.el" (18981 17703))
 ;;; Generated autoloads from util/mumamo-fun.el
 
 (autoload 'html-mumamo-mode "mumamo-fun" "\
@@ -1766,7 +1768,9 @@ This covers inlined style and javascript and PHP." t)
 
 (autoload 'nxml-mumamo-mode "mumamo-fun" "\
 Turn on multiple major modes for (X)HTML with main mode `nxml-mode'.
-This covers inlined style and javascript and PHP." t)
+This covers inlined style and javascript and PHP.
+
+See also `mumamo-alt-php-tags-mode'." t)
 
 (autoload 'embperl-html-mumamo-mode "mumamo-fun" "\
 Turn on multiple major modes for Embperl files with main mode `html-mode'.
@@ -1843,7 +1847,7 @@ This also covers inlined style and javascript." t)
 ;;;***
 
 ;;;### (autoloads (mumamo-add-region) "mumamo-regions" "util/mumamo-regions.el"
-;;;;;;  (18980 8322))
+;;;;;;  (18980 31679))
 ;;; Generated autoloads from util/mumamo-regions.el
 
 (autoload 'mumamo-add-region "mumamo-regions" "\
@@ -2235,8 +2239,8 @@ handled is governed by `sex-keep-dummy-buffer'.
 
 ;;;***
 
-;;;### (autoloads (tabkey2-mode) "tabkey2" "util/tabkey2.el" (18790
-;;;;;;  45400))
+;;;### (autoloads (tabkey2-mode) "tabkey2" "util/tabkey2.el" (18980
+;;;;;;  38708))
 ;;; Generated autoloads from util/tabkey2.el
 
 (defvar tabkey2-mode nil "\
@@ -2684,7 +2688,7 @@ Not documented
 ;;;;;;  "util/ocr-user.el" "util/org-panel.el" "util/pause.el" "util/popcmp.el"
 ;;;;;;  "util/rebind.el" "util/rxi.el" "util/udev-nxhtml.el" "util/udev.el"
 ;;;;;;  "util/useful-commands.el" "util/whelp.el" "util/zen-mode.el")
-;;;;;;  (18980 8902 125000))
+;;;;;;  (18995 30445 832000))
 
 ;;;***
 

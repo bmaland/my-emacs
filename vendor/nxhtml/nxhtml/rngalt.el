@@ -433,7 +433,8 @@ available from table then this is called instead of
 `compleating-read' with the same parameters."
   (let* ((orig (buffer-substring-no-properties start (point)))
          (completion (try-completion orig table predicate))
-         (completing-fun (if altcompl altcompl 'completing-read)))
+         (completing-fun (if altcompl altcompl 'completing-read))
+         (completion-ignore-case t))
     (cond ((not (or completion completing-fun))
            (if (string= orig "")
                (message "No completions available")

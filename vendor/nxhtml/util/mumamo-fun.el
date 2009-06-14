@@ -721,17 +721,102 @@ This covers inlined style and javascript and PHP."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; XHTML w nxml-mode
 
+(defun mumamo-alt-php-write-contents ()
+  "For `write-contents-functions' when `mumamo-chunk-alt-php' is used."
+  (save-restriction
+    (let ((here (point)))
+      (widen)
+      (goto-char (point-min))
+      (condition-case nil
+          (atomic-change-group
+            (progn
+              (while (search-forward "(?php" nil t)
+                (replace-match "<?php"))
+              (setq setmodes (basic-save-buffer-1))
+              (signal 'mumamo-error-ind-0 nil)))
+        (mumamo-error-ind-0))
+      (set-buffer-modified-p nil)
+      (goto-char here)))
+  ;; saved, return t
+  t)
+
+(define-minor-mode mumamo-alt-php-tags-mode
+  "Minor mode for using '(?php' instead of '<?php' in buffer.
+When turning on this mode <?php is replace with (?php in the buffer.
+If you write the buffer to file (?php is however written as <?php.
+
+When turning off this mode (?php is replace with <?php in the buffer.
+
+The purpose of this minor mode is to work around problems with
+using the `nxml-mode' parser in php files.  `nxml-mode' knows
+damned well that you can not have the character < in strings and
+I can't make it forget that.  For PHP programmers it is however
+very convient to use <?php ... ?> in strings.
+
+There is no reason to use this minor mode unless you want XML
+validation and/or completion in your php file.  If you do not
+want that then you can simply use a multi major mode based on
+`html-mode' instead of `nxml-mode'/`nxhtml-mode'.  Or, of course,
+just `php-mode' if there is no html code in the file."
+  :lighter "<?php "
+  (if mumamo-alt-php-tags-mode
+      (progn
+        (unless mumamo-multi-major-mode (error "Only for mumamo multi major modes"))
+        (unless (let ((major-mode (mumamo-main-major-mode)))
+                  (derived-mode-p 'nxml-mode))
+          (error "Mumamo multi major mode must be based on nxml-mode"))
+        (unless (memq 'mumamo-chunk-alt-php (caddr mumamo-current-chunk-family))
+          (error "Mumamo multi major must have chunk function mumamo-chunk-alt-php"))
+
+        ;; Be paranoid about the file/content write hooks
+        (when local-write-file-hooks
+          (error "Will not do this because local-write-file-hooks is non-nil"))
+        (remove-hook 'write-contents-functions 'mumamo-alt-php-write-contents t)
+        (when write-contents-functions
+          (error "Will not do this because write-contents-functions is non-nil"))
+        (when (delq 'recentf-track-opened-file (copy-list write-file-functions))
+          (error "Will not do this because write-file-functions is non-nil"))
+
+        (add-hook 'write-contents-functions 'mumamo-alt-php-write-contents t t)
+        (put 'write-contents-functions 'permanent-local t)
+        (save-restriction
+          (let ((here (point)))
+            (widen)
+            (goto-char (point-min))
+            (while (search-forward "<?php" nil t)
+              (replace-match "(?php"))
+            (goto-char here))))
+    (save-restriction
+      (let ((here (point)))
+        (widen)
+        (goto-char (point-min))
+        (while (search-forward "(?php" nil t)
+          (replace-match "<?php"))
+        (goto-char here)))
+    (remove-hook 'write-contents-functions 'mumamo-alt-php-write-contents t)))
+
+(defun mumamo-chunk-alt-php (pos min max)
+  "Find (?php ... ?>, return range and `php-mode'.
+Workaround for the problem that I can not tame `nxml-mode' to recognize <?php.
+
+See `mumamo-find-possible-chunk' for POS, MIN and MAX."
+  (when mumamo-alt-php-tags-mode
+    (mumamo-quick-static-chunk pos min max "(?php" "?>" t 'php-mode t)))
+
 ;;;###autoload
 (define-mumamo-multi-major-mode nxml-mumamo-mode
   "Turn on multiple major modes for (X)HTML with main mode `nxml-mode'.
-This covers inlined style and javascript and PHP."
-    ("nXml Family" nxml-mode
-     (mumamo-chunk-xml-pi
-      mumamo-chunk-inlined-style
-      mumamo-chunk-inlined-script
-      mumamo-chunk-style=
-      mumamo-chunk-onjs=
-      )))
+This covers inlined style and javascript and PHP.
+
+See also `mumamo-alt-php-tags-mode'."
+  ("nXml Family" nxml-mode
+   (mumamo-chunk-xml-pi
+    mumamo-chunk-alt-php
+    mumamo-chunk-inlined-style
+    mumamo-chunk-inlined-script
+    mumamo-chunk-style=
+    mumamo-chunk-onjs=
+    )))
 (add-hook 'nxml-mumamo-mode-hook 'mumamo-define-html-file-wide-keys)
 
 
