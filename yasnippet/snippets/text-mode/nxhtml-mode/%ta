@@ -1,0 +1,4 @@
+#name : <%= text_area(" ... ", " ... ") %>
+#group: rhtml
+# --
+<%= text_area("${object_name}", "${method}"$0) %>

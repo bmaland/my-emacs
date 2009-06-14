@@ -1,0 +1,4 @@
+#name : <%= text_field(" ... ", " ... ") %>
+#group: rhtml
+# --
+<%= text_field("${object_name} ", "${method}"$0) %>

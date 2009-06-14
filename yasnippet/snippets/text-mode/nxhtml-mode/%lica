@@ -1,0 +1,4 @@
+#name : <%= link_to " ... ", :controller => " ... ", :action => " ... " %>
+#group: rhtml
+# --
+<%= link_to "${title}", :controller => "${items}", :action => "${index}" %>$0

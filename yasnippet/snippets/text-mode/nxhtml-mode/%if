@@ -1,0 +1,6 @@
+#name : <% if  ...  -%> $. <% end -%>
+#group: rhtml
+# --
+<% if ${cond} -%>
+$0
+<% end -%>

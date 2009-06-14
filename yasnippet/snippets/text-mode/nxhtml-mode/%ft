@@ -1,0 +1,6 @@
+#name : <% form_tag(:action => " ... ") do %> ... <% end  %>
+#group: rhtml
+# --
+<% form_tag(:action => "${update}") do %>
+$0
+<% end %>

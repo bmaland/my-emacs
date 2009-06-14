@@ -1,0 +1,7 @@
+#name : <% form_for(@obj) ...
+#group: rhtml
+#contributor : Bjørn Arild Mæland [github.com/Chrononaut]
+# --
+<% form_for(${1:@obj}) do |f| %>
+  $0
+<% end %>
