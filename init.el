@@ -45,6 +45,8 @@
 (require 'package)
 (package-initialize)
 
+(load "~/.emacs.d/vendor/nxhtml/autostart.el")
+
 ;; I had to do this to use python-mode.el over python.el
 (load "python-mode.el")
 
