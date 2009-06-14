@@ -23,6 +23,9 @@
 
 (setq x-select-enable-clipboard t)
 
+;; do not turn on rng-validate-mode automatically
+(setq rng-nxml-auto-validate-flag nil)
+
 (setq prolog-system 'swi)
 
 (setq inhibit-startup-message t ;; Remove splash screen
