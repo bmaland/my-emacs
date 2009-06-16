@@ -1,0 +1,5 @@
+#name : <%= link_to " ... ", ... %>
+#group: rhtml
+#contributor : Bjørn Arild Mæland [github.com/Chrononaut]
+# --
+<%= link_to "${1:title}", $2_path %>$0
