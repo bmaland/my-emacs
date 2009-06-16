@@ -7,8 +7,6 @@
 
 (add-to-list 'auto-mode-alist '("_spec.rb$" . rspec-mode))
 (add-to-list 'auto-mode-alist '("_behavior.rb$" . rspec-mode))
-(if (functionp 'yas/load-directory)
-    (yas/load-directory (concat (file-name-directory load-file-name) "snippets")))
 
 (setq rspec-mode-map
   (let ((map (make-keymap)))
