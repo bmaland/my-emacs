@@ -1,64 +1,64 @@
 --- 
-vendor/swank-clojure: 
-  squashed: true
-  url: git://github.com/jochu/swank-clojure.git
-  branch: master
-  type: git
-  revision: 7b4d291370bfb8df473b10b241073f7baca456c1
-  remote: braid/vendor/swank-clojure
-vendor/rspec-mode: 
-  squashed: true
-  branch: master
-  url: git://github.com/Chrononaut/rspec-mode.el.git
-  type: git
-  revision: 7ca71b395ca864ca13f591d210e74da7a584d246
-  remote: braid/vendor/rspec-mode
 vendor/clojure-mode: 
   squashed: true
   branch: master
   url: git://github.com/jochu/clojure-mode.git
   type: git
-  revision: a51f8ff21940c50b2598ca4db96277459467baa8
+  revision: 8c333628bf507749dd78b312333130b00e6ec06f
   remote: braid/vendor/clojure-mode
-yasnippet/snippets/text-mode/ruby-mode: 
+vendor/rspec-mode: 
+  squashed: true
+  url: git://github.com/Chrononaut/rspec-mode.el.git
+  branch: master
+  type: git
+  revision: 7ca71b395ca864ca13f591d210e74da7a584d246
+  remote: braid/vendor/rspec-mode
+vendor/swank-clojure: 
   squashed: true
   branch: master
-  url: git://github.com/Chrononaut/yasnippet-ruby-mode.git
+  url: git://github.com/jochu/swank-clojure.git
   type: git
-  revision: 2ad4dc083ffd0db904bf07c14eeabf7bfbd37857
-  remote: braid/yasnippet/snippets/text-mode/ruby-mode
-vendor/rhtml: 
-  squashed: true
-  branch: master
-  url: git://github.com/eschulte/rhtml.git
-  type: git
-  revision: ccf020045e77cbfa68f5e17307bcc1b0fb27759d
-  remote: braid/vendor/rhtml
+  revision: 7b4d291370bfb8df473b10b241073f7baca456c1
+  remote: braid/vendor/swank-clojure
 yasnippet/snippets/text-mode/emacs-lisp-mode: 
   squashed: true
-  branch: master
   url: git://github.com/Chrononaut/yasnippet-emacs-lisp-mode.git
+  branch: master
   type: git
   revision: 2c58b23cd4301ffbc530cc90cfe0f74e95cd2bad
   remote: braid/yasnippet/snippets/text-mode/emacs-lisp-mode
+vendor/rhtml: 
+  squashed: true
+  url: git://github.com/eschulte/rhtml.git
+  branch: master
+  type: git
+  revision: ccf020045e77cbfa68f5e17307bcc1b0fb27759d
+  remote: braid/vendor/rhtml
+yasnippet/snippets/text-mode/ruby-mode: 
+  squashed: true
+  url: git://github.com/Chrononaut/yasnippet-ruby-mode.git
+  branch: master
+  type: git
+  revision: 2ad4dc083ffd0db904bf07c14eeabf7bfbd37857
+  remote: braid/yasnippet/snippets/text-mode/ruby-mode
 vendor/slime: 
   squashed: true
-  branch: master
   url: git://github.com/nablaone/slime.git
+  branch: master
   type: git
   revision: 2e6e313e9f0b16c6be8ab1cea3e87b585b93a0b2
   remote: braid/vendor/slime
 yasnippet/snippets/text-mode/sh-mode: 
   squashed: true
-  branch: master
   url: git://github.com/Chrononaut/yasnippet-sh-mode.git
+  branch: master
   type: git
   revision: 959ba8492654fca91e3c94113e3e50c33ceee8a2
   remote: braid/yasnippet/snippets/text-mode/sh-mode
 vendor/ri-emacs: 
   squashed: true
-  branch: master
   url: git://github.com/technomancy/ri.el.git
+  branch: master
   type: git
   revision: 737bd672081bec976eefe662909c85f55dfe9083
   remote: braid/vendor/ri-emacs

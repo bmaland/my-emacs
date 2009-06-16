@@ -5,7 +5,7 @@
 ;; Authors: Jeffrey Chu <jochu0@gmail.com>
 ;;          Lennart Staflin <lenst@lysator.liu.se>
 ;; URL: http://www.emacswiki.org/cgi-bin/wiki/ClojureMode
-;; Version: 1.0
+;; Version: 1.1
 ;; Keywords: languages, lisp
 
 ;; This file is not part of GNU Emacs.
@@ -13,9 +13,15 @@
 ;;; Commentary:
 
 ;; Provides font-lock, indentation, and functions for communication
-;; with subprocesses for Clojure. (http://clojure.org)
+;; with subprocesses for the Clojure language. (http://clojure.org)
 
 ;;; Installation:
+
+;; If you use ELPA, you can install via the M-x package-list-packages
+;; interface. This is preferrable as you will have access to updates
+;; automatically.
+
+;; If you need to install by hand for some reason:
 
 ;; (0) Add this file to your load-path, usually the ~/.emacs.d directory.
 ;; (1) Either:
@@ -42,6 +48,8 @@
 
 ;;; Todo:
 
+;; * installer doesn't work when git port is blocked
+;; * updater/installer should know "last known good" sha1s?
 ;; * hashbang is also a valid comment character
 ;; * do the inferior-lisp functions work without SLIME? needs documentation
 
@@ -85,7 +93,7 @@ restart (ie. M-x clojure-mode) of existing clojure mode buffers."
   :type 'boolean
   :group 'clojure-mode)
 
-(defcustom clojure-mode-load-command  "(clojure/load-file \"%s\")\n"
+(defcustom clojure-mode-load-command  "(clojure.core/load-file \"%s\")\n"
   "*Format-string for building a Clojure expression to load a file.
 This format string should use `%s' to substitute a file name
 and should result in a Clojure expression that will command the inferior Clojure
@@ -218,6 +226,9 @@ if that value is non-nil."
   (when (and (featurep 'paredit) paredit-mode (>= paredit-version 21))
     (define-key clojure-mode-map "{" 'paredit-open-curly)
     (define-key clojure-mode-map "}" 'paredit-close-curly)))
+
+;; (define-key clojure-mode-map "{" 'self-insert-command)
+;; (define-key clojure-mode-map "}" 'self-insert-command)
 
 (defun clojure-font-lock-def-at-point (point)
   "Find the position range between the top-most def* and the
@@ -581,11 +592,11 @@ is bundled up as a function so that you can call it after you've set
   (require 'slime-autoloads)
   (require 'swank-clojure-autoload)
 
-  (slime-setup '(slime-fancy slime-repl))
+  (slime-setup '(slime-fancy))
 
-  (setq swank-clojure-jar-path (concat clojure-src-root "/clojure/clojure.jar")
-        swank-clojure-extra-classpaths
-        (list (concat clojure-src-root "/clojure-contrib/src/"))))
+  (setq swank-clojure-jar-path (concat clojure-src-root "/clojure/clojure.jar"))
+  (add-to-list 'swank-clojure-extra-classpaths
+               (concat clojure-src-root "/clojure-contrib/src/")))
 
 ;;;###autoload
 (defun clojure-install (src-root)
@@ -617,7 +628,7 @@ This requires git, a JVM, ant, and an active Internet connection."
   (with-output-to-temp-buffer "clojure-install-note"
     (princ
      (if (equal src-root clojure-src-root)
-         "Add a call to \"\(eval-after-load 'clojure-mode '\(clojure-slime-config\)\)\"
+         "Add a call to \"\(clojure-slime-config\)\"
 to your .emacs so you can use SLIME in future sessions."
        (setq clojure-src-root src-root)
        (format "You've installed clojure in a non-default location. If you want
@@ -625,7 +636,7 @@ to use this installation in the future, you will need to add the following
 lines to your personal Emacs config somewhere:
 
 \(setq clojure-src-root \"%s\"\)
-\(eval-after-load 'clojure-mode '\(clojure-slime-config\)\)" src-root)))
+\(clojure-slime-config\)" src-root)))
     (princ "\n\n Press M-x slime to launch Clojure."))
 
   (clojure-slime-config))
@@ -650,11 +661,11 @@ should be checked out in the `clojure-src-root' directory."
 
 (defun clojure-enable-slime-on-existing-buffers ()
   (interactive)
+  (add-hook 'clojure-mode-hook 'swank-clojure-slime-mode-hook)
   (dolist (buffer (buffer-list))
-    (if (equal '(major-mode . clojure-mode)
-               (assoc 'major-mode (buffer-local-variables buffer)))
-        (with-current-buffer buffer
-          (slime-mode t)))))
+    (with-current-buffer buffer
+      (if (equal major-mode 'clojure-mode)
+          (swank-clojure-slime-mode-hook)))))
 
 (add-hook 'slime-connected-hook 'clojure-enable-slime-on-existing-buffers)
 
