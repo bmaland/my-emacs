@@ -135,7 +135,9 @@
           '(lambda ()
              (set-pairs '("<" "{" "[" "\"" "\'"))
              (local-set-key [return] 'reindent-then-newline-and-indent)
-             ))
+             (rng-validate-mode 0)
+             (outline-minor-mode 0))
+          t)
 
 (add-hook 'term-mode-hook
           '(lambda ()
@@ -186,6 +188,7 @@
           (lambda ()
             (set-pairs '("(" "{" "[" "\""))
             (auto-fill-mode 0)
+            (flyspell-mode)
             (bit-mode 0)))
 
 (add-hook 'text-mode-hook

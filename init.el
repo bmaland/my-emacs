@@ -45,8 +45,6 @@
 (require 'package)
 (package-initialize)
 
-(load "~/.emacs.d/vendor/nxhtml/autostart.el")
-
 ;; I had to do this to use python-mode.el over python.el
 (load "python-mode.el")
 
@@ -98,7 +96,6 @@
 (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
 
 (autoload 'ruby-mode "ruby-mode" "Ruby editing mode." t)
-(autoload 'ruby-test-run-file "ruby-test" "Test runner for ruby unit tests." t)
 (add-to-list 'auto-mode-alist '("\\.rb$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.rake$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.gemspec$" . ruby-mode))
