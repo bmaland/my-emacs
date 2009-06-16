@@ -2,7 +2,8 @@
   (:refer-clojure :exclude [load-file])
   (:use (swank util commands core)
         (swank.util.concurrent thread)
-        (swank.util string clojure))
+        (swank.util string clojure)
+        (swank.clj-contrib pprint macroexpand))
   (:require (swank.util [sys :as sys]))
   (:import (java.io StringReader File)
            (java.util.zip ZipFile)
@@ -63,7 +64,7 @@
 ;;;; Macro expansion
 
 (defn- apply-macro-expander [expander string]
-  (pr-str (expander (read-from-string string))))
+  (pretty-pr-code (expander (read-from-string string))))
 
 (defslimefn swank-macroexpand-1 [string]
   (apply-macro-expander macroexpand-1 string))
@@ -73,7 +74,7 @@
 
 ;; not implemented yet, needs walker
 (defslimefn swank-macroexpand-all [string]
-  (apply-macro-expander macroexpand string))
+  (apply-macro-expander macroexpand-all string))
 
 ;;;; Compiler / Execution
 
@@ -266,6 +267,13 @@
         (.replace \- \_)
         (.replace \. \/))))
 
+(defn source-location-for-frame [frame]
+  (let [line     (.getLineNumber frame)
+        frame-ns ((re-find #"(.*?)\$" (.getClassName frame)) 1)
+        filename (str (namespace-to-path (symbol frame-ns)) File/separator (.getFileName frame))
+        path     (slime-find-file-in-paths filename (slime-search-paths))]
+    `(:location ~path (:line ~line) nil)))
+
 (defslimefn find-definitions-for-emacs [name]
   (let [sym-name (read-from-string name)
         sym-var (ns-resolve (maybe-ns *current-package*) sym-name)]
@@ -303,5 +311,9 @@
 
 (defslimefn frame-catch-tags-for-emacs [n] nil)
 (defslimefn frame-locals-for-emacs [n] nil)
+
+(defslimefn frame-source-location-for-emacs [n]
+  (source-location-for-frame
+     (nth (.getStackTrace *current-exception*) n)))
 
 (defslimefn create-repl [target] '("user" user))
