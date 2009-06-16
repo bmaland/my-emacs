@@ -489,5 +489,14 @@ directory, select directory. Lastly the file is opened."
      (setq ido-temp-list choices))))
     (ido-read-buffer prompt)))
 
+;; From http://www.nileshk.com/prompt_before_closing_emacs
+(defun ask-before-closing ()
+  "Ask whether or not to close, and then close if y was pressed"
+  (interactive)
+  (if (y-or-n-p (format "Are you sure you want to exit Emacs? "))
+      (if (> emacs-major-version 22)
+          (save-buffers-kill-terminal)
+        (save-buffers-kill-emacs))
+    (message "Canceled exit")))
 
 (provide 'my-elisp)

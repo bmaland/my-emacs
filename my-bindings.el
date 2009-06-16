@@ -97,6 +97,7 @@
   (global-set-key (kbd "C-x ga") 'ack-in-project)
   (global-set-key (kbd "C-x gd") 'google-define))
 
-(global-set-key "\C-cT" 'twittering-update-status-interactive)
+(when window-system
+  (global-set-key (kbd "C-x C-c") 'ask-before-closing))
 
 (provide 'my-bindings)
