@@ -1312,6 +1312,10 @@ expansion will be added to the REPL's history.)"
 
 (defslime-repl-shortcut slime-repl-disconnect ("disconnect")
   (:handler 'slime-disconnect)
+  (:one-liner "Disconnect the current connection."))
+
+(defslime-repl-shortcut slime-repl-disconnect-all ("disconnect-all")
+  (:handler 'slime-disconnect-all)
   (:one-liner "Disconnect all connections."))
 
 (defslime-repl-shortcut slime-repl-sayoonara ("sayoonara")
@@ -1573,14 +1577,14 @@ expansion will be added to the REPL's history.)"
   "Evaluate BODY within a fresh REPL buffer. The REPL prompt is
 canonicalized to \"SWANK\"---we do actually switch to that
 package, though."
-  `(let ((.old-prompt. (slime-lisp-package-prompt-string)))
+  `(let ((%old-prompt% (slime-lisp-package-prompt-string)))
      (unwind-protect
           (progn (with-current-buffer (slime-output-buffer)
                    (setf (slime-lisp-package-prompt-string) "SWANK"))
                  (kill-buffer (slime-output-buffer))
                  (with-current-buffer (slime-output-buffer)
                    ,@body))
-       (setf (slime-lisp-package-prompt-string) .old-prompt.))))
+       (setf (slime-lisp-package-prompt-string) %old-prompt%))))
 
 (put 'with-canonicalized-slime-repl-buffer 'lisp-indent-function 0)
 
