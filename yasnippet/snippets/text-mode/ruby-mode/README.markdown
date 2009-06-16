@@ -3,19 +3,26 @@
 ## About
 
 Comprehensive collection of Ruby snippets for
-[yasnippet](http://code.google.com/p/yasnippet/ "yasnippet - Google Code"). Note
-that most of these snippets won't work (yet), since they were originally
-automatically converted from the TextMate repository. This is a work in
-progress.
+[yasnippet](http://code.google.com/p/yasnippet/ "yasnippet - Google Code").
+The collection also contains snippets for major Ruby frameworks like Rails
+and RSpec.
 
-Note that some of the snippets are changed from how they are defined in the
-official Yasnippet distribution, with a preference towards how they are defined
-in TextMate. I.e, the reject snippet is here triggered with 'rej' instead of
-'reject'.
+The Rails snippets were originally borrowed from
+[mknittig/yasnippet-rails](http://github.com/eschulte/yasnippets-rails/tree).
+
+The RSpec snippets require that RSpec files are edited in a separate
+Emacs mode. I recommend using
+[rspec-mode.el](http://github.com/Chrononaut/rspec-mode.el/tree/master).
+The RSpec snippets were originally borrowed from
+[gary/yasnippets-rspec](http://github.com/gary/yasnippets-rspec/tree/master).
 
 ## Contributors
 
-All snippets by Bjørn Arild Mæland <bjorn.maeland at gmail.com>, unless
-otherwise stated.
+* [Bjørn Arild Mæland](http://github.com/Chrononaut)
+* [Jean-Sébastien Ney](http://github.com/jney)
+* [John Andrews](http://github.com/jxa)
+
+And much of the credits should naturally go to the yasnippet-rails and
+yasnippet-rspec authors.
 
 Thanks to Jeff Wheeler for his work on the snippet_copier.py script!
