@@ -149,6 +149,11 @@
             (require 'bbdb)
             (bbdb-initialize)
 
+             ;; yasnippet
+            (make-variable-buffer-local 'yas/trigger-key)
+            (setq yas/trigger-key [tab])
+            (define-key yas/keymap [tab] 'yas/next-field-group)
+
             (set-pairs '("(" "{" "[" "\""))
 
             (local-set-key (kbd "M-s-<left>") 'org-promote-subtree)
@@ -177,6 +182,13 @@
 ;; (add-hook 'org-mode-hook 'org-mode-reftex-setup)
 
 (add-hook 'remember-mode-hook 'org-remember-apply-template)
+
+(add-hook 'message-mode-hook
+          (lambda ()
+            (orgstruct++-mode t)
+            (setq fill-column 72)
+            (flyspell-mode 1)
+            (bbdb-define-all-aliases)))
 
 (add-hook 'markdown-mode-hook
           (lambda ()
