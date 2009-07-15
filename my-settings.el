@@ -140,7 +140,7 @@
   (set-face-background 'hl-line "#232323"))
 
 ;; Load OS-specific settings
-(if (eq window-system 'mac)
+(if (or (eq window-system 'mac) (eq window-system 'ns))
     (load "osx.el")
   (load "linux.el"))
 
