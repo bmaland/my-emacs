@@ -1,5 +1,14 @@
 ;;; my-elisp.el --- Various pieces of elisp created by myself and others
 
+(defun toggle-sticky-buffer-window (&optional arg)
+  "Toggle whether this window is dedicated to this buffer. See
+`set-window-dedicated-p'. Optional prefix `arg' is just passed
+on, sets window non-dedicated iff `arg' is nil."
+  (interactive "P")
+  (let ((toggle (if arg arg
+      (not (window-dedicated-p (selected-window))))))
+    (set-window-dedicated-p (selected-window) toggle)))
+
 (defun load-nxhtml ()
   (interactive)
   (load "~/.emacs.d/vendor/nxhtml/autostart.el"))
