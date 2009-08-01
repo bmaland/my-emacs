@@ -149,7 +149,7 @@ Backends implement these functions using DEFIMPLEMENTATION."
          (let ((f (or (get ',name 'implementation)
                       (get ',name 'default))))
            (cond (f (apply f ,@(args-as-list args)))
-                 (t (error "~S not implementated" ',name)))))
+                 (t (error "~S not implemented" ',name)))))
        (pushnew ',name *interface-functions*)
        ,(if (null default-body)
             `(pushnew ',name *unimplemented-interfaces*)
@@ -681,7 +681,7 @@ Return T if `restart-frame' can safely be called on the frame."
   (declare (ignore frame))
   nil)
 
-(definterface frame-source-location-for-emacs (frame-number)
+(definterface frame-source-location (frame-number)
   "Return the source location for the frame associated to FRAME-NUMBER.")
 
 (definterface frame-catch-tags (frame-number)
@@ -1006,6 +1006,11 @@ user. They do not have to be unique."
   "Set THREAD's description to DESCRIPTION."
   (declare (ignore thread description))
   "")
+
+(definterface thread-attributes (thread)
+  "Return a plist of implementation-dependent attributes for THREAD"
+  (declare (ignore thread))
+  '())
 
 (definterface make-lock (&key name)
    "Make a lock for thread synchronization.

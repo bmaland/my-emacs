@@ -245,7 +245,7 @@
   (reset-inspector)
   (inspect-object (@condition sldb-context)))
 
-(defslimefun frame-source-location-for-emacs (frame-idx)
+(defslimefun frame-source-location (frame-idx)
   (match (nth-frame frame-idx)
     ((,f ,@_)
      (or (emacs-src-loc f)
@@ -498,6 +498,10 @@
 ;;;; eval
 
 (defslimefun ping () "PONG")
+
+(defslimefun create-repl (_)
+  (let ((name (sym-name (module-name (buffer-module)))))
+    `(,name ,name)))
 
 (defslimefun listener-eval (string)
   (clear-input in)

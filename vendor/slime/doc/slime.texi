@@ -12,7 +12,7 @@
 @set EDITION 3.0-alpha
 @set SLIMEVER 3.0-alpha
 @c @set UPDATED @today{}
-@set UPDATED @code{$Date: 2009-05-18 12:54:09 $}
+@set UPDATED @code{$Date: 2009-07-30 23:27:05 $}
 @set TITLE SLIME User Manual
 @settitle @value{TITLE}, version @value{EDITION}
 
@@ -1225,6 +1225,9 @@ Pretty print in another buffer object at point.
 @kbditem{., slime-inspector-show-source}
 Find source of object at point.
 
+@kbditem{>, slime-inspector-fetch-all}
+Fetch all inspector contents and go to the end.
+
 @kbditem{M-RET, slime-inspector-copy-down}
 Store the value under point in the variable `*'.  This can
 then be used to access the object in the REPL.
@@ -1416,6 +1419,13 @@ Move between frames ``with sugar'': hide the details of the original
 frame and display the details and source code of the next. Sugared
 motion makes you see the details and source code for the current frame
 only.
+
+@kbditem{>, sldb-end-of-backtrace}
+Fetch the entire backtrace and go to the last frame.
+
+@kbditem{<, sldb-beginning-of-backtrace}
+Goto the first frame.
+
 @end table
 
 @node Stepping
@@ -1498,6 +1508,10 @@ The most recently activated @SLDB{} buffer for the current connection.
 The most recently visited @code{lisp-mode} source buffer.
 @item s
 The @code{*slime-scratch*} buffer (@pxref{slime-scratch}).
+@item c
+SLIME connections buffer (@pxref{Multiple connections}).
+@item t
+SLIME threads buffer.
 @end table
 
 @code{slime-selector} doesn't have a key binding by default but we
@@ -2006,8 +2020,8 @@ What we do is teach Emacs how to take a filename on the remote machine
 and translate it into something that tramp can understand and access
 (and vice versa). Assuming the remote machine's host name is
 @code{remote.example.com}, @code{cl:machine-instance} returns
-``remote'' and we login as the user ``user'' we can use @SLIME{}'s
-built-in mechanism to setup the proper translations by simply doing:
+``remote'' and we login as the user ``user'' we can use @code{slime-tramp}
+contrib to setup the proper translations by simply doing:
 
 @example
 (push (slime-create-filename-translator :machine-instance "remote.example.com"

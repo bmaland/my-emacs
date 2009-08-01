@@ -281,8 +281,8 @@ most recently enclosed macro or function."
                  (slime-fuzzy-done))
                 ;; Incomplete
                 (t
-                 (slime-minibuffer-respecting-message "Complete but not unique")
-                 (slime-fuzzy-choices-buffer completion-set interrupted-p beg end)))))))
+                 (slime-fuzzy-choices-buffer completion-set interrupted-p beg end)
+                 (slime-minibuffer-respecting-message "Complete but not unique")))))))
 
 
 (defun slime-get-fuzzy-buffer ()
@@ -313,10 +313,9 @@ proper text properties."
       (put-text-property start (point) 'mouse-face 'highlight)
       (dotimes (i (- max-length (- end start)))
 	(insert " "))
-      (insert (format " %s %-8.2f"
+      (insert (format " %s %s\n"
 		      classification-string
-		      score))
-      (insert "\n")
+                      score))
       (put-text-property start (point) 'completion completion))))
 
 (defun slime-fuzzy-insert (text)
@@ -369,7 +368,9 @@ done."
       (setq buffer-quit-function 'slime-fuzzy-abort)) ; M-Esc Esc
     (when slime-fuzzy-completion-in-place
       ;; switch back to the original buffer
-      (switch-to-buffer-other-window slime-fuzzy-target-buffer))))
+      (if (minibufferp slime-fuzzy-target-buffer)
+          (select-window (minibuffer-window))
+          (switch-to-buffer-other-window slime-fuzzy-target-buffer)))))
 
 (defun slime-fuzzy-fill-completions-buffer (completions interrupted-p)
   "Erases and fills the completion buffer with the given completions."

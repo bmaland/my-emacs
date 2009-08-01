@@ -19,7 +19,7 @@
       '((kawa ("java"
 	       "-cp" "/opt/kawa/kawa-svn:/opt/java/jdk1.6.0/lib/tools.jar"
 	       "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n"
-	       "kawa.repl")
+	       "kawa.repl" "-s")
               :init kawa-slime-init)))
 
 (defun kawa-slime-init (file _)
@@ -192,8 +192,8 @@
            (result #!null))
        (if (instance? tmp <pair>)
            (let ((tmp :: <pair> tmp))
-             (mif (p tmp:car)
-                (mif (ps tmp:cdr)
+             (mif (p (@ car tmp))
+                (mif (ps (@ cdr tmp))
                      (set! result then)
                      (set! fail? -1))
                 (set! fail? -1)))
@@ -205,8 +205,8 @@
            (tmp value))
        (if (instance? tmp <pair>)
            (let ((tmp :: <pair> tmp))
-             (mif (p tmp:car)
-                  (mif (ps tmp:cdr)
+             (mif (p (@ car tmp))
+                  (mif (ps (@ cdr tmp))
                        then
                        (fail))
                   (fail)))
@@ -360,11 +360,7 @@
           ((in . _) (spawn/chan/catch (fun (c) (reader ins c))))
           ((out . _) (spawn/chan/catch (fun (c) (writer outs c))))
           ((dbg . _) (spawn/chan/catch vm-monitor))
-          (user-env 
-           (<gnu.mapping.InheritingEnvironment>
-            "user" (interaction-environment))
-           ;;(interaction-environment)
-           )
+          (user-env  (interaction-environment))
           (x (seq 
                (! set-flag user-env #t #|<env>:THREAD_SAFE|# 8)
                (! set-flag user-env #f #|<env>:DIRECT_INHERITED_ON_SET|# 16)))
@@ -389,8 +385,8 @@
            (send dbg `(throw-to-toplevel ,thread ,id)))
           ((_ (':emacs-rex ('|swank:sldb-continue|) pkg thread id))
            (send dbg `(thread-continue ,thread ,id)))
-          ((_ (':emacs-rex ('|swank:frame-source-location-for-emacs| frame)
-                           pkg thread id))
+          ((_ (':emacs-rex ('|swank:frame-source-location| frame)
+			   pkg thread id))
            (send dbg `(frame-src-loc ,thread ,frame ,id)))
           ((_ (':emacs-rex ('|swank:frame-locals-and-catch-tags| frame)
                            pkg thread id))
@@ -774,9 +770,37 @@
 
 ;;;; Dummy defs
 
-(defslimefun operator-arglist (#!rest y) '())
+
 (defslimefun buffer-first-change (#!rest y) '())
 (defslimefun swank-require (#!rest y) '())
+
+;;;; arglist
+
+(defslimefun operator-arglist (env name #!rest _)
+  (mcase (try-catch `(ok ,(eval (read-from-string name) env))
+                    (ex <throwable> 'nil))
+    (('ok obj)
+     (mcase (arglist obj)
+       ('#f 'nil)
+       ((args rtype)
+        (format "(~a~{~^ ~a~})~a" name 
+                (map (fun (e) 
+                       (if (equal (cadr e) "java.lang.Object") (car e) e))
+                     args)
+                (if (equal rtype "java.lang.Object")
+                    ""
+                    (format " => ~a" rtype))))))
+    (_ 'nil)))
+
+(df arglist (obj)
+  (typecase obj
+    (<gnu.expr.ModuleMethod> 
+     (let* ((mref (module-method>meth-ref obj)))
+       (list (mapi (! arguments mref)
+                   (fun ((v <local-var>))
+                     (list (! name v) (! typeName v))))
+             (! returnTypeName mref))))
+    (<object> #f)))
 
 ;;;; M-.
 
@@ -818,7 +842,10 @@
                                       (if s (all-definitions s) '()))))
     (<java.lang.Class> (list o))
     (<gnu.mapping.Procedure> (all-definitions (! get-class o)))
-    (<kawa.lang.Macro> (list o))))
+    (<kawa.lang.Macro> (list o))
+    (<gnu.bytecode.ObjectType> (all-definitions (! getReflectClass o)))
+    (<java.lang.Object> '())
+    ))
 
 (df gf-methods ((f <gnu.expr.GenericProc>))
   (let* ((o :: <obj-ref> (vm-mirror *the-vm* f))
@@ -913,8 +940,9 @@
          (ex <throwable> #f)))))
 
 (define swank-java-source-path
-        (let ((jre-home (<java.lang.System>:getProperty "java.home")))
-          (list (<file> (<file> jre-home):parent "src.zip"):path)))
+  (let ((jre-home (<java.lang.System>:getProperty "java.home")))
+    (list (! get-path (<file> (! get-parent (<file> jre-home)) "src.zip"))
+          )))
 
 (df source-path ()
   (mlet ((base) (search-path-prop "user.dir"))
@@ -975,7 +1003,7 @@
                       (! write s cpool)
                       (! flush s)
                       (! toByteArray bs))))
-    (vm-set-slot *the-vm* ct 'constants 
+    (vm-set-slot *the-vm* ct "constants"
                  (<gnu.bytecode.ConstantPool>
                   (<java.io.DataInputStream>
                    (<java.io.ByteArrayInputStream>
@@ -1015,11 +1043,8 @@
   (pprint-to-string (%macroexpand (read-from-string string))))
 
 (df %macroexpand (sexp)
-  (let* ((lang (<gnu.expr.Language>:getDefaultLanguage))
-	 (msgs (<gnu.text.SourceMessages>))
-	 (tr (<kawa.lang.Translator> lang msgs)))
-    (! pushNewModule tr (as <str> #!null))
-    (! parse tr `(lambda () ,sexp))))
+  (let ((tr :: kawa.lang.Translator (gnu.expr.Compilation:getCurrent)))
+    (! rewrite tr `(begin ,sexp))))
 
 
 ;;;; Inspector
@@ -1148,7 +1173,7 @@
          (flush (fun ()
                   (unless (zero? (! length builder))
                     (send out `(forward (:write-string ,(<str> builder))))
-                    (! setLength builder 0))))
+                    (set! builder:length 0)))) ; pure magic
          (closed #f))
     (while (not closed)
       (mcase (! poll q 200 <timeunit>:MILLISECONDS)
@@ -1176,6 +1201,7 @@
 (df vm-monitor ((c <chan>))
   (! set-name (current-thread) "swank-vm-monitor")
   (let ((vm (vm-attach)))
+    (log-vm-props vm)
     ;;(enable-uncaught-exception-events vm)
     (mlet* (((ev . _) (spawn/chan/catch 
                        (fun (c) 
@@ -1289,7 +1315,8 @@
    (set (@ loc (this)) loc)
    (set (@ args (this)) args)
    (set (@ names (this)) names)
-   (set (@ values (this)) values))
+   (set (@ values (this)) values)
+   (set (@ self (this)) self))
   ((toString) :: <str>
    (format "#<ff ~a>" (src-loc>str loc))))
 
@@ -1316,6 +1343,25 @@
   ((*init* (thread :: <thread-ref>)) (set (@ thread (this)) thread))
   ((request) :: <com.sun.jdi.request.EventRequest> #!null)
   ((virtualMachine) :: <vm> (! virtualMachine thread)))
+
+(df log-vm-props ((vm <vm>))
+  (letrec-syntax ((p (syntax-rules ()
+                       ((p name) (log "~s: ~s\n" 'name (! name vm)))))
+                  (p* (syntax-rules ()
+                        ((p* n ...) (seq (p n) ...)))))
+    (p* canBeModified
+        canRedefineClasses
+        canAddMethod
+        canUnrestrictedlyRedefineClasses
+        canGetBytecodes
+        canGetConstantPool
+        canGetSyntheticAttribute
+        canGetSourceDebugExtension
+        canPopFrames
+        canForceEarlyReturn
+        canGetMethodReturnValues
+        canGetInstanceInfo
+        )))
 
 ;;;;; Debugger
 
