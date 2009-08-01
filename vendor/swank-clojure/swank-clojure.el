@@ -80,7 +80,7 @@ swank-clojure-java-path) if non-nil."
            file (format "%s" encoding))))
 
 (defun swank-clojure-find-package ()
-  (let ((regexp "^(\\(clojure.core/\\)?\\(in-\\)?ns\\s-+[:']?\\([^()]+\\>\\)"))
+  (let ((regexp "^(\\(clojure.core/\\)?\\(in-\\)?ns\\s-+[:']?\\([^()\" \t\n]+\\>\\)"))
     (save-excursion
       (when (or (re-search-backward regexp nil t)
                 (re-search-forward regexp nil t))
@@ -147,5 +147,33 @@ will be used over paths too.)"
     (when (and (featurep 'paredit) paredit-mode (>= paredit-version 21))
       (define-key slime-repl-mode-map "{" 'paredit-open-curly)
       (define-key slime-repl-mode-map "}" 'paredit-close-curly))))
+
+;; Importer
+
+(defun swank-clojure-pick-import (classes)
+  (swank-clojure-insert-import
+   (list (if (and (boundp 'ido-mode) ido-mode)
+             (ido-completing-read "Insert import: " classes)
+           (completing-read "Insert import: " classes)))))
+
+(defun swank-clojure-insert-import (classes)
+  "Insert an :import directive in the ns macro to import full-class."
+  (if (= 1 (length classes))
+      (save-excursion
+        (goto-char (point-min))
+        (search-forward "(ns ")
+        (end-of-defun)
+        (backward-char 2)
+        (let* ((segments (split-string (first classes) "\\."))
+               (package (mapconcat 'identity (butlast segments 1) "."))
+               (class-name (car (last segments))))
+          (insert (format "\n(:import [%s %s])" package class-name)))
+        (indent-for-tab-command))
+    (swank-clojure-pick-import classes)))
+
+(defun swank-clojure-import (class)
+  (interactive (list (read-from-minibuffer "Class: " (slime-symbol-at-point))))
+  (slime-eval-async `(swank:classes-for ,class)
+                    #'swank-clojure-insert-import))
 
 (provide 'swank-clojure)
