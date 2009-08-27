@@ -1,5 +1,14 @@
 ;;; my-elisp.el --- Various pieces of elisp created by myself and others
 
+(defun my-insert-self ()
+  "Insert self. at the beginning of the current expression."
+  (interactive)
+  (save-excursion
+    (search-backward-regexp "[ \n\t,(-]\\|^")
+    (if (not (looking-at "^"))
+        (forward-char))
+    (insert "self.")))
+
 (defun toggle-sticky-buffer-window (&optional arg)
   "Toggle whether this window is dedicated to this buffer. See
 `set-window-dedicated-p'. Optional prefix `arg' is just passed

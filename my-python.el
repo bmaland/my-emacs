@@ -61,6 +61,8 @@
              ;;(local-set-key "\t" 'ryan-python-tab)
              (local-set-key (kbd "C-h p") 'py-complete-help-thing-at-point)
 
+             (local-set-key (kbd "C-;") 'my-insert-self)
+
              (when (and buffer-file-name
                         (file-writable-p
                          (file-name-directory buffer-file-name))
