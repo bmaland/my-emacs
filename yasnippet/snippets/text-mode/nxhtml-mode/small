@@ -1,0 +1,4 @@
+# -*- mode: yasnippet -*-
+#name : <small>...</small>
+# --
+<small>$1</small>

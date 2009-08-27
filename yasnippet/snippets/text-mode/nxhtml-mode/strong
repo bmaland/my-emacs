@@ -1,0 +1,4 @@
+# -*- mode: yasnippet -*-
+#name : <strong>...</strong>
+# --
+<strong>$1</strong>
