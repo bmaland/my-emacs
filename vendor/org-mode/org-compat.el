@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.27trans
+;; Version: 6.29trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -326,6 +326,11 @@ that can be added."
     (if (and (> (length s) 0) (= (aref s (1- (length s))) ?\n))
 	(setq n (1- n)))
     n))
+
+(defun org-kill-new (string &rest args)
+  (remove-text-properties 0 (length string) '(line-prefix t wrap-prefix t)
+			  string)
+  (apply 'kill-new string args))
 
 (provide 'org-compat)
 

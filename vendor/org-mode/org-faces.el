@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.27trans
+;; Version: 6.29trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -258,21 +258,21 @@ column view defines special faces for each outline level.  See the file
   '((((class color) (background light)) (:underline t))
     (((class color) (background dark)) (:underline t))
     (t (:underline t)))
-  "Face for links."
+  "Face for link targets."
   :group 'org-faces)
 
 (defface org-date
   '((((class color) (background light)) (:foreground "Purple" :underline t))
     (((class color) (background dark)) (:foreground "Cyan" :underline t))
     (t (:underline t)))
-  "Face for links."
+  "Face for date/time stamps."
   :group 'org-faces)
 
 (defface org-sexp-date
   '((((class color) (background light)) (:foreground "Purple"))
     (((class color) (background dark)) (:foreground "Cyan"))
     (t (:underline t)))
-  "Face for links."
+  "Face for diary-like sexp date specifications."
   :group 'org-faces)
 
 (defface org-tag
@@ -362,6 +362,16 @@ list of attributes, like (:foreground \"blue\" :weight bold :underline t)."
     '((t (:bold t))))
   "Face for checkboxes"
   :group 'org-faces)
+
+(unless (facep 'org-checkbox-statistics-todo)
+  (copy-face 'org-todo 'org-checkbox-statistics-todo)
+  (set-face-doc-string 'org-checkbox-statistics-todo
+		       "Face used for unfinished checkbox statistics."))
+
+(unless (facep 'org-checkbox-statistics-done)
+  (copy-face 'org-done 'org-checkbox-statistics-done)
+  (set-face-doc-string 'org-checkbox-statistics-done
+		       "Face used for finished checkbox statistics."))
 
 (defcustom org-tag-faces nil
   "Faces for specific tags.
@@ -488,6 +498,11 @@ changes."
   (when (fboundp 'set-face-attribute)
     (set-face-attribute 'org-agenda-date-today nil :weight 'bold :italic 't)))
 
+(unless (facep 'org-agenda-clocking)
+  (copy-face 'secondary-selection 'org-agenda-clocking)
+  (set-face-doc-string 'org-agenda-clocking
+ 		       "Face marking the current clock item in the agenda."))
+
 (unless (facep 'org-agenda-date-weekend)
   (copy-face 'org-agenda-date 'org-agenda-date-weekend)
   (set-face-doc-string 'org-agenda-date-weekend
@@ -612,6 +627,11 @@ If it is less than 8, the level-1 face gets re-used for level N+1 etc."
       (t (,@font))))
   "Face used to highlight math latex and other special exporter stuff."
   :group 'org-faces)
+
+(unless (facep 'org-mode-line-clock)
+  (copy-face 'modeline 'org-mode-line-clock)
+  (set-face-doc-string 'org-agenda-date
+		       "Face used for clock display in mode line."))
 
 (provide 'org-faces)
 

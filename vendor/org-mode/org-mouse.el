@@ -4,7 +4,7 @@
 ;;
 ;; Author: Piotr Zielinski <piotr dot zielinski at gmail dot com>
 ;; Maintainer: Carsten Dominik <carsten at orgmode dot org>
-;; Version: 6.27trans
+;; Version: 6.29trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -724,7 +724,7 @@ SCHEDULED: or DEADLINE: or ANYTHINGLIKETHIS:"
        ["Open" org-open-at-point t]
        ["Open in Emacs" (org-open-at-point t) t]
        "--"
-       ["Copy link" (kill-new (match-string 0))]
+       ["Copy link" (org-kill-new (match-string 0))]
        ["Cut link"
 	(progn
 	  (kill-region (match-beginning 0) (match-end 0))

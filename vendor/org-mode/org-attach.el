@@ -4,7 +4,7 @@
 
 ;; Author: John Wiegley <johnw@newartisans.com>
 ;; Keywords: org data task
-;; Version: 6.27trans
+;; Version: 6.29trans
 
 ;; This file is part of GNU Emacs.
 ;;
@@ -95,7 +95,7 @@ ln    create a hard link.  Note that this is not supported
   "Non-nil means, allow attachment directories be inherited."
   :group 'org-attach
   :type 'boolean)
-  
+
 
 (defvar org-attach-inherited nil
   "Indicates if the last access to the attachment directory was inherited.")
@@ -314,7 +314,7 @@ The attachment is created as an Emacs buffer."
   (let* ((attach-dir (org-attach-dir t))
 	 (files (org-attach-file-list attach-dir))
 	 (file (or file
-		   (org-ido-completing-read
+		   (org-icompleting-read
 		    "Delete attachment: "
 		    (mapcar (lambda (f)
 			      (list (file-name-nondirectory f)))
@@ -389,7 +389,7 @@ If IN-EMACS is non-nil, force opening in Emacs."
 	 (files (org-attach-file-list attach-dir))
 	 (file (if (= (length files) 1)
 		   (car files)
-		 (org-ido-completing-read "Open attachment: "
+		 (org-icompleting-read "Open attachment: "
 				  (mapcar 'list files) nil t))))
     (org-open-file (expand-file-name file attach-dir) in-emacs)))
 

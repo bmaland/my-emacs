@@ -5,7 +5,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.27trans
+;; Version: 6.29trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -141,7 +141,7 @@ Here are the keyword-value pair allows in `org-feed-alist'.
      The default action on new items in the feed is to add them as children
      under the headline for the feed.  The template describes how the entry
      should be formatted.  If not given, it defaults to
-     `org-feed-default-template'. 
+     `org-feed-default-template'.
 
 :formatter formatter-function
      Instead of relying on a template, you may specify a function to format
@@ -309,7 +309,7 @@ it can be a list structured like an entry in `org-feed-alist'."
 	  feed-buffer inbox-pos new-formatted
 	  entries old-status status new changed guid-alist e guid olds)
       (setq feed-buffer (org-feed-get-feed url))
-      (unless (and feed-buffer (bufferp feed-buffer))
+      (unless (and feed-buffer (bufferp (get-buffer feed-buffer)))
 	(error "Cannot get feed %s" name))
       (when retrieve-only
 	(throw 'exit feed-buffer))
@@ -322,7 +322,7 @@ it can be a list structured like an entry in `org-feed-alist'."
 	  ;; Add the "handled" status to the appropriate entries
 	  (setq entries (mapcar (lambda (e)
 				  (setq e (plist-put e :handled
-						     (nth 1 (assoc 
+						     (nth 1 (assoc
 							     (plist-get e :guid)
 							     old-status)))))
 				entries))
@@ -381,7 +381,7 @@ it can be a list structured like an entry in `org-feed-alist'."
 		    (mapcar
 		     (lambda (e) (org-feed-format-entry e template formatter))
 		     new)))
-	
+
 	    ;; Insert the new items
 	    (org-feed-add-items inbox-pos new-formatted))
 
@@ -395,7 +395,7 @@ it can be a list structured like an entry in `org-feed-alist'."
 	  ;; that would would end up with a status that does not reflect
 	  ;; which items truely have been handled
 	  (org-feed-write-status inbox-pos drawer status)
-	  
+
 	  ;; Normalize the visibility of the inbox tree
 	  (goto-char inbox-pos)
 	  (hide-subtree)
@@ -506,7 +506,7 @@ and returns the full property list.
 If that property is already present, nothing changes."
   (if formatter
       (funcall formatter entry)
-    (let (dlines fmt tmp indent time
+    (let (dlines fmt tmp indent time name
 		 v-h v-t v-T v-u v-U v-a)
       (setq dlines (org-split-string (or (plist-get entry :description) "???")
 				     "\n")
@@ -549,18 +549,28 @@ If that property is already present, nothing changes."
 	       (org-split-string s "\n")
 	       (concat "\n" (make-string n ?\ )))))
 
+(defun org-feed-skip-http-headers (buffer)
+  "Remove HTTP headers from BUFFER, and return it.
+Assumes headers are indeed present!"
+  (with-current-buffer buffer
+    (widen)
+    (goto-char (point-min))
+    (search-forward "\n\n")
+    (delete-region (point-min) (point))
+    buffer))
+
 (defun org-feed-get-feed (url)
   "Get the RSS feed file at URL and return the buffer."
   (cond
    ((eq org-feed-retrieve-method 'url-retrieve-synchronously)
-    (url-retrieve-synchronously url))
+    (org-feed-skip-http-headers (url-retrieve-synchronously url)))
    ((eq org-feed-retrieve-method 'curl)
     (ignore-errors (kill-buffer org-feed-buffer))
-    (call-process "curl" nil org-feed-buffer nil url)
+    (call-process "curl" nil org-feed-buffer nil "--silent" url)
     org-feed-buffer)
    ((eq org-feed-retrieve-method 'wget)
     (ignore-errors (kill-buffer org-feed-buffer))
-    (call-process "curl" nil org-feed-buffer nil "-q" "-O" "-" url)
+    (call-process "wget" nil org-feed-buffer nil "-q" "-O" "-" url)
     org-feed-buffer)
    ((functionp org-feed-retrieve-method)
     (funcall org-feed-retrieve-method url))))
@@ -610,10 +620,6 @@ The `:item-full-text' property actually contains the sexp
 formatted as a string, not the original XML data."
   (with-current-buffer buffer
     (widen)
-    (goto-char (point-min))
-    ;; Skip HTTP headers
-    (search-forward "\n\n")
-    (delete-region (point-min) (point))
     (let ((feed (car (xml-parse-region (point-min) (point-max)))))
       (mapcar
        (lambda (entry)
@@ -654,6 +660,4 @@ formatted as a string, not the original XML data."
 (provide 'org-feed)
 
 ;; arch-tag: 0929b557-9bc4-47f4-9633-30a12dbb5ae2
-
 ;;; org-feed.el ends here
-

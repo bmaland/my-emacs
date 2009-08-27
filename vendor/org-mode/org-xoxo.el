@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.27trans
+;; Version: 6.29trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -119,6 +119,4 @@ The XOXO buffer is named *xoxo-<source buffer name>*"
 (provide 'org-xoxo)
 
 ;; arch-tag: 16e6a31f-f4f5-46f1-af18-48dc89faa702
-
-
 ;;; org-xoxo.el ends here

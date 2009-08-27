@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.27trans
+;; Version: 6.29trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -627,7 +627,7 @@ Where possible, use the standard interface for changing this line."
      (t
       (setq allowed (org-property-get-allowed-values pom key 'table))
       (if allowed
-	  (setq nval (org-ido-completing-read "Value: " allowed nil t))
+	  (setq nval (org-icompleting-read "Value: " allowed nil t))
 	(setq nval (read-string "Edit: " value)))
       (setq nval (org-trim nval))
       (when (not (equal nval value))
@@ -876,7 +876,7 @@ around it."
 			 truncate-lines))
 	(setq truncate-lines t)
 	(mapc (lambda (x)
-		(goto-line (car x))
+		(org-goto-line (car x))
 		(org-columns-display-here (cdr x)))
 	      cache)))))
 
@@ -904,7 +904,7 @@ interactive function org-columns-new.")
   (let ((n (org-columns-current-column))
         (editp (and prop (assoc prop org-columns-current-fmt-compiled)))
 	cell)
-    (setq prop (org-ido-completing-read
+    (setq prop (org-icompleting-read
 		"Property: " (mapcar 'list (org-buffer-property-keys t nil t))
 		nil nil prop))
     (setq title (read-string (concat "Column title [" prop "]: ") (or title prop)))
@@ -912,7 +912,7 @@ interactive function org-columns-new.")
     (if (string-match "\\S-" width)
 	(setq width (string-to-number width))
       (setq width nil))
-    (setq fmt (org-ido-completing-read "Summary [none]: "
+    (setq fmt (org-icompleting-read "Summary [none]: "
 				       (mapcar (lambda (x) (list (symbol-name (cadr x)))) org-columns-compile-map)
 				       nil t))
     (setq fmt (intern fmt)
@@ -1269,29 +1269,40 @@ of fields."
   (if (featurep 'xemacs)
       (save-excursion
         (let* ((title (mapcar 'cadr org-columns-current-fmt-compiled))
+	       (re-comment (concat "\\*+[ \t]+" org-comment-string "\\>"))
+	       (re-archive (concat ".*:" org-archive-tag ":"))
                (n (length title)) row tbl)
           (goto-char (point-min))
 
 	  (while (re-search-forward "^\\(\\*+\\) " nil t)
-	    (when (and (or (null maxlevel)
-			   (>= maxlevel
-			       (if org-odd-levels-only
-				   (/ (1+ (length (match-string 1))) 2)
-				 (length (match-string 1)))))
-		       (get-char-property (match-beginning 0) 'org-columns-key))
-              (goto-char (match-beginning 0))
-              (setq row nil)
-              (loop for i from 0 to (1- n) do
-		    (push (or (get-char-property (point)
-						 'org-columns-value-modified)
-			      (get-char-property (point) 'org-columns-value)
-			      "")
-			  row)
-		    (org-columns-forward-char))
-              (setq row (nreverse row))
-              (unless (and skip-empty-rows
-                           (eq 1 (length (delete "" (delete-dups (copy-sequence row))))))
-                (push row tbl))))
+	    (catch 'next
+	      (when (and (or (null maxlevel)
+			     (>= maxlevel
+				 (if org-odd-levels-only
+				     (/ (1+ (length (match-string 1))) 2)
+				   (length (match-string 1)))))
+			 (get-char-property (match-beginning 0) 'org-columns-key))
+		(goto-char (match-beginning 0))
+		(when (save-excursion
+			(goto-char (point-at-bol))
+			(or (looking-at re-comment)
+			    (looking-at re-archive)))
+		  (org-end-of-subtree t)
+		  (throw 'next t))
+		(setq row nil)
+		(loop for i from 0 to (1- n) do
+		      (push
+		       (org-quote-vert
+			(or (get-char-property (point)
+					       'org-columns-value-modified)
+			    (get-char-property (point) 'org-columns-value)
+			    ""))
+		       row)
+		      (org-columns-forward-char))
+		(setq row (nreverse row))
+		(unless (and skip-empty-rows
+			     (eq 1 (length (delete "" (delete-dups (copy-sequence row))))))
+		  (push row tbl)))))
           (append (list title 'hline) (nreverse tbl))))
     (save-excursion
       (let* ((title (mapcar 'cadr org-columns-current-fmt-compiled))
@@ -1432,7 +1443,7 @@ and tailing newline characters."
   (interactive)
   (when (featurep 'xemacs) (org-columns-quit))
   (let ((defaults '(:name "columnview" :hlines 1))
-	(id (org-ido-completing-read
+	(id (org-icompleting-read
 	     "Capture columns (local, global, entry with :ID: property) [local]: "
 	     (append '(("global") ("local"))
 		     (mapcar 'list (org-property-values "ID"))))))
@@ -1504,7 +1515,7 @@ and tailing newline characters."
 	(org-set-local 'org-columns-current-maxwidths maxwidths)
 	(org-columns-display-here-title)
 	(mapc (lambda (x)
-		(goto-line (car x))
+		(org-goto-line (car x))
 		(org-columns-display-here (cdr x)))
 	      cache)
 	(when org-agenda-columns-show-summaries

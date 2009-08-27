@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.27trans
+;; Version: 6.29trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -250,6 +250,7 @@ publishing directory."
     (set-buffer buffer)
     (erase-buffer)
     (fundamental-mode)
+    (org-install-letbind)
     ;; create local variables for all options, to make sure all called
     ;; functions get the correct information
     (mapc (lambda (x)
@@ -265,11 +266,13 @@ publishing directory."
 
     ;; File header
     (unless body-only
-      (if title (org-insert-centered title ?=))
-      (insert "\n")
+      (when (and title (not (string= "" title)))
+	(org-insert-centered title ?=)
+	(insert "\n"))
+
       (if (and (or author email)
 	       org-export-author-info)
-	  (insert (concat (nth 1 lang-words) ": " (or author "")
+	  (insert(concat (nth 1 lang-words) ": " (or author "")
 			  (if email (concat " <" email ">") "")
 			  "\n")))
 
@@ -278,11 +281,12 @@ publishing directory."
 	(setq date (format-time-string date)))
        (date)
        (t (setq date (format-time-string "%Y-%m-%d %T %Z"))))
-      
+
       (if (and date org-export-time-stamp-file)
 	  (insert (concat (nth 2 lang-words) ": " date"\n")))
-      
-      (insert "\n\n"))
+
+      (unless (= (point) (point-min))
+	(insert "\n\n")))
 
     (if (and org-export-with-toc (not body-only))
 	(progn
@@ -362,7 +366,7 @@ publishing directory."
 				      (substring link 8)
 				      org-export-code-refs)))
 			t t line))
-	  (setq rpl (concat "[" 
+	  (setq rpl (concat "["
 			    (or (match-string 3 line) (match-string 1 line))
 			    "]"))
 	  (when (and desc0 (not (equal desc0 link)))
@@ -498,7 +502,7 @@ publishing directory."
 		(make-string ind ?\ )
 		(substring line (1+ pos)))
       line)))
-			   
+
 (defun org-export-ascii-push-links (link-buffer)
   "Push out links in the buffer."
   (when link-buffer
@@ -601,5 +605,4 @@ publishing directory."
 (provide 'org-ascii)
 
 ;; arch-tag: aa96f882-f477-4e13-86f5-70d43e7adf3c
-
 ;;; org-ascii.el ends here

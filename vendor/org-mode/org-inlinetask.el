@@ -1,17 +1,19 @@
 ;;; org-inlinetask.el --- Tasks independent of outline hierarchy
+
 ;; Copyright (C) 2009 Free Software Foundation, Inc.
 ;;
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.27trans
-;;
-;; This file is not yet part of GNU Emacs.
-;;
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; Version: 6.29trans
+
+;; This file is part of GNU Emacs.
+
+;; GNU Emacs is free software: you can redistribute it and/or modify
+
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +21,8 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Commentary:
@@ -65,8 +66,18 @@
 ;;                     :END:
 ;;                     And here is some extra text
 ;;    **************** END
+;;
+;; Also, if you want to use refiling and archiving for inline tasks,
+;; The END line must be present to make things work properly.
+;;
+;; This package installs one new comand:
+;;
+;; C-c C-x t      Insert a new inline task with END line
+
 
 ;;; Code
+
+(require 'org)
 
 (defgroup org-inlinetask nil
   "Options concerning inline tasks in Org mode."
@@ -106,6 +117,16 @@ but containing only the word END."
 (defvar org-drawer-regexp)
 (defvar org-complex-heading-regexp)
 (defvar org-property-end-re)
+
+(defun org-inlinetask-insert-task ()
+  "Insert an inline task."
+  (interactive)
+  (or (bolp) (newline))
+  (insert (make-string org-inlinetask-min-level ?*) " \n"
+	  (make-string org-inlinetask-min-level ?*) " END\n")
+  (end-of-line -1))
+(define-key org-mode-map "\C-c\C-xt" 'org-inlinetask-insert-task)
+
 (defun org-inlinetask-export-handler ()
   "Handle headlines with level larger or equal to `org-inlinetask-min-level'.
 Either remove headline and meta data, or do special formatting."
@@ -161,6 +182,12 @@ Either remove headline and meta data, or do special formatting."
       (add-text-properties (match-beginning 3) (match-end 3)
 			   '(face shadow font-lock-fontified t)))))
 
+(defun org-inlinetask-remove-END-maybe ()
+  "Remove an END line when present."
+  (when (looking-at (format "\\([ \t]*\n\\)*\\*\\{%d,\\}[ \t]+END[ \t]*$"
+			    org-inlinetask-min-level))
+    (replace-match "")))
+
 (eval-after-load "org-exp"
   '(add-hook 'org-export-preprocess-after-tree-selection-hook
 	     'org-inlinetask-export-handler))
@@ -170,4 +197,3 @@ Either remove headline and meta data, or do special formatting."
 (provide 'org-inlinetask)
 
 ;;; org-inlinetask.el ends here
-
