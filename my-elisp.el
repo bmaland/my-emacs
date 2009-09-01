@@ -51,13 +51,16 @@ on, sets window non-dedicated iff `arg' is nil."
   ;; TODO maybe try complete-tag as well
   "Either expand a snippet or the word preceding point, or indent."
   (interactive "*P")
-  (unless (yas/expand)
-    (if (and
-         (or (bobp) (= ?w (char-syntax (char-before))))
-         (or (eobp) (not (= ?w (char-syntax (char-after)))))
-         (not (looking-back "end")))
-        (hippie-expand arg)
-      (indent-for-tab-command))))
+  (if (and yas/active-field-overlay (overlay-buffer yas/active-field-overlay))
+      (yas/next-field-or-maybe-expand)
+    (let ((yas/fallback-behavior 'return-nil))
+      (unless (yas/expand)
+        (if (and
+             (or (bobp) (= ?w (char-syntax (char-before))))
+             (or (eobp) (not (= ?w (char-syntax (char-after)))))
+             (not (looking-back "end")))
+            (hippie-expand arg)
+          (indent-for-tab-command))))))
 
 (defun emacswiki ()
   "Docstring"
