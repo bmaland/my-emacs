@@ -12,6 +12,7 @@
  '(comint-scroll-show-maximum-output t)
  '(comint-scroll-to-bottom-on-input t)
  '(frame-background-mode (quote dark))
+ '(hippie-expand-try-functions-list (quote (try-complete-file-name-partially try-complete-file-name try-expand-all-abbrevs try-expand-list try-expand-line try-expand-dabbrev try-expand-dabbrev-all-buffers try-expand-dabbrev-from-kill try-complete-lisp-symbol-partially try-complete-lisp-symbol yas/hippie-try-expand)))
  '(load-home-init-file t t)
  '(make-backup-files nil)
  '(minibuffer-max-depth nil)
