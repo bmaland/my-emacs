@@ -90,9 +90,6 @@
                ("elisp" (mode . emacs-lisp-mode))
                ("org" (mode . org-mode))
                ("erc" (mode . erc-mode))
-               ("gtalk" (or
-                         (mode . jabber-chat-mode)
-                         (name . "*-jabber-roster-*")))
                ("emacs" (or
                          (name . "^\\*scratch\\*$")
                          (name . "^\\*Messages\\*$")))))))
