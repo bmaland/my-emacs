@@ -6,7 +6,7 @@
 ;; Version: 0.6.1
 ;; Package-version: 0.6.1b
 ;; X-URL: http://code.google.com/p/yasnippet/
-;; Keywords: snippet, textmate
+;; Keywords: convenience, emulation
 ;; URL: http://code.google.com/p/yasnippet/
 ;; EmacsWiki: YaSnippetMode
 
@@ -164,22 +164,22 @@ bulk reloading of all snippets using `yas/reload-all'"
 
 These functions are called with the following arguments:
 
-* PROMPT: A string to prompt the user
+- PROMPT: A string to prompt the user
 
-* CHOICES: a list of strings or objects.
+- CHOICES: a list of strings or objects.
 
-* optional DISPLAY-FN : A function that, when applied to each of
+- optional DISPLAY-FN : A function that, when applied to each of
 the objects in CHOICES will return a string.
 
 The return value of any function you put here should be one of
 the objects in CHOICES, properly formatted with DISPLAY-FN (if
 that is passed).
 
-* To signal that your particular style of prompting is
+- To signal that your particular style of prompting is
 unavailable at the moment, you can also have the function return
 nil.
 
-* To signal that the user quit the prompting process, you can
+- To signal that the user quit the prompting process, you can
 signal `quit' with
 
   (signal 'quit \"user quit!\")."
@@ -191,9 +191,9 @@ signal `quit' with
 
 The following values are possible:
 
-`fixed' Indent the snippet to the current column;
+- `fixed' Indent the snippet to the current column;
 
-`auto' Indent each line of the snippet with `indent-according-to-mode'
+- `auto' Indent each line of the snippet with `indent-according-to-mode'
 
 Every other value means don't apply any snippet-side indendation
 after expansion (the manual per-line \"$>\" indentation still
@@ -260,14 +260,15 @@ field"
 (defcustom yas/fallback-behavior 'call-other-command
   "How to act when `yas/trigger-key' does *not* expand a snippet.
 
-`call-other-command' means try to temporarily disable YASnippet
+- `call-other-command' means try to temporarily disable YASnippet
     and call the next command bound to `yas/trigger-key'.
 
-`return-nil' means return do nothing.
+- nil or the symbol `return-nil' mean do nothing. (and
+  `yas/expand-returns' nil)
 
-An entry (apply COMMAND . ARGS) means interactively call COMMAND,
-if ARGS is non-nil, call COMMAND non-interactively with ARGS as
-arguments."
+- An entry (apply COMMAND . ARGS) means interactively call
+  COMMAND, if ARGS is non-nil, call COMMAND non-interactively
+  with ARGS as arguments."
   :type '(choice (const :tag "Call previous command"  'call-other-command)
                  (const :tag "Do nothing"    'return-nil))
   :group 'yasnippet)
@@ -297,10 +298,10 @@ This affects `yas/insert-snippet', `yas/visit-snippet-file'"
 When non-nil, submenus for each snippet table will be listed
 under the menu \"Yasnippet\".
 
-If set to `real-modes' only submenus whose name more or less
+- If set to `real-modes' only submenus whose name more or less
 corresponds to a major mode are listed.
 
-If set to `abbreviate', only the current major-mode
+- If set to `abbreviate', only the current major-mode
 menu and the modes set in `yas/mode-symbol' are listed.
 
 Any other non-nil value, every submenu is listed."
@@ -634,10 +635,9 @@ Here's an example:
        :help "Display some information about YASsnippet"]))
   ;; Now for the stuff that has direct keybindings
   ;;
-  (define-key yas/minor-mode-map (when yas/trigger-key
-                                   (read-kbd-macro
-                                    yas/trigger-key))
-    'yas/expand)
+  (when  (and yas/trigger-key
+              (stringp yas/trigger-key))
+    (define-key yas/minor-mode-map (read-kbd-macro yas/trigger-key) 'yas/expand))
   (define-key yas/minor-mode-map "\C-c&\C-s" 'yas/insert-snippet)
   (define-key yas/minor-mode-map "\C-c&\C-n" 'yas/new-snippet)
   (define-key yas/minor-mode-map "\C-c&\C-v" 'yas/visit-snippet-file)
@@ -669,7 +669,8 @@ Key bindings:
     ;; if a `yas/minor-mode-map' is already built. Else, call
     ;; `yas/init-minor-keymap' to build it
     (if (and (cdr yas/minor-mode-map)
-             yas/trigger-key)
+             yas/trigger-key
+             (stringp yas/trigger-key))
         (define-key yas/minor-mode-map (read-kbd-macro yas/trigger-key) 'yas/expand)
       (yas/init-minor-keymap))))
 
@@ -1437,7 +1438,7 @@ Here's the default value for all the parameters:
   (interactive "ffind the yasnippet.el file: \nFTarget bundle file: \nDSnippet directory to bundle: \nMExtra code? \nfdropdown-library: ")
   
   (let* ((yasnippet (or yasnippet
-                        ("yasnippet.el")))
+                        "yasnippet.el"))
          (yasnippet-bundle (or yasnippet-bundle
                                "./yasnippet-bundle.el"))
          (snippet-roots (or snippet-roots
@@ -1453,8 +1454,7 @@ Here's the default value for all the parameters:
          (dirs (or (and (listp snippet-roots) snippet-roots)
                    (list snippet-roots)))
          (bundle-buffer nil))
-    (with-temp-buffer
-      (setq bundle-buffer (current-buffer))
+    (with-temp-file yasnippet-bundle
       (insert ";;; yasnippet-bundle.el --- "
               "Yet another snippet extension (Auto compiled bundle)\n")
       (insert-file-contents yasnippet)
@@ -1471,30 +1471,29 @@ Here's the default value for all the parameters:
               "  (yas/global-mode 1)\n")
       (flet ((yas/define-snippets
               (mode snippets &optional parent-or-parents)
-              (with-current-buffer bundle-buffer
-                (insert ";;; snippets for " (symbol-name mode) "\n")
-                (let ((literal-snippets (list)))
-                  (dolist (snippet snippets)
-                    (let ((key                    (first   snippet))
-                          (template-content       (second  snippet))
-                          (name                   (third   snippet))
-                          (condition              (fourth  snippet))
-                          (group                  (fifth   snippet))
-                          (expand-env             (sixth   snippet))
-                          ;; Omit the file on purpose
-                          (file                   nil);; (seventh snippet)) 
-                          (binding                (eighth  snippet)))
-                      (push `(,key
-                              ,template-content
-                              ,name
-                              ,condition
-                              ,group
-                              ,expand-env
-                              ,file
-                              ,binding)
-                            literal-snippets)))
-                  (insert (pp-to-string `(yas/define-snippets ',mode ',literal-snippets ',parent-or-parents)))
-                  (insert "\n\n")))))
+              (insert ";;; snippets for " (symbol-name mode) "\n")
+              (let ((literal-snippets (list)))
+                (dolist (snippet snippets)
+                  (let ((key                    (first   snippet))
+                        (template-content       (second  snippet))
+                        (name                   (third   snippet))
+                        (condition              (fourth  snippet))
+                        (group                  (fifth   snippet))
+                        (expand-env             (sixth   snippet))
+                        ;; Omit the file on purpose
+                        (file                   nil) ;; (seventh snippet)) 
+                        (binding                (eighth  snippet)))
+                    (push `(,key
+                            ,template-content
+                            ,name
+                            ,condition
+                            ,group
+                            ,expand-env
+                            ,file
+                            ,binding)
+                          literal-snippets)))
+                (insert (pp-to-string `(yas/define-snippets ',mode ',literal-snippets ',parent-or-parents)))
+                (insert "\n\n"))))
         (dolist (dir dirs)
           (dolist (subdir (yas/subdirs dir))
             (yas/load-directory-1 subdir nil 'no-hierarchy-parents))))
@@ -1507,9 +1506,17 @@ Here's the default value for all the parameters:
               ")\n")
       (insert ";;; "
               (file-name-nondirectory yasnippet-bundle)
-              " ends here\n")
-      (setq buffer-file-name yasnippet-bundle)
-      (save-buffer))))
+              " ends here\n"))))
+
+(defun yas/compile-textmate-bundle ()
+  (interactive)
+  (yas/compile-bundle "yasnippet.el"
+                      "./yasnippet-textmate-bundle.el"
+                      "extras/imported/"
+                      (concat "(yas/initialize-bundle)"
+                              "\n;;;###autoload" ; break through so that won't
+                              "(require 'yasnippet-textmate-bundle)")
+                      "dropdown-list.el"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Some user level functions
@@ -1772,7 +1779,11 @@ defined in `yas/fallback-behavior'"
              nil)
             ((eq yas/fallback-behavior 'call-other-command)
              (let* ((yas/minor-mode nil)
-                    (command (key-binding (read-kbd-macro yas/trigger-key))))
+                    (keys (or (this-command-keys-vector)
+                              (and yas/trigger-key
+                                   (stringp yas/trigger-key)
+                                   (read-kbd-macro yas/trigger-key))))
+                    (command (key-binding keys)))
                (when (commandp command)
                  (setq this-command command)
                  (call-interactively command))))
@@ -1862,73 +1873,155 @@ visited file in `snippet-mode'."
           (t
            (message "This snippet was not loaded from a file!")))))
 
-(defun yas/guess-snippet-directory ()
+(defun yas/guess-snippet-directories-1 (table &optional suffix)
+  "Guesses possible snippet subdirsdirectories for TABLE."
+  (unless suffix
+    (setq suffix (yas/snippet-table-name table))) 
+  (cons suffix
+        (mapcan #'(lambda (parent)
+                    (yas/guess-snippet-directories-1
+                     parent
+                     (concat (yas/snippet-table-name parent) "/" suffix)))
+                (yas/snippet-table-parents table))))
+
+(defun yas/guess-snippet-directories ()
   "Try to guess suitable directories based on the current active
-tables."
+tables.
+
+Returns a a list of options alist TABLE -> DIRS where DIRS are
+all the possibly directories where snippets of table might be
+lurking."
   (let ((main-dir (or (and (listp yas/root-directory)
                            (first yas/root-directory))
                       yas/root-directory
-                      "~/.emacs.d/snippets")))
+                      (setq yas/root-directory "~/.emacs.d/snippets")))
+        (tables (yas/get-snippet-tables)))
+    ;; HACK! the snippet table created here is a dummy table that
+    ;; holds the correct name so that `yas/make-directory-maybe' can
+    ;; work. The real table, if it does not exist in
+    ;; yas/snippet-tables will be created when the first snippet for
+    ;; that mode is loaded.
+    ;; 
+    (unless (gethash major-mode yas/snippet-tables)
+      (setq tables (cons (yas/make-snippet-table (symbol-name major-mode))
+                         tables)))
+    
     (mapcar #'(lambda (table)
-                (concat main-dir "/" (yas/snippet-table-name table)))
-            (yas/get-snippet-tables))))
+                (cons table
+                      (mapcar #'(lambda (subdir)
+                                  (concat main-dir "/" subdir))
+                              (yas/guess-snippet-directories-1 table))))
+            tables)))
 
-(defun yas/new-snippet (&optional same-window)
-  "Create a new snippet in guessed current mode's directory."
-  (interactive)
-  (yas/find-snippets same-window
-                     (read-from-minibuffer "Enter snippet name: ")))
+(defun yas/make-directory-maybe (table-and-dirs &optional main-table-string)
+  "Returns a dir inside  TABLE-AND-DIRS, prompts for creation if none exists."
+  (or (some #'(lambda (dir) (when (file-directory-p dir) dir)) (cdr table-and-dirs))
+      (let ((candidate (first (cdr table-and-dirs))))
+        (if (y-or-n-p (format "Guessed directory (%s) for%s%s table \"%s\" does not exist! Create? "
+                              candidate
+                              (if (gethash (intern (yas/snippet-table-name (car table-and-dirs)))
+                                           yas/snippet-tables)
+                                  ""
+                                " brand new")
+                              (or main-table-string
+                                  "")
+                              (yas/snippet-table-name (car table-and-dirs))))
+            (progn
+              (make-directory candidate 'also-make-parents)
+              ;; create the .yas-parents file here...
+              candidate)))))
 
+(defun yas/new-snippet (&optional choose-instead-of-guess)
+  ""
+  (interactive "P")
+  (let* ((guessed-directories (yas/guess-snippet-directories))
+         (option (or (and choose-instead-of-guess
+                          (some #'(lambda (fn)
+                                    (funcall fn "Choose a snippet table: "
+                                             guessed-directories
+                                             #'(lambda (option)
+                                                 (yas/snippet-table-name (car option)))))
+                                yas/prompt-functions))
+                     (first guessed-directories)))
+         (chosen))
+    (setq chosen (yas/make-directory-maybe option (unless choose-instead-of-guess
+                                                    " main")))
+    (unless (or chosen
+                choose-instead-of-guess)
+      (if (y-or-n-p (format "Continue guessing for other active tables %s? "
+                            (mapcar #'(lambda (table-and-dirs)
+                                        (yas/snippet-table-name (car table-and-dirs)))
+                                    (rest guessed-directories))))
+          (setq chosen (some #'yas/make-directory-maybe
+                             (rest guessed-directories)))))
+    (unless (or chosen
+                choose-instead-of-guess)
+      (when (y-or-n-p "Having trouble... use snippet root dir? ")
+        (setq chosen (if (listp yas/root-directory)
+                         (first yas/root-directory)
+                       yas/root-directory))))
+    (if chosen
+        (let ((default-directory chosen)
+              (name (read-from-minibuffer "Enter a snippet name: ")))
+          (find-file-other-window (concat name
+                                          ".yasnippet"))
+          (snippet-mode)
+          (unless (and choose-instead-of-guess
+                       (not (y-or-n-p "Insert a snippet with useful headers? ")))
+            (yas/expand-snippet (format 
+                                 "\
+# -*- mode: snippet -*-
+# name: %s
+# key: $1${2:
+# binding: \"${3:keybinding}\"}${4:
+# expand-env: ((${5:some-var} ${6:some-value}))}
+# --
+$0" name))))
+      (message "[yas] aborted snippet creation."))))
 
-(defun yas/find-snippets (&optional same-window snippet-name )
+(defun yas/find-snippets (&optional same-window )
   "Look for user snippets in guessed current mode's directory.
 
 Calls `find-file' interactively in the guessed directory.
 
 With prefix arg SAME-WINDOW opens the buffer in the same window.
 
-With optional SNIPPET-NAME, finds the file directly, i.e. `find-file' is
-called non-interactively.
-
 Because snippets can be loaded from many different locations,
 this has to guess the correct directory using
-`yas/guess-directory', which returns a list of options. If any
-one of these exists, it is taken and `find-file' is called there,
-otherwise, proposes to create the first option returned by
-`yas/guess-directory'."
+`yas/guess-snippet-directories', which returns a list of
+options. 
+
+If any one of these exists, it is taken and `find-file' is called
+there, otherwise, proposes to create the first option returned by
+`yas/guess-snippet-directories'."
   (interactive "P")
-  (let* ((guessed-directories (append (yas/guess-snippet-directory)
-                                      (if (listp yas/root-directory)
-                                          yas/root-directory
-                                        (list yas/root-directory))))
-         (target-directory (first guessed-directories))
+  (let* ((guessed-directories (yas/guess-snippet-directories))
+         (chosen)
          (buffer))
-
-    (while (and guessed-directories
-                (or (not target-directory)
-                    (not (file-exists-p target-directory))))
-      (if (y-or-n-p (format "Guessed directory (%s) does not exist! Create? "
-                            (first guessed-directories)))
-          (progn
-            (setq target-directory (first guessed-directories))
-            (make-directory target-directory 'also-make-parents))
-        (setq guessed-directories (cdr guessed-directories))
-        (setq target-directory (first guessed-directories))))
-
-    (when target-directory
-      (let ((default-directory target-directory))
-        (setq buffer (if snippet-name
-                         (if same-window
-                             (find-file snippet-name)
-                           (find-file-other-window snippet-name))
-                       (call-interactively (if same-window
+    (setq chosen (yas/make-directory-maybe (first guessed-directories) " main"))
+    (unless chosen
+      (if (y-or-n-p (format "Continue guessing for other active tables %s? "
+                            (mapcar #'(lambda (table-and-dirs)
+                                        (yas/snippet-table-name (car table-and-dirs)))
+                                    (rest guessed-directories))))
+          (setq chosen (some #'yas/make-directory-maybe
+                             (rest guessed-directories)))))
+    (unless chosen
+      (when (y-or-n-p "Having trouble... go to snippet root dir? ")
+        (setq chosen (if (listp yas/root-directory)
+                         (first yas/root-directory)
+                       yas/root-directory))))
+    (if chosen
+        (let ((default-directory chosen))
+          (setq buffer (call-interactively (if same-window
                                                'find-file
-                                             'find-file-other-window))))
-        (when buffer
-          (save-excursion
-            (set-buffer buffer)
-            (when (eq major-mode 'fundamental-mode)
-              (snippet-mode))))))))
+                                             'find-file-other-window)))
+          (when buffer
+            (save-excursion
+              (set-buffer buffer)
+              (when (eq major-mode 'fundamental-mode)
+                (snippet-mode)))))
+      (message "Could not guess snippet dir!"))))
 
 (defun yas/compute-major-mode-and-parents (file &optional prompt-if-failed no-hierarchy-parents)
   (let* ((file-dir (and file
@@ -2958,7 +3051,7 @@ SNIPPET-MARKERS."
   ;; implementations of these functions delete text
   ;; before they insert. If there happens to be a marker
   ;; just after the text being deleted, the insertion
-  ;; actually happens after the marker, which misplaces
+  ;; actually happens  after the marker, which misplaces
   ;; it.
   ;;
   ;; This would also happen if we had used overlays with
@@ -2977,7 +3070,10 @@ SNIPPET-MARKERS."
                                         snippet-markers)))
     (save-restriction
       (widen)
-      (indent-according-to-mode))
+      (condition-case err
+          (indent-according-to-mode)
+        (error (message "[yas] warning: yas/indent-according-to-mode habing problems running %s" indent-line-function)
+               nil)))
     (mapc #'(lambda (marker)
               (set-marker marker (point)))
           trouble-markers)))
