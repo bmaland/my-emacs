@@ -4,3 +4,5 @@
 ;; yasnippet dev
 (setq snippet-dir "~/src/snippets")
 (yas/load-directory snippet-dir)
+;; etc
+(setq browse-url-generic-program "chromium-browser")
