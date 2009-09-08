@@ -26,6 +26,7 @@
 (add-hook 'slime-repl-mode-hook
           (lambda ()
             (local-set-key "\C-cp" 'slime-close-all-parens-in-sexp)
+            (local-set-key [tab] 'slime-fuzzy-complete-symbol)
             ))
 
 (add-hook 'lisp-mode-hook
