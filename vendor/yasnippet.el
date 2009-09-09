@@ -1,10 +1,11 @@
 ;;; Yasnippet.el --- Yet another snippet extension for Emacs.
 
 ;; Copyright 2008 pluskid
+;;           2009 pluskid, joaotavora
 
 ;; Authors: pluskid <pluskid@gmail.com>, joaotavora <joaotavora@gmail.com>
 ;; Version: 0.6.1
-;; Package-version: 0.6.1b
+;; Package-version: 0.6.1c
 ;; X-URL: http://code.google.com/p/yasnippet/
 ;; Keywords: convenience, emulation
 ;; URL: http://code.google.com/p/yasnippet/
@@ -126,6 +127,11 @@
 ;;
 ;;        M-x customize-group RET yasnippet RET
 ;;
+;;   If you use the customization group to set variables
+;;   `yas/root-directory' or `yas/global-mode', make sure the path to
+;;   "yasnippet.el" is present in the `load-path' *before* the
+;;   `custom-set-variables' is executed in your .emacs file.
+;;
 ;;   For more information and detailed usage, refer to the project page:
 ;;      http://code.google.com/p/yasnippet/
 
@@ -144,16 +150,26 @@
   "Yet Another Snippet extension"
   :group 'editing)
 
+;;;###autoload
 (defcustom yas/root-directory nil
   "Root directory that stores the snippets for each major mode.
 
-Can also be a list of strings, for multiple root directories. If
-you make this a list, the first element is always the
-user-created snippets directory. Other directories are used for
-bulk reloading of all snippets using `yas/reload-all'"
-
-  :type '(string)
-  :group 'yasnippet)
+If you set this from your .emacs, can also be a list of strings,
+for multiple root directories. If you make this a list, the first
+element is always the user-created snippets directory. Other
+directories are used for bulk reloading of all snippets using
+`yas/reload-all'"
+  :type '(choice (string :tag "Single directory (string)")
+                 (repeat :args (string) :tag "List of directories (strings)"))
+  :group 'yasnippet
+  :require 'yasnippet
+  :set #'(lambda (symbol new)
+           (let ((old (and (boundp symbol)
+                           (symbol-value symbol))))
+             (set-default symbol new)
+             (unless (or (not (fboundp 'yas/reload-all))
+                         (equal old new))
+               (yas/reload-all)))))
 
 (defcustom yas/prompt-functions '(yas/x-prompt
                                   yas/dropdown-prompt
@@ -183,7 +199,7 @@ nil.
 signal `quit' with
 
   (signal 'quit \"user quit!\")."
-  :type 'list
+  :type '(repeat function)
   :group 'yasnippet)
 
 (defcustom yas/indent-line 'auto
@@ -221,33 +237,59 @@ Naturally this is only valid when `yas/indent-line' is `auto'"
 Value is a string that is converted to the internal Emacs key
 representation using `read-kbd-macro'."
   :type 'string
-  :group 'yasnippet)
-
+  :group 'yasnippet
+  :set #'(lambda (symbol key)
+           (let ((old (and (boundp symbol)
+                           (symbol-value symbol))))
+             (set-default symbol key)
+             (if (fboundp 'yas/trigger-key-reload)
+                 (yas/trigger-key-reload old)))))
+  
 (defcustom yas/next-field-key "TAB"
   "The key to navigate to next field when a snippet is active.
 
 Value is a string that is converted to the internal Emacs key
-representation using `read-kbd-macro'."
-  :type 'string
-  :group 'yasnippet)
+representation using `read-kbd-macro'.
+
+Can also be a list of strings."
+  :type '(choice (string :tag "String")
+                 (repeat :args (string) :tag "List of strings"))
+  :group 'yasnippet
+  :set #'(lambda (symbol val)
+           (set-default symbol val)
+           (if (fboundp 'yas/init-yas-in-snippet-keymap)
+               (yas/init-yas-in-snippet-keymap))))
+           
 
 (defcustom yas/prev-field-key '("<backtab>" "<S-tab>")
   "The key to navigate to previous field when a snippet is active.
 
-Can also be a list of keys.
-
 Value is a string that is converted to the internal Emacs key
-representation using `read-kbd-macro'."
-  :type 'string
-  :group 'yasnippet)
+representation using `read-kbd-macro'.
+
+Can also be a list of strings."
+  :type '(choice (string :tag "String")
+                 (repeat :args (string) :tag "List of strings"))
+  :group 'yasnippet
+  :set #'(lambda (symbol val)
+           (set-default symbol val)
+           (if (fboundp 'yas/init-yas-in-snippet-keymap)
+               (yas/init-yas-in-snippet-keymap))))
 
 (defcustom yas/skip-and-clear-key "C-d"
   "The key to clear the currently active field.
 
 Value is a string that is converted to the internal Emacs key
-representation using `read-kbd-macro'."
-  :type 'string
-  :group 'yasnippet)
+representation using `read-kbd-macro'.
+
+Can also be a list of strings."
+  :type '(choice (string :tag "String")
+                 (repeat :args (string) :tag "List of strings"))
+  :group 'yasnippet
+  :set #'(lambda (symbol val)
+           (set-default symbol val)
+           (if (fboundp 'yas/init-yas-in-snippet-keymap)
+               (yas/init-yas-in-snippet-keymap))))
 
 (defcustom yas/triggers-in-field nil
   "If non-nil, `yas/next-field-key' can trigger stacked expansions.
@@ -266,12 +308,13 @@ field"
 - nil or the symbol `return-nil' mean do nothing. (and
   `yas/expand-returns' nil)
 
-- An entry (apply COMMAND . ARGS) means interactively call
+- A lisp form (apply COMMAND . ARGS) means interactively call
   COMMAND, if ARGS is non-nil, call COMMAND non-interactively
   with ARGS as arguments."
-  :type '(choice (const :tag "Call previous command"  'call-other-command)
-                 (const :tag "Do nothing"    'return-nil))
+  :type '(choice (const :tag "Call previous command"  call-other-command)
+                 (const :tag "Do nothing"             return-nil))
   :group 'yasnippet)
+(make-variable-buffer-local 'yas/fallback-behavior)
 
 (defcustom yas/choose-keys-first nil
   "If non-nil, prompt for snippet key first, then for template.
@@ -369,14 +412,17 @@ This cafn only work when snippets are loaded from files."
     (dolist (key keys)
       (define-key keymap (read-kbd-macro key) definition))))
 
-(let ((map (make-sparse-keymap)))
-  (mapc #'(lambda (binding)
-            (yas/define-some-keys (car binding) map (cdr binding)))
-        `((,yas/next-field-key     . yas/next-field-or-maybe-expand)
-          (,yas/prev-field-key     . yas/prev-field)
-          ("C-g"                   . yas/abort-snippet)
-          (,yas/skip-and-clear-key . yas/skip-and-clear-or-delete-char)))
-  (setq yas/keymap map))
+(defun yas/init-yas-in-snippet-keymap ()
+  (let ((map (make-sparse-keymap)))
+    (mapc #'(lambda (binding)
+              (yas/define-some-keys (car binding) map (cdr binding)))
+          `((,yas/next-field-key     . yas/next-field-or-maybe-expand)
+            (,yas/prev-field-key     . yas/prev-field)
+            ("C-g"                   . yas/abort-snippet)
+            (,yas/skip-and-clear-key . yas/skip-and-clear-or-delete-char)))
+    (setq yas/keymap map)))
+
+(yas/init-yas-in-snippet-keymap)
 
 (defvar yas/key-syntaxes (list "w" "w_" "w_." "^ ")
   "A list of syntax of a key. This list is tried in the order
@@ -490,7 +536,7 @@ Here's an example:
   "A regexp to recognize a \"`lisp-expression`\" expression." )
 
 (defconst yas/transform-mirror-regexp
-  "${\\(?:\\([0-9]+\\):\\)?$\\(([^}]*\\)"
+  "${\\(?:\\([0-9]+\\):\\)?$\\([ \t\n]*([^}]*\\)"
   "A regexp to *almost* recognize a mirror with a transform.")
 
 (defconst yas/simple-mirror-regexp
@@ -635,17 +681,30 @@ Here's an example:
        :help "Display some information about YASsnippet"]))
   ;; Now for the stuff that has direct keybindings
   ;;
-  (when  (and yas/trigger-key
-              (stringp yas/trigger-key))
-    (define-key yas/minor-mode-map (read-kbd-macro yas/trigger-key) 'yas/expand))
+  (yas/trigger-key-reload)
   (define-key yas/minor-mode-map "\C-c&\C-s" 'yas/insert-snippet)
   (define-key yas/minor-mode-map "\C-c&\C-n" 'yas/new-snippet)
   (define-key yas/minor-mode-map "\C-c&\C-v" 'yas/visit-snippet-file)
   (define-key yas/minor-mode-map "\C-c&\C-f" 'yas/find-snippets))
 
-(progn
-  (yas/init-minor-keymap))
+(defun yas/trigger-key-reload (&optional unbind-key)
+  "Rebind `yas/expand' to the new value of `yas/trigger-key'.
 
+With optional UNBIND-KEY, try to unbind that key from
+`yas/minor-mode-map'."
+  (when (and unbind-key
+             (stringp unbind-key)
+             (not (string= unbind-key "")))
+    (define-key yas/minor-mode-map (read-kbd-macro unbind-key) nil)) 
+  (when  (and yas/trigger-key
+              (stringp yas/trigger-key)
+              (not (string= yas/trigger-key "")))
+    (define-key yas/minor-mode-map (read-kbd-macro yas/trigger-key) 'yas/expand)))
+
+;;; eval'ed on require/load
+(yas/init-minor-keymap)
+
+;;;###autoload
 (define-minor-mode yas/minor-mode
   "Toggle YASnippet mode.
 
@@ -665,14 +724,18 @@ Key bindings:
   " yas"
   :group 'yasnippet
   (when yas/minor-mode
-    ;; when turning on theminor mode, re-read the `yas/trigger-key'
-    ;; if a `yas/minor-mode-map' is already built. Else, call
-    ;; `yas/init-minor-keymap' to build it
-    (if (and (cdr yas/minor-mode-map)
-             yas/trigger-key
-             (stringp yas/trigger-key))
-        (define-key yas/minor-mode-map (read-kbd-macro yas/trigger-key) 'yas/expand)
-      (yas/init-minor-keymap))))
+    ;; when turning on the minor mode.
+    ;;
+    ;; re-read the `yas/trigger-key' if a `yas/minor-mode-map' is
+    ;; already built. Else, call `yas/init-minor-keymap' to build it
+    (unless (and (cdr yas/minor-mode-map)
+                 (yas/trigger-key-reload))
+      (yas/init-minor-keymap))
+    ;; load all snippets definitions unless we still don't have a
+    ;; root-directory or some snippets have already been loaded.
+    (unless (or (null yas/root-directory)
+                (> (hash-table-count yas/snippet-tables) 0))
+      (yas/reload-all))))
 
 (defvar yas/dont-activate nil
   "If non-nil don't let `yas/minor-mode-on' active yas for this buffer.
@@ -682,10 +745,15 @@ this effectively lets you define exceptions to the \"global\"
 behaviour.")
 (make-variable-buffer-local 'yas/dont-activate)
 
+
 (defun yas/minor-mode-on ()
-  "Turn on YASnippet minor mode."
+  "Turn on YASnippet minor mode.
+
+Do this unless `yas/dont-activate' is t or the function
+`yas/get-snippet-tables' (which see), returns an empty list."
   (interactive)
-  (unless yas/dont-activate
+  (unless (or yas/dont-activate
+              (null (yas/get-snippet-tables)))
     (yas/minor-mode 1)))
 
 (defun yas/minor-mode-off ()
@@ -694,7 +762,8 @@ behaviour.")
   (yas/minor-mode -1))
 
 (define-globalized-minor-mode yas/global-mode yas/minor-mode yas/minor-mode-on
-  :group 'yasnippet)
+  :group 'yasnippet
+  :require 'yasnippet)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Major mode stuff
@@ -743,11 +812,7 @@ behaviour.")
   (set-syntax-table (standard-syntax-table))
   (setq font-lock-defaults '(yas/font-lock-keywords))
   (set (make-local-variable 'require-final-newline) nil)
-  (use-local-map snippet-mode-map)
-  (unless (cdr snippet-mode-map)
-    (yas/init-major-keymap)))
-
-
+  (use-local-map snippet-mode-map))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Internal structs for template management
@@ -1020,10 +1085,15 @@ already have such a property."
 (defun yas/get-snippet-tables (&optional mode-symbol dont-search-parents)
   "Get snippet tables for current buffer.
 
-Return tables in this order: optional MODE-SYMBOL, then
+Return a list of 'yas/snippet-table' objects indexed by mode.
+
+The modes are tried in this order: optional MODE-SYMBOL, then
 `yas/mode-symbol', then `major-mode' then, unless
 DONT-SEARCH-PARENTS is non-nil, the guessed parent mode of either
-MODE-SYMBOL or `major-mode'."
+MODE-SYMBOL or `major-mode'.
+
+Guessing is done by looking up the MODE-SYMBOL's
+`derived-mode-parent' property, see also `derived-mode-p'."
   (let ((mode-tables
          (mapcar #'(lambda (mode)
                      (gethash mode yas/snippet-tables))
@@ -1390,7 +1460,7 @@ content of the file is the template."
     (when restore-global-mode
       (yas/global-mode 1))
 
-    (message "done.")))
+    (message "[yas] Reloading everything... Done.")))
 
 (defun yas/quote-string (string)
   "Escape and quote STRING.
@@ -1467,8 +1537,7 @@ Here's the default value for all the parameters:
       (insert ";;;;      Auto-generated code         ;;;;\n")
       (insert ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;\n")
       (insert "(defun yas/initialize-bundle ()\n"
-              "  \"Initialize YASnippet and load snippets in the bundle.\""
-              "  (yas/global-mode 1)\n")
+              "  \"Initialize YASnippet and load snippets in the bundle.\"")
       (flet ((yas/define-snippets
               (mode snippets &optional parent-or-parents)
               (insert ";;; snippets for " (symbol-name mode) "\n")
@@ -1498,7 +1567,9 @@ Here's the default value for all the parameters:
           (dolist (subdir (yas/subdirs dir))
             (yas/load-directory-1 subdir nil 'no-hierarchy-parents))))
 
+      (insert "  (yas/global-mode 1)\n")
       (insert ")\n\n" code "\n")
+      
       (insert "(provide '"
               (file-name-nondirectory
                (file-name-sans-extension
@@ -1639,20 +1710,22 @@ not need to be a real mode."
         ;; conflict!
         ;;
         (when keybinding
-          (if (lookup-key (symbol-value (first keybinding)) (second keybinding))
-              (message "[yas] warning: won't overwrite keybinding \"%s\" for snippet \"%s\" in `%s'"
-                       (key-description (second keybinding)) name (first keybinding))
-            (define-key
-              (symbol-value (first keybinding))
-              (second keybinding)
-              `(lambda (&optional yas/prefix)
-                 (interactive "P")
-                 (when (yas/template-can-expand-p ,(yas/template-condition template))
-                   (yas/expand-snippet ,(yas/template-content template)
-                                       nil
-                                       nil
-                                       ,(yas/template-expand-env template)))))
-            (add-to-list 'yas/active-keybindings keybinding)))
+	  (let ((lookup (lookup-key (symbol-value (first keybinding)) (second keybinding))))
+	    (if (and lookup
+		     (not (numberp lookup)))
+		(message "[yas] warning: won't overwrite keybinding \"%s\" for snippet \"%s\" in `%s'"
+			 (key-description (second keybinding)) name (first keybinding))
+	      (define-key
+		(symbol-value (first keybinding))
+		(second keybinding)
+		`(lambda (&optional yas/prefix)
+		   (interactive "P")
+		   (when (yas/template-can-expand-p ,(yas/template-condition template))
+		     (yas/expand-snippet ,(yas/template-content template)
+					 nil
+					 nil
+					 ,(yas/template-expand-env template)))))
+	      (add-to-list 'yas/active-keybindings keybinding))))
 
         ;; Setup the menu groups, reorganizing from group to group if
         ;; necessary
@@ -1779,12 +1852,17 @@ defined in `yas/fallback-behavior'"
              nil)
             ((eq yas/fallback-behavior 'call-other-command)
              (let* ((yas/minor-mode nil)
-                    (keys (or (this-command-keys-vector)
-                              (and yas/trigger-key
-                                   (stringp yas/trigger-key)
-                                   (read-kbd-macro yas/trigger-key))))
-                    (command (key-binding keys)))
-               (when (commandp command)
+                    (keys-1 (this-command-keys-vector))
+                    (keys-2 (and yas/trigger-key
+                                 (stringp yas/trigger-key)
+                                 (read-kbd-macro yas/trigger-key))) 
+                    (command-1 (and keys-1 (key-binding keys-1)))
+                    (command-2 (and keys-2 (key-binding keys-2)))
+                    (command (or (and (not (eq command-1 'yas/expand))
+                                      command-1)
+                                 command-2)))
+               (when (and (commandp command)
+                          (not (eq 'yas/expand command)))
                  (setq this-command command)
                  (call-interactively command))))
             ((and (listp yas/fallback-behavior)
@@ -2612,6 +2690,7 @@ Move the overlay, or create it if it does not exit."
           (make-overlay (yas/field-start field)
                         (yas/field-end field)
                         nil nil t))
+    (overlay-put yas/active-field-overlay 'priority 100)
     (overlay-put yas/active-field-overlay 'face 'yas/field-highlight-face)
     (overlay-put yas/active-field-overlay 'yas/snippet snippet)
     (overlay-put yas/active-field-overlay 'modification-hooks '(yas/on-field-overlay-modification))
@@ -2999,9 +3078,9 @@ Meant to be called in a narrowed buffer, does various passes"
     ;; Reset the yas/dollar-regions
     ;;
     (setq yas/dollar-regions nil)
-    ;; protect quote and backquote escapes
+    ;; protect escaped quote, backquotes and backslashes
     ;;
-    (yas/protect-escapes nil '(?` ?'))
+    (yas/protect-escapes nil '(?\\ ?` ?'))
     ;; replace all backquoted expressions
     ;;
     (goto-char parse-start)
