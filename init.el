@@ -49,13 +49,14 @@
 (load "python-mode.el")
 
 ;; Autoloads
-(autoload 'w3m-load "w3m" t)
-(autoload 'slime-selector "slime" t)
-(autoload 'google-define "google-define" nil t)
-(autoload 'twittering-mode "twittering-mode" nil t)
-(autoload 'rspec-mode "rspec-mode" nil t)
-(autoload 'sr-speedbar-toggle "sr-speedbar")
 (autoload 'bit-mode "bigram-input-translation" nil t)
+(autoload 'google-define "google-define" nil t)
+(autoload 'rspec-mode "rspec-mode" nil t)
+(autoload 'shuffle-lines "shuffle-lines" nil t)
+(autoload 'slime-selector "slime" t)
+(autoload 'sr-speedbar-toggle "sr-speedbar")
+(autoload 'twittering-mode "twittering-mode" nil t)
+(autoload 'w3m-load "w3m" t)
 
 (autoload 'clojure-mode "clojure-mode" nil t)
 (add-to-list 'auto-mode-alist '("\\.clj$" . clojure-mode))
@@ -95,6 +96,9 @@
 
 (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
 
+(autoload 'octave-mode "octave-mod" nil t)
+(add-to-list 'auto-mode-alist '("\\.m$" . octave-mode))
+
 (autoload 'ruby-mode "ruby-mode" "Ruby editing mode." t)
 (add-to-list 'auto-mode-alist '("\\.rb$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.rake$" . ruby-mode))
@@ -113,8 +117,7 @@
 (autoload 'mercury-mode "prolog" "Major mode for editing Mercury programs." t)
 
 (setq auto-mode-alist (append '(("\\.pl$" . prolog-mode)
-                                ("\\.dcg$" . prolog-mode)
-                                ("\\.m$" . mercury-mode))
+                                ("\\.dcg$" . prolog-mode))
                                auto-mode-alist))
 
 (add-to-list 'auto-mode-alist '("\.org$" . org-mode))
