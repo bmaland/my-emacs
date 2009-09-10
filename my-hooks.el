@@ -144,6 +144,16 @@
           '(lambda ()
              (set (make-local-variable 'scroll-margin) 0)))
 
+(add-hook 'octave-mode-hook
+          (lambda ()
+            (abbrev-mode 1)
+            (auto-fill-mode 1)
+            (define-key octave-mode-map "\C-m" 'octave-reindent-then-newline-and-indent)
+            (define-key octave-mode-map (kbd "C-c C-c") 'octave-send-defun)
+            (define-key octave-mode-map (kbd "C-c C-z") 'octave-show-process-buffer)
+            (if (eq window-system 'x)
+                (font-lock-mode 1))))
+
 (add-hook 'org-mode-hook
           (lambda ()
             (reftex-mode t)
