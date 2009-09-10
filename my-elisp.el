@@ -1,5 +1,34 @@
 ;;; my-elisp.el --- Various pieces of elisp created by myself and others
 
+;; taken from http://gandalf.uib.no/lingkurs/webroot/static/replace-utils.el
+(defun replace-strings (&rest patterns)
+  (while patterns
+    (goto-char (point-min))
+    (replace-string (first patterns) (second patterns))
+    (setf patterns (rest (rest patterns))))
+  (message "Strings replaced"))
+
+(defun replace-patterns (&rest patterns)
+  (while patterns
+    (goto-char (point-min))
+    (replace-regexp (first patterns) (second patterns))
+    (setf patterns (rest (rest patterns))))
+  (message "Patterns replaced"))
+
+(defun remove-strings (&rest patterns)
+  (while patterns
+    (goto-char (point-min))
+    (replace-string (first patterns) "")
+    (setq patterns (rest patterns)))
+  (message "Strings removed"))
+
+(defun remove-patterns (&rest patterns)
+  (while patterns
+    (goto-char (point-min))
+    (replace-regexp (first patterns) "")
+    (setq patterns (rest patterns)))
+  (message "Strings removed"))
+
 (defun my-insert-self ()
   "Insert self. at the beginning of the current expression."
   (interactive)
