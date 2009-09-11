@@ -62,7 +62,7 @@
       inhibit-default-init t
       visible-bell nil
       shift-select-mode nil
-      browse-url-browser-function 'browse-url-firefox
+      browse-url-browser-function 'browse-url-generic
       prolog-program-name "pl"
       vc-follow-symlinks nil
       tramp-default-method "ssh"
