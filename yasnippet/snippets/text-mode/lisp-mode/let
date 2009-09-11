@@ -1,0 +1,5 @@
+# -*- mode: yasnippet -*-
+#name : let
+# --
+(let (${1:variables})
+  ($0))

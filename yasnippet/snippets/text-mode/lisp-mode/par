@@ -1,0 +1,5 @@
+# -*- mode: yasnippet -*-
+#name : defparameter
+# --
+(defparameter *${1:name}* ${2:value}
+  "${3:Docstring}")
