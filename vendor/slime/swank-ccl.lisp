@@ -200,8 +200,8 @@
   (signal (make-condition
            'compiler-condition
            :original-condition condition
-           :message (format nil "~A" condition)
-           :short-message (compiler-warning-short-message condition)
+           :message (compiler-warning-short-message condition)
+           :source-context nil
            :severity (compiler-warning-severity condition)
            :location (source-note-to-source-location 
                       (ccl:compiler-warning-source-note condition)
@@ -383,23 +383,6 @@
   (setq ccl:*break-hook* function)
   (setq ccl:*select-interactive-process-hook* 'find-repl-thread)
   )
-
-(let ((ccl::*warn-if-redefine-kernel* nil))
-  ;; Everybody (error, cerror, break, invoke-debugger, and async interrupts) ends up
-  ;; in CCL::BREAK-LOOP, which implements the default debugger. Regardless of how it
-  ;; was entered, make sure it runs with the swank connection state established so
-  ;; that i/o happens via emacs and there is no contention for the terminal (stdin).
-  (ccl:advise
-   ccl::break-loop
-   (if (symbol-value (swank-sym *emacs-connection*))
-     (:do-it)
-     (let ((conn (funcall (swank-sym default-connection))))
-       (if conn
-         (funcall (swank-sym call-with-connection) conn
-                  (lambda () (:do-it)))
-         (:do-it))))
-   :when :around
-   :name swank-default-debugger-context))
 
 (defun map-backtrace (function &optional
                                (start-frame-number 0)
@@ -617,7 +600,9 @@
        (lambda () "No source note available")))))
 
 (defun definition-name (type object)
-  (list (ccl:definition-type-name type) (ccl:name-of object)))
+  (case (ccl:definition-type-name type)
+    (method (ccl:name-of object))
+    (t (list (ccl:definition-type-name type) (ccl:name-of object)))))
 
 ;;; Utilities
 

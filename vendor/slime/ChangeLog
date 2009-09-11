@@ -1,3 +1,248 @@
+2009-09-08  Helmut Eller  <heller@common-lisp.net>
+
+	* swank-loader.lisp (lisp-version-string): Include "-ics" for
+	version with extended charsets.  Suggested by Scott L. Burson.
+
+2009-09-03  Helmut Eller  <heller@common-lisp.net>
+
+	* slime.el (slime-net-close): set-process-query-on-exit-flag
+	doesn't exist in XEmacs.
+	(slime-make-net-buffer): For now, disable querying here.
+	Could also close the socket before killing the buffer.
+	(slime-buffer-processes): Deleted.
+
+2009-09-02  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-lispworks.lisp (replace-strings-with-symbols): New function for
+	recursively interning and replacing strings in a list.
+	(arglist): Replace all strings in arglists with symbols.
+
+	* slime.el (slime-net-close): Do not query for process killing
+	confirmation before killing a connection buffer.
+	(slime-buffer-processes): New function for listing processes
+	associated with a buffer.
+
+2009-08-31  Helmut Eller  <heller@common-lisp.net>
+
+	Don't advice ccl::break-loop.
+	Should not be necessary as we can now use ccl:*break-hook*.
+
+	* swank-ccl.lisp ([advice] ccl::break-loop): Deleted.
+
+2009-08-31  Helmut Eller  <heller@common-lisp.net>
+
+	Keep note overlays in a global variable.
+	That's simpler and cheaper than scanning all buffers.
+
+	* slime.el (slime-note-overlays): New variable.
+	(slime-make-note-overlay, slime-remove-old-overlays): Use it.
+
+2009-08-27  Stas Boukarev  <stassats@gmail.com>
+
+	* slime.el (slime-remove-old-overlays): delete notes at the very beginning
+	of the buffer too. Thanks to Nick Levine.
+
+2009-08-22  Helmut Eller  <heller@common-lisp.net>
+
+	Speed up symbol completion.
+
+	* swank.lisp (all-completions): Don't call unparse-symbol
+	while matching.  That gets very slow in CCL's CCL package.
+	Just use symbol-name and compare with char-equal.
+	(prefix-match-p): Use char-equal.
+
+2009-08-21  Helmut Eller  <heller@common-lisp.net>
+
+	* slime.el (slime-transcript-start-hook)
+	(slime-transcript-stop-hook): New hooks.
+	(slime-eval-with-transcript): Use them.
+	(slime-eval-with-transcript-cont): Deleted.
+
+2009-08-19  Mark Evenson  <evenson@panix.com>
+
+	* swank-abcl.lisp: Accommodate the new Java/Lisp stack frame
+	abstraction in the upcoming abcl-0.16. (based on code from Tobias
+	Rittweiler).
+
+2009-08-18  Mark Evenson  <evenson@panix.com>
+
+	Add multithreading code for abcl-0.16. (Tobias Rittweiler)
+
+	* swank-abcl.lisp: A multithread implementation taking advantage
+	of the new synchronization primitives in abcl-0.16.
+
+	Restore working with abcl-0.15.
+
+	* swank-abcl.lisp: Remove the warm initialization code for
+	SWANK:COMPILER-CONDITION, as it is no longer needed for the
+	current release of ABCL.
+
+2009-08-16  StanisBaw Halik <sthalik@test123.ltd.pl>
+
+	* swank.lisp (init-global-stream-redirection): Continue even if
+	streams are already redirected.  Useful for restarting Swank with
+	M-x slime when a REPL is already present.  Will most likeley
+	mess up the input stream in multi threaded setups, tho.
+
+2009-08-15  Helmut Eller  <heller@common-lisp.net>
+
+	XEmacs fixes.
+
+	* slime.el (slime-editing-keys): Use (kbd "C-M-.") because XEmacs
+	translates [?\C-\M-.] to C-M-n.
+	(next-single-char-property-change)
+	(previous-single-char-property-change): Use
+	next-single-property-change because next-char-property-change gets
+	embarrisingly slow in XEmacs in font-locked buffers.
+	It never felt that slow in Emacs 20 though.
+
+2009-08-15  Helmut Eller  <heller@common-lisp.net>
+
+	* swank-ccl.lisp (definition-name): Special case methods.
+
+	* slime.el (slime-choose-overlay-region): Don't return zero length
+	regions for :eof.
+	(slime-show-buffer-position): The second argument to
+	display-buffer means something completely different in
+	XEmacs. Don't use it.
+	(slime-severity-face): Handle :redefinition.
+	(slime-temporarily-highlight-note): Use a timer instead of the
+	post-command-hook.
+
+2009-08-13  Stas Boukarev  <stassats@gmail.com>
+
+	* slime.el (slime-auto-select-connection, slime-auto-connect):
+	Turn them into customizable variables.
+
+2009-08-11  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* swank-sbcl.lisp (swank-compile-string): Make sure that it
+	returns NIL on compilation failure.
+
+2009-08-10  Helmut Eller  <heller@common-lisp.net>
+
+	* slime.el (slime-insert-note-group): Factored out from
+	slime-insert-compilation-log.
+	(slime-goto-location-position): Can't use goto-line.
+
+2009-08-10  Helmut Eller  <heller@common-lisp.net>
+	Separate context info from compiler message text.
+
+	* swank-backend.lisp (compiler-condition): Add a new slot
+	:source-context.  Remove :short-message.
+	* swank-cmucl.lisp, swank-sbcl.lisp, swank-scl.lisp,
+	swank-openmcl.lisp, swank-ccl.lisp: Update callers.
+	* swank.lisp (make-compiler-note): Use source-context slot.
+	* slime.el (slime-note.source-context): New.
+	(slime-insert-compilation-log): Use it.
+	(slime-note.short-message): Deleted.
+
+2009-08-10  Helmut Eller  <heller@common-lisp.net>
+
+	Don't add linebreaks for one-line messages.
+
+	(slime-insert-block): New function.
+	(slime-insert-compilation-log): Use it.
+	(slime-indent-rigidly): Use insert-before-markers, otherwise point
+	ends up at before a bunch of inserted spaces.
+
+2009-08-10  Helmut Eller  <heller@common-lisp.net>
+
+	Various compilation related changes.
+
+	* slime.el (slime-show-note-counts): Don't show 0 values.
+	(slime-severity<): New function.
+	(slime-maybe-show-compilation-log): Always create the log buffer
+	but display it only if the compilation failed.
+	(slime-insert-compilation-log): Disable the stupidly inefficient
+	font-lock-after-change-function.
+	(slime-canonicalized-location-to-string): Use relative filenames.
+	(slime-goto-location-buffer): Disable warnings about symlinks.
+
+2009-08-09  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	Make C-x ` work again.
+
+	M-n and C-x ` are now very similiar; but the former operates
+	relative to point in the source buffer, while the latter works
+	relative to the compilation log.
+
+	* slime.el (slime-insert-compilation-log): No do set
+	`compilation-skip-to-next-location'.
+
+2009-08-09  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	M-n/M-p in .lisp buffers do not show the note in the minibuffer
+	anymore if a compilation log is displayed to the user.
+
+	In the compilation log, sort and group the notes by line/column
+	number.
+
+	* slime.el (slime-insert-compilation-log): Sort the notes by their
+	line/column numbers; group notes of same location and display them
+	as one entry.
+	(slime-compilation-loc): Removed.
+	(slime-canonicalized-location),
+	(slime-canonicalized-location-to-string): Extracted from
+	`slime-compilation-loc'.
+	(slime-group-and-sort-notes): Does the sorting/grouping.
+	(slime-show-note): Do not show note in minibuffer if compilation
+	log is displayed to the user.
+
+2009-08-09  Stas Boukarev  <stassats@gmail.com>
+
+	* swank.asd (asdf:perform): don't call `swank-loader:init' with
+	:setup nil, because it doesn't get contribs compiled, and some other
+	configuration steps are omitted.
+
+	* slime.el (slime-profile-by-substring): new function for profiling
+	functions by matching a substring.
+
+	* swank.lisp (profile-by-substring): ditto.
+
+2009-08-08  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	M-n / M-p in a .lisp buffer now also jump to the respective note
+	in the compilation-log buffer if one is currently displayed to the
+	user.
+
+	* slime.el (slime-remove-old-overlays): Simplified.
+	(slime-insert-compilation-log): Add a note-overlay for each note
+	so we can find the right one when user uses M-n/M-p in .lisp
+	buffer.
+	(slime-goto-note-in-compilation-log): New.
+	(slime-make-note-overlay): Extracted from
+	`slime-create-note-overlay'.
+	(slime-next-note, slime-previous-note): Simplified.
+	(slime-show-note): Goto note in compilation-log if available.
+	(slime-note-overlay-p): Call overlay property `slime-note', not
+	just `slime'.
+	(slime-find-note): Likewise; also returns the overlay if found.
+	(slime-show-buffer-position): Optionally recenter position to the
+	top of the window.
+
+2009-08-04  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-sbcl.lisp (signal-compiler-condition): read
+	sb-kernel:redefinition-warning only if it exists.
+	Some older SBCLs don't have it (particularly included in the
+	stable Debian).
+
+2009-08-02  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* swank-backend.lisp (severity [type]): Allow :redefinition.
+
+	* swank-sbcl.lisp (signal-compiler-condition): Tag redefinitions.
+
+	* slime.el (slime-maybe-show-compilation-log): Do not show
+	compilation log if each note describes just a redefinition.
+	(slime-insert-compilation-log): Insert notes indented by 2
+	spaces. Insert some more newlines so the buffer appears more
+	structured.
+	(slime-show-note-counts): Add :redefinition to ecase.
+	(slime-redefinition-note-p): New.
+	(slime-severity-label): Was unused. Adapted to be usable.
+
 2009-07-30  Stas Boukarev  <stassats@gmail.com>
 
 	* doc/slime.texi (Setting up pathname translations): add that it is

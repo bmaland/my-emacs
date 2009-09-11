@@ -16,7 +16,12 @@
 
 (defun sys::break (&optional (format-control "BREAK called") 
                    &rest format-arguments)
-  (let ((*saved-backtrace* (backtrace-as-list-ignoring-swank-calls)))
+  (let ((*saved-backtrace* 
+         #+#.(swank-backend::with-symbol 'backtrace 'sys) 
+         (sys:backtrace)
+         #-#.(swank-backend::with-symbol 'backtrace 'sys)
+         (ext:backtrace-as-list)
+         ))
     (with-simple-restart (continue "Return from BREAK.")
       (invoke-debugger
        (sys::%make-condition 'simple-condition
@@ -119,7 +124,11 @@
 
 
 (defimplementation preferred-communication-style ()
-  nil)
+#+#.(cl:if (cl:find-package :threads) '(:and) '(:or))
+  :spawn
+#-#.(cl:if (cl:find-package :threads) '(:and) '(:or))
+  nil
+)
 
 (defimplementation create-socket (host port)
   (ext:make-server-socket port))
@@ -256,26 +265,45 @@
 
 (defvar *sldb-topframe*)
 
-(defun backtrace-as-list-ignoring-swank-calls ()
-  (let ((list (ext:backtrace-as-list)))
-    (subseq list (1+ (or (position (intern "SWANK-DEBUGGER-HOOK" 'swank) list :key 'car) -1)))))
-
 (defimplementation call-with-debugging-environment (debugger-loop-fn)
-  (let ((*sldb-topframe* (car (backtrace-as-list-ignoring-swank-calls)) #+nil (excl::int-newest-frame)))
+  (let* ((magic-token (intern "SWANK-DEBUGGER-HOOK" 'swank))
+         (*sldb-topframe* 
+          #+#.(swank-backend::with-symbol 'backtrace 'sys)
+          (second (member magic-token (sys:backtrace)
+                          :key #'(lambda (frame) 
+                                   (first (sys:frame-to-list frame)))))
+          #-#.(swank-backend::with-symbol 'backtrace 'sys)
+          (second (member magic-token (ext:backtrace-as-list)
+                          :key #'(lambda (frame) 
+                                   (first frame))))
+          ))
     (funcall debugger-loop-fn)))
 
+(defun backtrace (start end)
+  "A backtrace without initial SWANK frames."
+  (let ((backtrace 
+         #+#.(swank-backend::with-symbol 'backtrace 'sys)
+         (sys:backtrace)
+         #-#.(swank-backend::with-symbol 'backtrace 'sys)
+         (ext:backtrace-as-list)
+         ))
+    (subseq (or (member *sldb-topframe* backtrace) backtrace)
+            start end)))
+
 (defun nth-frame (index)
-  (nth index (backtrace-as-list-ignoring-swank-calls)))
+  (nth index (backtrace 0 nil)))
 
 (defimplementation compute-backtrace (start end)
   (let ((end (or end most-positive-fixnum)))
-    (loop for f in (subseq (backtrace-as-list-ignoring-swank-calls) start end)
-          collect f)))
+    (backtrace start end)))
 
 (defimplementation print-frame (frame stream)
-  (write-string (string-trim '(#\space #\newline)
-                             (prin1-to-string frame))
-                stream))
+  (write-string 
+   #+#.(swank-backend::with-symbol 'backtrace 'sys)
+   (sys:frame-to-string frame)
+   #-#.(swank-backend::with-symbol 'backtrace 'sys)
+   (string-trim '(#\space #\newline) (prin1-to-string frame))
+   stream))
 
 (defimplementation frame-locals (index)
   `(,(list :name "??" :id 0 :value "??")))
@@ -483,95 +511,97 @@ part of *sysdep-pathnames* in swank.loader.lisp.
 
 ;;;; Multithreading
 
-(defimplementation startup-multiprocessing ()
-  #+nil(mp:start-scheduler))
+#+#.(cl:if (cl:find-package :threads) '(:and) '(:or))
+(progn
+  (defimplementation spawn (fn &key name)
+    (threads:make-thread (lambda () (funcall fn)) :name name))
 
-(defimplementation spawn (fn &key name)
-  (ext:make-thread (lambda () (funcall fn)) :name name))
+  (defvar *thread-plists* (make-hash-table) ; should be a weak table
+    "A hashtable mapping threads to a plist.")
 
-(defvar *thread-props-lock* (ext:make-thread-lock))
+  (defvar *thread-id-counter* 0)
 
-(defvar *thread-props* (make-hash-table) ; should be a weak table
-  "A hashtable mapping threads to a plist.")
-
-(defvar *thread-id-counter* 0)
-
-(defimplementation thread-id (thread)
-  (ext:with-thread-lock (*thread-props-lock*)
-    (or (getf (gethash thread *thread-props*) 'id)
-        (setf (getf (gethash thread *thread-props*) 'id)
+  (defimplementation thread-id (thread)
+    (threads:synchronized-on *thread-plists*
+      (or (getf (gethash thread *thread-plists*) 'id)
+          (setf (getf (gethash thread *thread-plists*) 'id)
               (incf *thread-id-counter*)))))
 
-(defimplementation find-thread (id)
-  (find id (all-threads) 
+  (defimplementation find-thread (id)
+    (find id (all-threads) 
         :key (lambda (thread)
-                (getf (gethash thread *thread-props*) 'id))))
+                (getf (gethash thread *thread-plists*) 'id))))
 
-(defimplementation thread-name (thread)
-  (ext:thread-name thread))
+  (defimplementation thread-name (thread)
+    (threads:thread-name thread))
 
-(defimplementation thread-status (thread)
-  (format nil "Thread is ~:[dead~;alive~]" (ext:thread-alive-p thread)))
+  (defimplementation thread-status (thread)
+    (format nil "Thread is ~:[dead~;alive~]" (threads:thread-alive-p thread)))
 
-(defimplementation make-lock (&key name)
-  (ext:make-thread-lock))
+  ;; XXX should be a weak hash table
+  (defparameter *thread-description-map* (make-hash-table)) 
 
-(defimplementation call-with-lock-held (lock function)
-  (ext:with-thread-lock (lock) (funcall function)))
+  (defimplementation thread-description (thread) 
+    (synchronized-on *thread-description-map*
+      (or (gethash thread *thread-description-map*)
+          "No description available.")))
 
-(defimplementation current-thread ()
-  (ext:current-thread))
+  (defimplementation set-thread-description (thread description) 
+    (synchronized-on *thread-description-map*
+      (setf (gethash thread *thread-description-map*) description)))
 
-(defimplementation all-threads ()
-  (copy-list (ext:mapcar-threads #'identity)))
+  (defimplementation make-lock (&key name)
+    (declare (ignore name))
+    (threads:make-thread-lock))
 
-(defimplementation interrupt-thread (thread fn)
-  (ext:interrupt-thread thread fn))
+  (defimplementation call-with-lock-held (lock function)
+    (threads:with-thread-lock (lock) (funcall function)))
 
-(defimplementation kill-thread (thread)
-  (ext:destroy-thread thread))
+  (defimplementation current-thread ()
+    (threads:current-thread))
 
-(defstruct mailbox 
-  (mutex (ext:make-mutex))
-  (queue '()))
+  (defimplementation all-threads ()
+    (copy-list (threads:mapcar-threads #'identity)))
 
-(defun mailbox (thread)
-  "Return THREAD's mailbox."
-  (ext:with-thread-lock (*thread-props-lock*)
-    (or (getf (gethash thread *thread-props*) 'mailbox)
-        (setf (getf (gethash thread *thread-props*) 'mailbox)
-              (make-mailbox)))))
+  (defimplementation thread-alive-p (thread)
+    (member thread (all-threads)))
 
-(defimplementation send (thread object)
-  (let ((mbox (mailbox thread)))
-    (ext:with-mutex ((mailbox-mutex mbox))
-      (setf (mailbox-queue mbox) 
-            (nconc (mailbox-queue mbox) (list message))))))
+  (defimplementation interrupt-thread (thread fn)
+    (threads:interrupt-thread thread fn)) 
 
-#+(or)
-(defimplementation receive-if (thread &optional timeout)
-  (let* ((mbox (mailbox (current-thread))))
-    (assert (or (not timeout) (eq timeout t)))
-    (loop
-     (check-slime-interrupts)
-     (ext:with-mutex ((mailbox-mutex mbox))
-       (let* ((q (mailbox-queue mbox))
-              (tail (member-if test q)))
-         (when tail 
-           (setf (mailbox-queue mbox) (nconc (ldiff q tail) (cdr tail)))
-           (return (car tail))))
-       (when (eq timeout t) (return (values nil t)))
-       ;;(java:jcall (java:jmethod "java.lang.Object" "wait") 
-       ;;            (mailbox-mutex mbox) 1000)
-       ))))
+  (defimplementation kill-thread (thread)
+    (threads:destroy-thread thread))
+
+  (defstruct mailbox 
+    (queue '()))
+
+  (defun mailbox (thread)
+    "Return THREAD's mailbox."
+    (threads:synchronized-on *thread-plists*
+      (or (getf (gethash thread *thread-plists*) 'mailbox)
+          (setf (getf (gethash thread *thread-plists*) 'mailbox)
+                (make-mailbox)))))
+
+  (defimplementation send (thread message)
+    (let ((mbox (mailbox thread)))
+      (threads:synchronized-on mbox
+        (setf (mailbox-queue mbox) 
+              (nconc (mailbox-queue mbox) (list message)))
+        (threads:object-notify-all mbox))))
+
+  (defimplementation receive-if (test &optional timeout)
+    (let* ((mbox (mailbox (current-thread))))
+      (assert (or (not timeout) (eq timeout t)))
+      (loop
+       (check-slime-interrupts)
+       (threads:synchronized-on mbox
+         (let* ((q (mailbox-queue mbox))
+                (tail (member-if test q)))
+           (when tail 
+             (setf (mailbox-queue mbox) (nconc (ldiff q tail) (cdr tail)))
+               (return (car tail)))
+         (when (eq timeout t) (return (values nil t)))
+         (threads:object-wait mbox 0.3)))))))
 
 (defimplementation quit-lisp ()
   (ext:exit))
-
-;; WORKAROUND: call/initialize accessors at load time
-(let ((c (make-condition 'compiler-condition 
-                          :original-condition nil
-                          :severity ':note :message "" :location nil))
-       (slots `(severity message short-message references location)))
-   (dolist (slot slots)
-     (funcall slot c)))

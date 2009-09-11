@@ -12,7 +12,7 @@
 @set EDITION 3.0-alpha
 @set SLIMEVER 3.0-alpha
 @c @set UPDATED @today{}
-@set UPDATED @code{$Date: 2009-07-30 23:27:05 $}
+@set UPDATED @code{$Date: 2009-08-27 14:48:46 $}
 @set TITLE SLIME User Manual
 @settitle @value{TITLE}, version @value{EDITION}
 
@@ -293,7 +293,7 @@ This chapter tells you how to get @SLIME{} up and running.
 
 @SLIME{} supports a wide range of operating systems and Lisp
 implementations. @SLIME{} runs on Unix systems, Mac OSX, and Microsoft
-Windows. GNU Emacs versions 21, 22, and 22 and XEmacs version 21 are
+Windows. GNU Emacs versions 21, 22, and 23 and XEmacs version 21 are
 supported.
 
 The supported Lisp implementations, roughly ordered from the
@@ -1252,6 +1252,8 @@ output buffer.
 Toggle profiling of a function.
 @cmditem{slime-profile-package}
 Profile all functions in a package.
+@cmditem{slime-profile-by-substring}
+Profile all functions which names contain a substring.
 @cmditem{slime-unprofile-all}
 Unprofile all functions.
 @cmditem{slime-profile-report}

@@ -1489,11 +1489,13 @@ dynamic binding."
 
 (defun init-global-stream-redirection ()
   (when *globally-redirect-io*
-    (assert (not *saved-global-streams*) () "Streams already redirected.")
-    (mapc #'setup-stream-indirection
-          (append *standard-output-streams*
-                  *standard-input-streams*
-                  *standard-io-streams*))))
+    (cond (*saved-global-streams*
+           (warn "Streams already redirected."))
+          (t
+           (mapc #'setup-stream-indirection
+                 (append *standard-output-streams*
+                         *standard-input-streams*
+                         *standard-io-streams*))))))
 
 (add-hook *after-init-hook* 'init-global-stream-redirection)
 
@@ -2765,8 +2767,8 @@ The time is measured in seconds."
          :severity (severity condition)
          :location (location condition)
          :references (references condition)
-         (let ((s (short-message condition)))
-           (if s (list :short-message s)))))
+         (let ((s (source-context condition)))
+           (if s (list :source-context s)))))
 
 (defun collect-notes (function)
   (let ((notes '()))
@@ -2945,19 +2947,19 @@ the filename of the module (or nil if the file doesn't exist).")
 
 ;;;; Simple completion
 
-(defslimefun simple-completions (string package)
-  "Return a list of completions for the string STRING."
-  (let ((strings (all-completions string package #'prefix-match-p)))
+(defslimefun simple-completions (prefix package)
+  "Return a list of completions for the string PREFIX."
+  (let ((strings (all-completions prefix package)))
     (list strings (longest-common-prefix strings))))
 
-(defun all-completions (string package test)
-  (multiple-value-bind (name pname intern) (tokenize-symbol string)
+(defun all-completions (prefix package)
+  (multiple-value-bind (name pname intern) (tokenize-symbol prefix)
     (let* ((extern (and pname (not intern)))
-	   (pack (cond ((equal pname "") keyword-package)
-		       ((not pname) (guess-buffer-package package))
-		       (t (guess-package pname))))
-	   (test (lambda (sym) (funcall test name (unparse-symbol sym))))
-	   (syms (and pack (matching-symbols pack extern test))))
+	   (pkg (cond ((equal pname "") keyword-package)
+                      ((not pname) (guess-buffer-package package))
+                      (t (guess-package pname))))
+	   (test (lambda (sym) (prefix-match-p name (symbol-name sym))))
+	   (syms (and pkg (matching-symbols pkg extern test))))
       (format-completion-set (mapcar #'unparse-symbol syms) intern pname))))
 
 (defun matching-symbols (package external test)
@@ -2980,7 +2982,8 @@ the filename of the module (or nil if the file doesn't exist).")
 
 (defun prefix-match-p (prefix string)
   "Return true if PREFIX is a prefix of STRING."
-  (not (mismatch prefix string :end2 (min (length string) (length prefix)))))
+  (not (mismatch prefix string :end2 (min (length string) (length prefix))
+                 :test #'char-equal)))
 
 (defun longest-common-prefix (strings)
   "Return the longest string that is a common prefix of STRINGS."
@@ -3185,6 +3188,24 @@ Include the nicknames if NICKNAMES is true."
 	  (t
            (profile fname)
 	   (format nil "~S is now profiled." fname)))))
+
+(defslimefun profile-by-substring (substring package)
+  (let ((count 0))
+    (flet ((maybe-profile (symbol)
+             (when (and (fboundp symbol)
+                        (not (profiledp symbol))
+                        (search substring (symbol-name symbol) :test #'equalp))
+               (handler-case (progn
+                               (profile symbol)
+                               (incf count))
+                 (error (condition)
+                   (warn "~a" condition))))))
+      (if package
+          (do-symbols (symbol (parse-package package))
+            (maybe-profile symbol))
+          (do-all-symbols (symbol)
+            (maybe-profile symbol))))
+    (format nil "~a function~:p ~:*~[are~;is~:;are~] now profiled" count)))
 
 
 ;;;; Source Locations
