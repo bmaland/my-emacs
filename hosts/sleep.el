@@ -1,12 +1,15 @@
 ;; Clojure
 (setq swank-clojure-jar-path "/home/bjorn/java/clojure.jar")
-(setq swank-clojure-extra-classpaths '("/home/bjorn/java"))
+
+(setq swank-clojure-extra-classpaths '())
+(add-to-list 'swank-clojure-extra-classpaths "/home/bjorn/java/clojure.jar")
+(add-to-list 'swank-clojure-extra-classpaths "/home/bjorn/java/clojure-contrib.jar")
+
 ;; yasnippet dev
 (setq snippet-dir "~/src/snippets")
 (yas/load-directory snippet-dir)
 ;; etc
 (setq browse-url-generic-program "chromium-browser")
-
 
 ;; Imaxima
 (push "/home/bjorn/src/imaxima-imath-1.0" load-path)
