@@ -46,7 +46,7 @@
 (package-initialize)
 
 ;; I had to do this to use python-mode.el over python.el
-(load "python-mode.el")
+(load "vendor/python-mode.el")
 
 ;; Autoloads
 (autoload 'bit-mode "bigram-input-translation" nil t)
@@ -98,6 +98,8 @@
 
 (autoload 'octave-mode "octave-mod" nil t)
 (add-to-list 'auto-mode-alist '("\\.m$" . octave-mode))
+
+(setq auto-mode-alist (cons '("\\.py$" . python-mode) auto-mode-alist))
 
 (autoload 'ruby-mode "ruby-mode" "Ruby editing mode." t)
 (add-to-list 'auto-mode-alist '("\\.rb$" . ruby-mode))
