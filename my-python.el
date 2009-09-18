@@ -71,6 +71,12 @@
                               'flymake-display-err-menu-for-current-line)
                (flymake-mode t))))
 
+(defun my-py-indent-def-or-class ()
+  "Docstring"
+  (interactive)
+  (py-mark-def-or-class)
+  (py-indent-region))
+
 ;; NOTE Not sure if I really need this, py-complete works well enough I think.
 ;; Should be improved with completion etc
 (defun my-python-documentation (w)
@@ -87,12 +93,6 @@
              input)))) ;sinon input
   (shell-command (concat py-python-command " -c \"from pydoc import help;help(\'" w "\')\"") "*PYDOCS*")
   (view-buffer-other-window "*PYDOCS*" t 'kill-buffer-and-window))
-
-(defun py-next-block ()
-  "go to the next block.  Cf. `forward-sexp' for lisp-mode"
-  (interactive)
-  (py-mark-block nil 't)
-  (back-to-indentation))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -151,6 +151,7 @@
             (auto-complete-mode 1)
             (define-key ac-complete-mode-map "\C-n" 'ac-next)
             (define-key ac-complete-mode-map "\C-p" 'ac-previous)
+            (local-set-key "\M-\C-q" 'my-py-indent-def-or-class)
 
             (set (make-local-variable 'ac-sources)
                  (append ac-sources '(ac-source-rope) '(ac-source-yasnippet)))
