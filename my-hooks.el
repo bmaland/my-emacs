@@ -43,6 +43,7 @@
              (lisp-hook)
              (eldoc-mode t)
              (make-local-variable 'after-save-hook)
+             (local-set-key "\C-c\C-c" 'eval-last-sexp)
              (add-hook
               'after-save-hook
               ;; If you're saving an elisp file, likely the .elc
