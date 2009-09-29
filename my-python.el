@@ -3,7 +3,7 @@
 ;;
 ;; For flymake, pylint must be installed and the epylint wrapper must be
 ;; somewhere in PATH. On Arch Linux, epylint is included in the pylint
-;; package.
+;; package. pylint can be installed with easy_install.
 ;;
 ;; Also, ropemacs:
 ;; http://www.enigmacurry.com/2009/01/21/autocompleteel-python-code-completion-in-emacs/
