@@ -77,6 +77,15 @@
   (py-mark-def-or-class)
   (py-indent-region))
 
+(defun my-insert-self ()
+  "Insert self. at the beginning of the current expression."
+  (interactive)
+  (save-excursion
+    (search-backward-regexp "[ \n\t,(-]\\|^")
+    (if (not (looking-at "^"))
+        (forward-char))
+    (insert "self.")))
+
 ;; NOTE Not sure if I really need this, py-complete works well enough I think.
 ;; Should be improved with completion etc
 (defun my-python-documentation (w)
@@ -152,6 +161,7 @@
             (define-key ac-complete-mode-map "\C-n" 'ac-next)
             (define-key ac-complete-mode-map "\C-p" 'ac-previous)
             (local-set-key "\M-\C-q" 'my-py-indent-def-or-class)
+            (local-set-key "\C-x s" 'my-insert-self)
 
             (set (make-local-variable 'ac-sources)
                  (append ac-sources '(ac-source-rope) '(ac-source-yasnippet)))
