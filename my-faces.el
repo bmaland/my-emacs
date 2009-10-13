@@ -36,7 +36,8 @@
                             sh-mode
                             scheme-mode
                             js2-mode
-                            sml-mode))
+                            sml-mode
+                            ess-mode))
 
 ;; Highlight keywords for programming modes
 (mapcar (lambda (mode)
