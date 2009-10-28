@@ -12,7 +12,11 @@
   (defvar swank-clojure-path
     (let ((path (file-truename (or (locate-library "swank-clojure")
                                    load-file-name))))
-      (and path (file-name-directory path)))
+      (and path (file-name-directory ; go back two directories
+                 (directory-file-name
+                  (file-name-directory
+                   (directory-file-name
+                    (file-name-directory path)))))))
     "Directory containing the swank-clojure package. This is used
 to load the supporting clojure library swank."))
 
@@ -86,7 +90,7 @@ swank-clojure-java-path) if non-nil."
    (when (boundp 'slime-protocol-version)
      (format "(swank.swank/ignore-protocol-version %S)\n\n" slime-protocol-version))
    (format "(swank.swank/start-server %S :encoding %S)\n\n"
-           file (format "%s" encoding))))
+           (expand-file-name file) (format "%s" (slime-coding-system-cl-name encoding)))))
 
 (defun swank-clojure-find-package ()
   (let ((regexp "^(\\(clojure.core/\\)?\\(in-\\)?ns\\s-+[:']?\\([^()\" \t\n]+\\>\\)"))
@@ -127,7 +131,7 @@ will be used over paths too.)"
          "-classpath"
          (swank-clojure-concat-paths
           (append (list swank-clojure-jar-path
-                        swank-clojure-path)
+                        (concat swank-clojure-path "src/main/clojure/"))
                   swank-clojure-extra-classpaths))
          "clojure.main")
         (let ((init-opts '()))
