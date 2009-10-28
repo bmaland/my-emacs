@@ -814,7 +814,7 @@ connections, otherwise it will be closed after the first."
                                (cat "Swank " (princ-to-string port))))
                (list-threads))))
          (when thread-position
-           (kill-nth-thread thread-position)
+           (kill-nth-thread (1- thread-position))
            (close-socket socket)
            (remf *listener-sockets* port))))
       ((:fd-handler :sigio)
@@ -1593,8 +1593,6 @@ NIL if streams are not globally redirected.")
 
 ;;; Channels
 
-(progn
-
 (defvar *channels* '())
 (defvar *channel-counter* 0)
 
@@ -1705,30 +1703,7 @@ NIL if streams are not globally redirected.")
            (unless ok
              (send-to-remote-channel remote `(:read-aborted ,tag)))))))))
 
-)
-
-(defun call-with-thread-description (description thunk)
-  ;; For `M-x slime-list-threads': Display what threads
-  ;; created by swank are currently doing.
-  (flet ((request-to-string (req)
-           (remove #\Newline
-                   (string-trim '(#\Space #\Tab)
-                                (prin1-to-string req))))
-         (truncate-string (str n)
-           (format nil "~A..." (subseq str 0 (min (length str) n)))))
-    (let* ((thread (current-thread))
-           (old-description (thread-description thread)))
-      (set-thread-description thread 
-                              (truncate-string (request-to-string description)
-                                               55))
-      (unwind-protect (funcall thunk)
-        (set-thread-description thread old-description)))))
-
-
-
-
-(defmacro with-thread-description (description &body body)
-  `(call-with-thread-description ,description #'(lambda () ,@body)))
+
 
 (defun decode-message (stream)
   "Read an S-expression from STREAM using the SLIME protocol."
@@ -1952,24 +1927,48 @@ Emacs buffer."
         (let ((*readtable* *buffer-readtable*))
           (call-with-syntax-hooks fun)))))
 
+(defmacro without-printing-errors ((&key object stream
+                                        (msg "<<error printing object>>"))
+                                  &body body)
+  "Catches errors during evaluation of BODY and prints MSG instead."
+  `(handler-case (progn ,@body) 
+     (serious-condition ()
+       ,(cond ((and stream object)
+               (let ((gstream (gensym "STREAM+")))
+                 `(let ((,gstream ,stream))
+                    (print-unreadable-object (,object ,gstream :type t :identity t)
+                      (write-string ,msg ,gstream)))))
+              (stream
+               `(write-string ,msg ,stream))
+              (object
+               `(with-output-to-string (s)
+                  (print-unreadable-object (,object s :type t :identity t)
+                    (write-string ,msg  s))))
+              (t msg)))))
+
 (defun to-string (object)
   "Write OBJECT in the *BUFFER-PACKAGE*.
 The result may not be readable. Handles problems with PRINT-OBJECT methods
 gracefully."
   (with-buffer-syntax ()
     (let ((*print-readably* nil))
-      (handler-case
-          (prin1-to-string object)
-        (error ()
-          (with-output-to-string (s)
-            (print-unreadable-object (object s :type t :identity t)
-              (princ "<<error printing object>>" s))))))))
+      (without-printing-errors (:object object :stream nil)
+        (prin1-to-string object)))))
+
+(defun to-line  (object &optional (width 75))
+  "Print OBJECT to a single line. Return the string."
+  (without-printing-errors (:object object :stream nil)
+    (call/truncated-output-to-string
+     width
+     (lambda (*standard-output*)
+       (write object :right-margin width :lines 1))
+     "..")))
 
 (defun from-string (string)
   "Read string in the *BUFFER-PACKAGE*"
   (with-buffer-syntax ()
     (let ((*read-suppress* nil))
-      (read-from-string string))))
+      (values (read-from-string string)))))
 
 (defun parse-string (string package)
   "Read STRING in PACKAGE."
@@ -2228,7 +2227,7 @@ Used by pprint-eval.")
   "Set *package* to the package named NAME.
 Return the full package-name and the string to use in the prompt."
   (let ((p (guess-package name)))
-    (assert (packagep p))
+    (assert (packagep p) nil "Package ~a doesn't exist." name)
     (setq *package* p)
     (list (package-name p) (package-string-for-prompt p))))
 
@@ -2300,6 +2299,7 @@ aborted and return immediately with the output written so far."
                    (replace buffer ellipsis :start1 fill-pointer)
                    (return-from buffer-full buffer)))))
         (let ((stream (make-output-stream #'write-output)))
+          
           (funcall function stream)
           (finish-output stream)
           (subseq buffer 0 fill-pointer))))))
@@ -3116,19 +3116,21 @@ that symbols accessible in the current package go first."
       (with-output-to-string (*standard-output*)
         (describe-definition (parse-symbol-or-lose name) kind)))))
 
-(defslimefun documentation-symbol (symbol-name &optional default)
+(defslimefun documentation-symbol (symbol-name)
   (with-buffer-syntax ()
     (multiple-value-bind (sym foundp) (parse-symbol symbol-name)
       (if foundp
           (let ((vdoc (documentation sym 'variable))
                 (fdoc (documentation sym 'function)))
-            (or (and (or vdoc fdoc)
-                     (concatenate 'string
-                                  fdoc
-                                  (and vdoc fdoc '(#\Newline #\Newline))
-                                  vdoc))
-                default))
-          default))))
+            (with-output-to-string (string)
+              (format string "Documentation for the symbol ~a:~2%" sym)
+              (unless (or vdoc fdoc)
+                (format string "Not documented." ))
+              (when vdoc
+                (format string "Variable:~% ~a~2%" vdoc))
+              (when fdoc
+                (format string "Function:~% ~a" fdoc))))
+          (format nil "No such symbol, ~a." symbol-name)))))
 
 
 ;;;; Package Commands
@@ -3229,23 +3231,36 @@ Include the nicknames if NICKNAMES is true."
 (defslimefun find-definitions-for-emacs (name)
   "Return a list ((DSPEC LOCATION) ...) of definitions for NAME.
 DSPEC is a string and LOCATION a source location. NAME is a string."
-  (multiple-value-bind (sexp error) (ignore-errors (values (from-string name)))
+  (multiple-value-bind (sexp error) (ignore-errors (from-string name))
     (unless error
       (mapcar #'xref>elisp (find-definitions sexp)))))
 
+(defun xref-doit (type symbol)
+  (ecase type
+    (:calls (who-calls symbol))
+    (:calls-who (calls-who symbol))
+    (:references (who-references symbol))
+    (:binds (who-binds symbol))
+    (:sets (who-sets symbol))
+    (:macroexpands (who-macroexpands symbol))
+    (:specializes (who-specializes symbol))
+    (:callers (list-callers symbol))
+    (:callees (list-callees symbol))))
+
 (defslimefun xref (type name)
-  (let ((symbol (parse-symbol-or-lose name *buffer-package*)))
-    (mapcar #'xref>elisp
-            (ecase type
-              (:calls (who-calls symbol))
-              (:calls-who (calls-who symbol))
-              (:references (who-references symbol))
-              (:binds (who-binds symbol))
-              (:sets (who-sets symbol))
-              (:macroexpands (who-macroexpands symbol))
-              (:specializes (who-specializes symbol))
-              (:callers (list-callers symbol))
-              (:callees (list-callees symbol))))))
+  (multiple-value-bind (sexp error) (ignore-errors (from-string name))
+    (unless error
+      (let ((xrefs  (xref-doit type sexp)))
+        (if (eq xrefs :not-implemented)
+            :not-implemented
+            (mapcar #'xref>elisp xrefs))))))
+
+(defslimefun xrefs (types name)
+  (loop for type in types
+        for xrefs = (xref type name)
+        when (and (not (eq :not-implemented xrefs))
+                  (not (null xrefs)))
+          collect (cons type xrefs)))
 
 (defun xref>elisp (xref)
   (destructuring-bind (name loc) xref
@@ -3359,13 +3374,7 @@ DSPEC is a string and LOCATION a source location. NAME is a string."
         (format nil "#~D=~A" pos string)
         string)))
 
-;; Print OBJECT to a single line. Return the string.
-(defun to-line  (object &optional (width 75))
-  (call/truncated-output-to-string
-   width
-   (lambda (*standard-output*)
-     (write object :right-margin width :lines 1))
-   ".."))
+
 
 (defun content-range (list start end)
   (typecase list

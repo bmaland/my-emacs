@@ -303,11 +303,14 @@
    :test 'equal))
 
 (defimplementation who-specializes (class)
-  (delete-duplicates
-   (mapcar (lambda (m) 
-             (car (find-definitions m)))
-           (ccl:specializer-direct-methods (if (symbolp class) (find-class class) class)))
-   :test 'equal))
+  (when (symbolp class)
+    (setq class (find-class class nil)))
+  (when class
+    (delete-duplicates
+     (mapcar (lambda (m) 
+               (car (find-definitions m)))
+             (ccl:specializer-direct-methods class))
+     :test 'equal)))
 
 (defimplementation list-callees (name)
   (remove-duplicates
@@ -385,16 +388,17 @@
   )
 
 (defun map-backtrace (function &optional
-                               (start-frame-number 0)
-                               (end-frame-number most-positive-fixnum))
+                      (start-frame-number 0)
+                      end-frame-number)
   "Call FUNCTION passing information about each stack frame
  from frames START-FRAME-NUMBER to END-FRAME-NUMBER."
-  (ccl:map-call-frames function
-                       :origin ccl:*top-error-frame*
-                       :start-frame-number start-frame-number
-                       :count (- end-frame-number start-frame-number)
-                       :test (and (not t) ;(not (symbol-value (swank-sym *sldb-show-internal-frames*)))
-                                  'interesting-frame-p)))
+  (let ((end-frame-number (or end-frame-number most-positive-fixnum)))
+    (ccl:map-call-frames function
+                         :origin ccl:*top-error-frame*
+                         :start-frame-number start-frame-number
+                         :count (- end-frame-number start-frame-number)
+                         :test (and (not t) ;(not (symbol-value (swank-sym *sldb-show-internal-frames*)))
+                                    'interesting-frame-p))))
 
 ;; Exceptions
 (defvar *interesting-internal-frames* ())
@@ -581,13 +585,17 @@
               (t `(:error ,(funcall if-nil-thunk))))
       (error (c) `(:error ,(princ-to-string c))))))
 
-(defimplementation find-definitions (obj)
-  (loop for ((type . name) . sources) in (ccl:find-definition-sources obj)
-        collect (list (definition-name type name)
-                      (source-note-to-source-location
-                       (find-if-not #'null sources)
-                       (lambda () "No source-note available")
-                       name))))
+(defimplementation find-definitions (name)
+  (let ((defs (or (ccl:find-definition-sources name)
+                  (and (symbolp name)
+                       (fboundp name)
+                       (ccl:find-definition-sources (symbol-function name))))))
+    (loop for ((type . name) . sources) in defs
+          collect (list (definition-name type name)
+                        (source-note-to-source-location
+                         (find-if-not #'null sources)
+                         (lambda () "No source-note available")
+                         name)))))
 
 (defimplementation find-source-location (obj)
   (let* ((defs (ccl:find-definition-sources obj))

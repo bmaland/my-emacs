@@ -170,7 +170,7 @@
                                (mp:process-interrupt self handler)))))
 
 (defimplementation call-without-interrupts (fn)
-  (lw:without-interrupts (funcall fn)))
+  (error "Don't use without-interrupts -- consider without-slime-interrupts instead."))
   
 (defimplementation getpid ()
   #+win32 (win32:get-current-process-id)
@@ -184,18 +184,26 @@
 
 ;;;; Documentation
 
+(defun map-list (function list)
+  "Map over proper and not proper lists."
+  (loop for (car . cdr) on list
+        collect (funcall function car) into result
+        when (null cdr) return result
+        when (atom cdr) return (nconc result (funcall function cdr))))
+
 (defun replace-strings-with-symbols (tree)
-  (mapcar (lambda (x)
-            (typecase x
-              (list
-               (replace-strings-with-symbols x))
-              (symbol
-               x)
-              (string
-               (intern x))
-              (t
-               (intern (write-to-string x)))))
-          tree))
+  (map-list
+   (lambda (x)
+     (typecase x
+       (list
+        (replace-strings-with-symbols x))
+       (symbol
+        x)
+       (string
+        (intern x))
+       (t
+        (intern (write-to-string x)))))
+   tree))
                
 (defimplementation arglist (symbol-or-function)
   (let ((arglist (lw:function-lambda-list symbol-or-function)))
@@ -319,7 +327,6 @@ Return NIL if the symbol is unbound."
         ((dbg::binding-frame-p frame) dbg:*print-binding-frames*)
         ((dbg::handler-frame-p frame) dbg:*print-handler-frames*)
         ((dbg::restart-frame-p frame) dbg:*print-restart-frames*)
-        ((dbg::open-frame-p frame) dbg:*print-open-frames*)
         (t nil)))
 
 (defun nth-next-frame (frame n)

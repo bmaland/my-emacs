@@ -14,9 +14,13 @@
   (require :collect) ;just so that it doesn't spoil the flying letters
   (require :pprint))
 
+;;; The introduction of SYS::*INVOKE-DEBUGGER-HOOK* obliterates the
+;;; need for redefining BREAK. The following should thus be removed at
+;;; some point in the future.
+#-#.(swank-backend::with-symbol '*invoke-debugger-hook* 'sys)
 (defun sys::break (&optional (format-control "BREAK called") 
                    &rest format-arguments)
-  (let ((*saved-backtrace* 
+  (let ((sys::*saved-backtrace* 
          #+#.(swank-backend::with-symbol 'backtrace 'sys) 
          (sys:backtrace)
          #-#.(swank-backend::with-symbol 'backtrace 'sys)
@@ -47,11 +51,24 @@
 
 ;(defun class-finalized-p (class) t)
 
-(defun slot-definition-documentation (slot) #+nil (documentation slot 't))
-(defun slot-definition-type (slot) t)
-(defun class-prototype (class))
-(defun generic-function-declarations (gf))
-(defun specializer-direct-methods (spec) (mop::class-direct-methods spec))
+(defun slot-definition-documentation (slot)
+  (declare (ignore slot))
+  #+nil (documentation slot 't))
+
+(defun slot-definition-type (slot)
+  (declare (ignore slot))
+  t)
+
+(defun class-prototype (class)
+  (declare (ignore class))
+  nil)
+
+(defun generic-function-declarations (gf)
+  (declare (ignore gf))
+  nil)
+
+(defun specializer-direct-methods (spec)
+  (mop::class-direct-methods spec))
 
 (defun slot-definition-name (slot)
   (mop::%slot-definition-name slot))
@@ -66,9 +83,11 @@
   (mop::%method-function method))
 
 (defun slot-boundp-using-class (class object slotdef)
+  (declare (ignore class))
   (system::slot-boundp object (slot-definition-name slotdef)))
 
 (defun slot-value-using-class (class object slotdef)
+  (declare (ignore class))
   (system::slot-value object (slot-definition-name slotdef)))
 
 (import-to-swank-mop
@@ -213,7 +232,12 @@
 
 (defimplementation arglist (fun)
   (cond ((symbolp fun)
-         (multiple-value-bind (arglist present) (sys::arglist fun)
+         (multiple-value-bind (arglist present) 
+             (or (sys::arglist fun)
+                 (and (fboundp fun)
+                      (typep (symbol-function fun) 'standard-generic-function)
+                      (let ((it (mop::generic-function-lambda-list (symbol-function fun))))
+                        (values it it))))
            (if present arglist :not-available)))
         (t :not-available)))
 
@@ -263,6 +287,28 @@
 
 ;;;; Debugger
 
+;;; Copied from swank-sbcl.lisp.
+(defun make-invoke-debugger-hook (hook)
+  #'(lambda (condition old-hook)
+      ;; Notice that *INVOKE-DEBUGGER-HOOK* is tried before
+      ;; *DEBUGGER-HOOK*, so we have to make sure that the latter gets
+      ;; run when it was established locally by a user (i.e. changed
+      ;; meanwhile.)
+      (if *debugger-hook*
+          (funcall *debugger-hook* condition old-hook)
+          (funcall hook condition old-hook))))
+
+(defimplementation call-with-debugger-hook (hook fun)
+  (let ((*debugger-hook* hook)
+        #+#.(swank-backend::with-symbol '*invoke-debugger-hook* 'sys)
+        (sys::*invoke-debugger-hook* (make-invoke-debugger-hook hook)))
+    (funcall fun)))
+
+(defimplementation install-debugger-globally (function)
+  (setq *debugger-hook* function)
+  #+#.(swank-backend::with-symbol '*invoke-debugger-hook* 'sys)
+  (setq sys::*invoke-debugger-hook* (make-invoke-debugger-hook function)))
+
 (defvar *sldb-topframe*)
 
 (defimplementation call-with-debugging-environment (debugger-loop-fn)
@@ -276,7 +322,7 @@
           (second (member magic-token (ext:backtrace-as-list)
                           :key #'(lambda (frame) 
                                    (first frame))))
-          ))
+          ))    
     (funcall debugger-loop-fn)))
 
 (defun backtrace (start end)
@@ -298,7 +344,7 @@
     (backtrace start end)))
 
 (defimplementation print-frame (frame stream)
-  (write-string 
+  (write-string
    #+#.(swank-backend::with-symbol 'backtrace 'sys)
    (sys:frame-to-string frame)
    #-#.(swank-backend::with-symbol 'backtrace 'sys)
@@ -384,9 +430,8 @@
         (multiple-value-bind (fn warn fail) 
             (compile-file input-file :output-file output-file)
           (values fn warn
-                  (or fail 
-                      (and load-p 
-                           (not (load fn))))))))))
+                  (and fn load-p
+                       (not (load fn)))))))))
 
 (defimplementation swank-compile-string (string &key buffer position filename
                                          policy)
@@ -430,12 +475,14 @@
 
 (defun source-location (symbol)
   (when (pathnamep (ext:source-pathname symbol))
-    `(((,symbol)
-       (:location 
-        (:file ,(namestring (ext:source-pathname symbol)))
-        (:position ,(or (ext:source-file-position symbol) 1))
-        (:align t))))))
-
+    (let ((pos (ext:source-file-position symbol)))
+      `(((,symbol)
+         (:location
+           (:file ,(namestring (ext:source-pathname symbol)))
+           ,(if pos
+                (list :position (1+ pos))
+                (list :function-name (string symbol)))
+           (:align t)))))))
 
 (defimplementation find-definitions (symbol)
   (source-location symbol))
@@ -542,12 +589,12 @@ part of *sysdep-pathnames* in swank.loader.lisp.
   (defparameter *thread-description-map* (make-hash-table)) 
 
   (defimplementation thread-description (thread) 
-    (synchronized-on *thread-description-map*
+    (threads:synchronized-on *thread-description-map*
       (or (gethash thread *thread-description-map*)
-          "No description available.")))
+          "")))
 
   (defimplementation set-thread-description (thread description) 
-    (synchronized-on *thread-description-map*
+    (threads:synchronized-on *thread-description-map*
       (setf (gethash thread *thread-description-map*) description)))
 
   (defimplementation make-lock (&key name)
