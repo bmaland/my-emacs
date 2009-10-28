@@ -43,6 +43,8 @@
 (global-set-key "\C-\M-s" 'isearch-forward)
 (global-set-key "\C-\M-r" 'isearch-backward)
 
+(global-set-key "\M-%"     'query-replace-regexp)
+
 (global-set-key "\M-#"          'calc)
 (global-set-key "\C-xf"         'recentf-ido-find-file)
 (global-set-key "\C-xx"         'file-cache-ido-find-file)
