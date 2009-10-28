@@ -4,7 +4,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.29trans
+;; Version: 6.32trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -277,4 +277,5 @@ Point is assumed to be at the beginning of a headline."
 
 (provide 'org-indent)
 
+;; arch-tag: b76736bc-9f4a-43cd-977c-ecfd6689846a
 ;;; org-indent.el ends here

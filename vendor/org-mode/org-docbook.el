@@ -4,7 +4,7 @@
 ;;
 ;; Emacs Lisp Archive Entry
 ;; Filename: org-docbook.el
-;; Version: 6.29trans
+;; Version: 6.32trans
 ;; Author: Baoqiu Cui <cbaoqiu AT yahoo DOT com>
 ;; Maintainer: Baoqiu Cui <cbaoqiu AT yahoo DOT com>
 ;; Keywords: org, wp, docbook
@@ -242,6 +242,11 @@ the variable to
   :group 'org-export-docbook
   :type 'string)
 
+;;; Hooks
+
+(defvar org-export-docbook-final-hook nil
+  "Hook run at the end of DocBook export, in the new buffer.")
+
 ;;; Autoload functions:
 
 ;;;###autoload
@@ -387,7 +392,7 @@ publishing directory."
 	(org-set-local 'buffer-file-name
 		       (with-current-buffer (buffer-base-buffer)
 			 buffer-file-name))
-      (error "Need a file name to be able to export.")))
+      (error "Need a file name to be able to export")))
 
   (message "Exporting...")
   (setq-default org-todo-line-regexp org-todo-line-regexp)
@@ -1101,7 +1106,7 @@ publishing directory."
 
       (unless (plist-get opt-plist :buffer-will-be-killed)
 	(normal-mode)
-	(if (eq major-mode default-major-mode)
+	(if (eq major-mode (default-value 'major-mode))
 	    (nxml-mode)))
 
       ;; Remove empty paragraphs and lists.  Replace them with a
@@ -1123,6 +1128,7 @@ publishing directory."
       (goto-char (point-max))
       (unless body-only
 	(insert "</article>"))
+      (run-hooks 'org-export-docbook-final-hook)
       (or to-buffer (save-buffer))
       (goto-char (point-min))
       (or (org-export-push-to-kill-ring "DocBook")
@@ -1401,4 +1407,5 @@ that need to be preserved in later phase of DocBook exporting."
 
 (provide 'org-docbook)
 
+;; arch-tag: a24a127c-d365-4c2a-9e9b-f7dcb0ebfdc3
 ;;; org-docbook.el ends here

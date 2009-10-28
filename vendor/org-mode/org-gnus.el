@@ -7,7 +7,7 @@
 ;;         Tassilo Horn <tassilo at member dot fsf dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.29trans
+;; Version: 6.32trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -34,8 +34,13 @@
 ;;; Code:
 
 (require 'org)
-(eval-when-compile
-  (require 'gnus-sum))
+(eval-when-compile (require 'gnus-sum))
+
+;; Declare external functions and variables
+(declare-function message-fetch-field "message" (header &optional not-all))
+(declare-function message-narrow-to-head-1 "message" nil)
+;; The following line suppresses a compiler warning stemming from gnus-sum.el
+(declare-function gnus-summary-last-subject "gnus-sum" nil)
 
 ;; Customization variables
 
@@ -50,14 +55,6 @@ negates this setting for the duration of the command."
   :group 'org-link-store
   :type 'boolean)
 
-;; Declare external functions and variables
-(declare-function gnus-summary-article-header "gnus-sum" (&optional number))
-(declare-function message-fetch-field "message" (header &optional not-all))
-(declare-function message-narrow-to-head-1 "message" nil)
-
-(defvar gnus-other-frame-object)
-(defvar gnus-group-name)
-(defvar gnus-article-current)
 
 ;; Install the link type
 (org-add-link-type "gnus" 'org-gnus-open)
@@ -120,24 +117,29 @@ If `org-store-link' was called with a prefix arg the meaning of
 	      link desc)
 	(org-add-link-props :link link :description desc)
 	link)))
-   
+
    ((memq major-mode '(gnus-summary-mode gnus-article-mode))
     (let* ((group gnus-newsgroup-name)
    	   (header (with-current-buffer gnus-summary-buffer
 		     (gnus-summary-article-header)))
-	   (extra (mail-header-extra header))
 	   (from (mail-header-from header))
 	   (message-id (org-remove-angle-brackets (mail-header-id header)))
 	   (date (mail-header-date header))
-	   (to (cdr (assoc 'To extra)))
-	   (newsgroups (cdr (assoc 'newsgroup extra)))
-	   (x-no-archive (cdr (assoc 'x-no-archive extra)))
 	   (subject (mail-header-subject header))
-	   desc link)
+           (to (cdr (assq 'To (mail-header-extra header))))
+           newsgroups x-no-archive desc link)
+      ;; Fetching an article is an expensive operation; newsgroup and
+      ;; x-no-archive are only needed for web links.
+      (when (org-xor current-prefix-arg org-gnus-prefer-web-links)
+        ;; Make sure the original article buffer is up-to-date
+        (save-window-excursion (gnus-summary-select-article))
+        (setq to (or to (gnus-fetch-original-field "To"))
+              newsgroups (gnus-fetch-original-field "Newsgroups")
+              x-no-archive (gnus-fetch-original-field "x-no-archive")))
       (org-store-link-props :type "gnus" :from from :subject subject
 			    :message-id message-id :group group :to to)
       (setq desc (org-email-link-description)
-	    link (org-gnus-article-link 
+	    link (org-gnus-article-link
 		  group	newsgroups message-id x-no-archive))
       (org-add-link-props :link link :description desc)
       link))))

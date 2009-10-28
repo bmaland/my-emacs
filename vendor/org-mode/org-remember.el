@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.29trans
+;; Version: 6.32trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -130,8 +130,8 @@ Furthermore, the following %-escapes will be replaced with content:
               You may define a prompt like %^{Please specify birthday
   %n          user name (taken from `user-full-name')
   %a          annotation, normally the link created with org-store-link
-  %i          initial content, the region active.  If %i is indented,
-              the entire inserted text will be indented as well.
+  %i          initial content, copied from the active region.  If %i is 
+              indented, the entire inserted text will be indented as well.
   %c          current kill ring head
   %x          content of the X clipboard
   %^C         Interactive selection of which kill or clip to use
@@ -771,8 +771,7 @@ The user is queried for the template."
     (widen)
     (goto-char (point-min))
     (if (re-search-forward
-	 (concat "^\\*+[ \t]+" (regexp-quote heading)
-		 (org-re "\\([ \t]+:[[:alnum:]@_:]*\\)?[ \t]*$"))
+	 (format org-complex-heading-regexp-format (regexp-quote heading))
 	 nil t)
 	(goto-char (match-beginning 0))
       (error "Target headline not found: %s" heading))))
@@ -951,8 +950,8 @@ See also the variable `org-reverse-note-order'."
 	       ((and (stringp heading) (string-match "\\S-" heading))
 		(goto-char (point-min))
 		(if (re-search-forward
-		     (concat "^\\*+[ \t]+" (regexp-quote heading)
-			     (org-re "\\([ \t]+:[[:alnum:]@_:]*\\)?[ \t]*$"))
+		     (format org-complex-heading-regexp-format
+			     (regexp-quote heading))
 		     nil t)
 		    (setq org-goto-start-pos (match-beginning 0))
 		  (when fastp

@@ -4,7 +4,7 @@
 
 ;; Author: John Wiegley <johnw@newartisans.com>
 ;; Keywords: org data task
-;; Version: 6.29trans
+;; Version: 6.32trans
 
 ;; This file is part of GNU Emacs.
 ;;
@@ -217,7 +217,7 @@ Throw an error if we cannot root the directory."
   (or (and dir (file-name-absolute-p dir))
       (file-name-absolute-p org-attach-directory)
       (buffer-file-name (buffer-base-buffer))
-      (error "Need absolute `org-attach-directory' to attach in buffers without filename.")))
+      (error "Need absolute `org-attach-directory' to attach in buffers without filename")))
 
 (defun org-attach-set-directory ()
   "Set the ATTACH_DIR property of the current entry.

@@ -5,7 +5,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.29trans
+;; Version: 6.32trans
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -212,16 +212,17 @@ If the entry does not have an ID, the function returns nil.
 However, when CREATE is non nil, create an ID if none is present already.
 PREFIX will be passed through to `org-id-new'.
 In any case, the ID of the entry is returned."
-  (let ((id (org-entry-get pom "ID")))
-    (cond
-     ((and id (stringp id) (string-match "\\S-" id))
-      id)
-     (create
-      (setq id (org-id-new prefix))
-      (org-entry-put pom "ID" id)
-      (org-id-add-location id (buffer-file-name (buffer-base-buffer)))
-      id)
-     (t nil))))
+  (org-with-point-at pom
+    (let ((id (org-entry-get nil "ID")))
+      (cond
+       ((and id (stringp id) (string-match "\\S-" id))
+	id)
+       (create
+	(setq id (org-id-new prefix))
+	(org-entry-put pom "ID" id)
+	(org-id-add-location id (buffer-file-name (buffer-base-buffer)))
+	id)
+       (t nil)))))
 
 ;;;###autoload
 (defun org-id-get-with-outline-path-completion (&optional targets)
@@ -390,26 +391,33 @@ When FILES is given, scan these files instead.
 When CHECK is given, prepare detailed information about duplicate IDs."
   (interactive)
   (if (not org-id-track-globally)
-      (error "Please turn on `org-id-track-globally' if you want to track IDs.")
-    (let ((files
-	   (or files
-	       (append
-		;; Agenda files and all associated archives
-		(org-agenda-files t org-id-search-archives)
-		;; Explicit extra files
-		(if (symbolp org-id-extra-files)
-		    (symbol-value org-id-extra-files)
-		  org-id-extra-files)
+      (error "Please turn on `org-id-track-globally' if you want to track IDs")
+    (let* ((org-id-search-archives
+	    (or org-id-search-archives
+		(and (symbolp org-id-extra-files)
+		     (symbol-value org-id-extra-files)
+		     (member 'agenda-archives org-id-extra-files))))
+	   (files
+	    (or files
+		(append
+		 ;; Agenda files and all associated archives
+		 (org-agenda-files t org-id-search-archives)
+		 ;; Explicit extra files
+		 (if (symbolp org-id-extra-files)
+		     (symbol-value org-id-extra-files)
+		   org-id-extra-files)
 	      ;; Files associated with live org-mode buffers
-		(delq nil
-		      (mapcar (lambda (b)
-				(with-current-buffer b
-				  (and (org-mode-p) (buffer-file-name))))
-			      (buffer-list)))
-		;; All files known to have IDs
-		org-id-files)))
-	  org-agenda-new-buffers
-	  file nfiles tfile ids reg found id seen (ndup 0))
+		 (delq nil
+		       (mapcar (lambda (b)
+				 (with-current-buffer b
+				   (and (org-mode-p) (buffer-file-name))))
+			       (buffer-list)))
+		 ;; All files known to have IDs
+		 org-id-files)))
+	   org-agenda-new-buffers
+	   file nfiles tfile ids reg found id seen (ndup 0))
+      (when (member 'agenda-archives files)
+	(setq files (delq 'agenda-archives (copy-sequence files))))
       (setq nfiles (length files))
       (while (setq file (pop files))
 	(message "Finding ID locations (%d/%d files): %s"
