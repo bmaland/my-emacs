@@ -13,10 +13,10 @@
 
 ;;(define-key dired-mode-map "o" 'dired-open-mac)
 (defun dired-open-mac ()
-       (interactive)
-       (let ((file-name (dired-get-file-for-visit)))
-         (if (file-exists-p file-name)
-             (call-process "/usr/bin/open" nil 0 nil file-name))))
+  (interactive)
+  (let ((file-name (dired-get-file-for-visit)))
+    (if (file-exists-p file-name)
+        (call-process "/usr/bin/open" nil 0 nil file-name))))
 
 ;; Implementation specific settings
 (if (boundp 'aquamacs-version)
@@ -31,13 +31,15 @@
 
       (set-default-font "-apple-monaco-medium-r-normal--14-120-72-72-m-120-iso10646-1"))
   ;; CVS or Carbon Emacs
-  (setq mac-option-modifier 'meta)
+  (progn
+    (setq mac-option-modifier 'none
+          mac-command-modifier 'meta)
 
-  ;; Fullscreen for Carbon Emacs
-  (defun toggle-fullscreen ()
-    (interactive)
-    (set-frame-parameter nil 'fullscreen (if (frame-parameter nil 'fullscreen)
-                                             nil
+    ;; Fullscreen for Carbon Emacs
+    (defun toggle-fullscreen ()
+      (interactive)
+      (set-frame-parameter nil 'fullscreen (if (frame-parameter nil 'fullscreen)
+                                               nil
                                              'fullboth)))
 
-  (global-set-key [(meta return)] 'toggle-fullscreen))
+    (global-set-key [(meta return)] 'toggle-fullscreen)))
