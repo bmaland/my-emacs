@@ -48,6 +48,13 @@ vendor/slime:
   type: git
   revision: 6e106036df31c770d2ea5f54589061f3f3e7fcd2
   remote: braid/vendor/slime
+yasnippet/snippets/text-mode/org-mode: 
+  squashed: true
+  url: git://github.com/bmaland/yasnippet-org-mode.git
+  branch: master
+  type: git
+  revision: 12c31d6a2897614a241fc74f0c32e224177175a2
+  remote: braid/yasnippet/snippets/text-mode/org-mode
 yasnippet/snippets/text-mode/sh-mode: 
   squashed: true
   branch: master
