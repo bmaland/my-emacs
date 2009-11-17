@@ -308,10 +308,6 @@ that the calling thread is the one that interacts with Emacs."
 
 (defconstant +sigint+ 2)
 
-(definterface call-without-interrupts (fn)
-  "Call FN in a context where interrupts are disabled."
-  (funcall fn))
-
 (definterface getpid ()
   "Return the (Unix) process ID of this superior Lisp.")
 
@@ -1003,9 +999,8 @@ Can return nil if the thread no longer exists."
 
 (definterface thread-name (thread)
    "Return the name of THREAD.
-
-Thread names are be single-line strings and are meaningful to the
-user. They do not have to be unique."
+Thread names are short strings meaningful to the user. They do not
+have to be unique."
    (declare (ignore thread))
    "The One True Thread")
 
@@ -1013,16 +1008,6 @@ user. They do not have to be unique."
    "Return a string describing THREAD's state."
    (declare (ignore thread))
    "")
-
-(definterface thread-description (thread)
-  "Return a string describing THREAD."
-  (declare (ignore thread))
-  "")
-
-(definterface set-thread-description (thread description)
-  "Set THREAD's description to DESCRIPTION."
-  (declare (ignore thread description))
-  "")
 
 (definterface thread-attributes (thread)
   "Return a plist of implementation-dependent attributes for THREAD"
@@ -1057,7 +1042,9 @@ but that thread may hold it more than once."
   "Cause THREAD to execute FN.")
 
 (definterface kill-thread (thread)
-  "Kill THREAD."
+  "Terminate THREAD immediately.
+Don't execute unwind-protected sections, don't raise conditions.
+(Do not pass go, do not collect $200.)"
   (declare (ignore thread))
   nil)
 

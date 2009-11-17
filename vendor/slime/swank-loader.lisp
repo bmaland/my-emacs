@@ -182,7 +182,7 @@ If LOAD is true, load the fasl file."
                            :defaults src-dir))
           names))
 
-(defvar *swank-files* `(swank-backend ,@*sysdep-files* swank))
+(defvar *swank-files* `(swank-backend ,@*sysdep-files* swank-match swank))
 
 (defvar *contribs* '(swank-c-p-c swank-arglists swank-fuzzy
                      swank-fancy-inspector
@@ -226,7 +226,10 @@ If LOAD is true, load the fasl file."
 (defun setup ()
   (load-site-init-file *source-directory*)
   (load-user-init-file)
-  (eval `(pushnew 'compile-contribs ,(q "swank::*after-init-hook*")))
+  (when (#-clisp probe-file
+         #+clisp ext:probe-directory        
+         (contrib-dir *source-directory*))
+    (eval `(pushnew 'compile-contribs ,(q "swank::*after-init-hook*"))))
   (funcall (q "swank::init")))
 
 (defun init (&key delete reload load-contribs (setup t))

@@ -13,7 +13,7 @@
 ;;; available to us here via the `SWANK-BACKEND' package.
 
 (defpackage :swank
-  (:use :cl :swank-backend)
+  (:use :cl :swank-backend :swank-match)
   (:export #:startup-multiprocessing
            #:start-server 
            #:create-server
@@ -457,11 +457,6 @@ Do not set this to T unless you want to debug swank internals.")
   (check-type msg string)
   `(call-with-retry-restart ,msg #'(lambda () ,@body)))
 
-;;; FIXME: Can this be removed with the introduction of
-;;;        WITH/WITHOUT-SLIME-INTERRUPTS.
-(defmacro without-interrupts (&body body)
-  `(call-without-interrupts (lambda () ,@body)))
-
 (defmacro destructure-case (value &rest patterns)
   "Dispatch VALUE to one of PATTERNS.
 A cross between `case' and `destructuring-bind'.
@@ -478,11 +473,11 @@ corresponding values in the CDR of VALUE."
 	    (,operands (cdr ,tmp)))
        (case ,operator
          ,@(loop for (pattern . body) in patterns collect 
-                   (if (eq pattern t)
-                       `(t ,@body)
-                       (destructuring-bind (op &rest rands) pattern
-                         `(,op (destructuring-bind ,rands ,operands 
-                                 ,@body)))))
+                 (if (eq pattern t)
+                     `(t ,@body)
+                     (destructuring-bind (op &rest rands) pattern
+                       `(,op (destructuring-bind ,rands ,operands 
+                               ,@body)))))
          ,@(if (eq (caar (last patterns)) t)
                '()
                `((t (error "destructure-case failed: ~S" ,tmp))))))))
@@ -706,8 +701,9 @@ keywords: :BOUNDP, :FBOUNDP, :CONSTANT, :GENERIC-FUNCTION,
       (when (macro-function symbol)     (push :macro result))
       (when (special-operator-p symbol) (push :special-operator result))
       (when (find-package symbol)       (push :package result))
-      (when (typep (ignore-errors (fdefinition symbol))
-                   'generic-function)
+      (when (and (fboundp symbol)
+                 (typep (ignore-errors (fdefinition symbol))
+                        'generic-function))
         (push :generic-function result))
 
       result)))
@@ -1232,6 +1228,7 @@ The processing is done in the extent of the toplevel restart."
                                  (cdr tail)))
       tail)))
 
+;;; FIXME: Make this use SWANK-MATCH.
 (defun event-match-p (event pattern)
   (cond ((or (keywordp pattern) (numberp pattern) (stringp pattern)
 	     (member pattern '(nil t)))
@@ -2013,7 +2010,7 @@ considered to represent a symbol internal to some current package.)"
              (vector-push-extend char token))
             ((char= char #\:)
              (cond ((and package internp)
-                    (error "More than two colons in ~S" string))
+                    (return-from tokenize-symbol-thoroughly))
                    (package
                     (setq internp t))
                    (t
@@ -2023,9 +2020,8 @@ considered to represent a symbol internal to some current package.)"
                                             :fill-pointer 0)))))
             (t
              (vector-push-extend (casify-char char) token))))
-    (when vertical
-      (error "Unclosed vertical bar in ~S" string))
-    (values token package (or (not package) internp))))
+    (unless vertical
+          (values token package (or (not package) internp)))))
 
 (defun untokenize-symbol (package-name internal-p symbol-name)
   "The inverse of TOKENIZE-SYMBOL.
@@ -2048,17 +2044,29 @@ considered to represent a symbol internal to some current package.)"
                  (char-downcase char)
                  (char-upcase char)))))
 
+
+(defun find-symbol-with-status (symbol-name status &optional (package *package*))
+  (multiple-value-bind (symbol flag) (find-symbol symbol-name package)
+    (if (and flag (eq flag status))
+        (values symbol flag)
+        (values nil nil))))
+
 (defun parse-symbol (string &optional (package *package*))
   "Find the symbol named STRING.
 Return the symbol and a flag indicating whether the symbols was found."
-  (multiple-value-bind (sname pname) (tokenize-symbol-thoroughly string)
-    (let ((package (cond ((string= pname "") keyword-package)
-                         (pname              (find-package pname))
-                         (t                  package))))
-      (if package
-          (multiple-value-bind (symbol flag) (find-symbol sname package)
-            (values symbol flag sname package))
-          (values nil nil nil nil)))))
+  (multiple-value-bind (sname pname internalp)
+      (tokenize-symbol-thoroughly string)
+    (when sname
+     (let ((package (cond ((string= pname "") keyword-package)
+                          (pname              (find-package pname))
+                          (t                  package))))
+       (if package
+           (multiple-value-bind (symbol flag)
+               (if internalp
+                   (find-symbol sname package)
+                   (find-symbol-with-status sname ':external package))
+             (values symbol flag sname package))
+           (values nil nil nil nil))))))
 
 (defun parse-symbol-or-lose (string &optional (package *package*))
   (multiple-value-bind (symbol status) (parse-symbol string package)
@@ -2776,8 +2784,7 @@ The time is measured in seconds."
         (handler-bind ((compiler-condition
                         (lambda (c) (push (make-compiler-note c) notes))))
           (measure-time-interval function))
-      (check-type successp boolean)
-      (make-compilation-result (reverse notes) successp seconds))))
+      (make-compilation-result (reverse notes) (and successp t) seconds))))
 
 (defslimefun compile-file-for-emacs (filename load-p &optional options)
   "Compile FILENAME and, when LOAD-P, load the result.
@@ -3623,21 +3630,20 @@ synchronization issues (yet).  There can only be one thread listing at
 a time.")
 
 (defslimefun list-threads ()
-  "Return a list (LABELS (ID NAME STATUS DESCRIPTION ATTRS ...) ...).
+  "Return a list (LABELS (ID NAME STATUS ATTRS ...) ...).
 LABELS is a list of attribute names and the remaining lists are the
 corresponding attribute values per thread."
   (setq *thread-list* (all-threads))
   (let* ((plist (thread-attributes (car *thread-list*)))
          (labels (loop for (key) on plist by #'cddr 
                        collect key)))
-    `((:id :name :status :description ,@labels)
+    `((:id :name :status ,@labels)
       ,@(loop for thread in *thread-list*
               for name = (thread-name thread)
               for attributes = (thread-attributes thread)
               collect (list* (thread-id thread)
-                             (if (symbolp name) (symbol-name name) name)
+                             (string name)
                              (thread-status thread)
-                             (thread-description thread)
                              (loop for label in labels
                                    collect (getf attributes label)))))))
 

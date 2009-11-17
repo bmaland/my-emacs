@@ -74,7 +74,8 @@
   (require 'arc-mode)
   (require 'apropos)
   (require 'outline)
-  (require 'etags))
+  (require 'etags)
+  (require 'compile))
 
 (eval-and-compile 
   (defvar slime-path
@@ -152,13 +153,6 @@ Return nil if the ChangeLog file cannot be found."
   "Set `truncate-lines' in popup buffers.
 This applies to buffers that present lines as rows of data, such as
 debugger backtraces and apropos listings."
-  :type 'boolean
-  :group 'slime-ui)
-
-(defcustom slime-extended-modeline t
-  "If non-nil, display various information in the mode line of a
-Lisp buffer. The information includes the current connection of
-that buffer, the buffer package, and some state indication."
   :type 'boolean
   :group 'slime-ui)
 
@@ -416,31 +410,39 @@ Full set of commands:
   nil
   ;; Fake binding to coax `define-minor-mode' to create the keymap
   '((" " 'undefined))
-  (slime-setup-command-hooks))
+  (slime-setup-command-hooks)
+  (slime-recompute-modelines))
 
+
+;;;;;; Modeline
+
+;; For XEmacs only
 (make-variable-buffer-local
  (defvar slime-modeline-string nil
-   "The string that should be displayed in the modeline if
-`slime-extended-modeline' is true, and which indicates the
-current connection, package and state of a Lisp buffer.
-The string is periodically updated by an idle timer."))
+   "The string that should be displayed in the modeline."))
 
+(add-to-list 'minor-mode-alist
+             `(slime-mode ,(if (featurep 'xemacs)
+                               'slime-modeline-string
+                             '(:eval (slime-modeline-string)))))
 
-;;; These are used to keep track of old values, so we can determine
-;;; whether the mode line has changed, and should be updated.
-(make-variable-buffer-local
- (defvar slime-modeline-package nil))
-(make-variable-buffer-local
- (defvar slime-modeline-connection-name nil))
-(make-variable-buffer-local
- (defvar slime-modeline-connection-state nil))
-
-(defun slime-compute-modeline-package ()
-  (when (memq major-mode slime-lisp-modes)
-    ;; WHEN-LET is defined later.
-    (let ((package (slime-current-package)))
-      (when package
-        (slime-pretty-package-name package)))))
+(defun slime-modeline-string ()
+  "Return the string to display in the modeline.
+\"Slime\" only appears if we aren't connected.  If connected,
+include package-name, connection-name, and possibly some state
+information."
+  (let* ((conn (slime-current-connection))
+         (local (and conn (eq conn slime-buffer-connection)))
+         (pkg (slime-current-package)))
+    (cond ((not conn) (and slime-mode " Slime"))
+          ((concat " "
+                   (if local "{" "[")
+                   (if pkg (slime-pretty-package-name pkg) "?")
+                   " "
+                   ;; ignore errors for closed connections
+                   (ignore-errors (slime-connection-name conn))
+                   (slime-modeline-state-string conn)
+                   (if local "}" "]"))))))
 
 (defun slime-pretty-package-name (name)
   "Return a pretty version of a package name NAME."
@@ -450,92 +452,23 @@ The string is periodically updated by an idle timer."))
          (match-string 1 name))
         (t name)))
 
-(defun slime-compute-modeline-connection ()
-  (let ((conn (slime-current-connection)))
-    (if (or (null conn) (slime-stale-connection-p conn)) 
-        nil
-        (slime-connection-name conn))))
+(defun slime-modeline-state-string (conn)
+  "Return a string possibly describing CONN's state."
+  (cond ((not (eq (process-status conn) 'open))
+         (format " %s" (process-status conn)))
+        ((let ((pending (length (slime-rex-continuations conn)))
+               (sldbs (length (sldb-buffers conn))))
+           (cond ((and (zerop sldbs) (zerop pending)) nil)
+                 ((zerop sldbs) (format " %s" pending))
+                 (t (format " %s/%s" pending sldbs)))))))
 
-(defun slime-compute-modeline-connection-state ()
-  (let* ((conn (slime-current-connection))
-         (new-state (slime-compute-connection-state conn)))
-    (if (eq new-state :connected)
-        (let ((rex-cs  (length (slime-rex-continuations)))
-              (sldb-cs (length (sldb-debugged-continuations conn)))
-              ;; There can be SLDB buffers which have no continuations
-              ;; attached to it, e.g. the one resulting from
-              ;; `slime-interrupt'.
-              (sldbs   (length (sldb-buffers conn))))
-          (cond ((and (= sldbs 0) (zerop rex-cs)) nil)
-                ((= sldbs 0) (format "%s" rex-cs))
-                (t (format "%s/%s"
-                           (if (= rex-cs 0) 0 (- rex-cs sldb-cs)) 
-                           sldbs))))
-      (slime-connection-state-as-string new-state))))
-
-(defun slime-compute-modeline-string (conn state pkg)
-  (concat (when (or conn pkg)             "[")
-          (when pkg                       (format "%s" pkg))
-          (when (and (or conn state) pkg) ", ")
-          (when conn                      (format "%s" conn))
-          (when state                     (format "{%s}" state))
-          (when (or conn pkg)             "]")))
-
-(defun slime-update-modeline-string ()
-  (let ((old-pkg   slime-modeline-package)
-        (old-conn  slime-modeline-connection-name)
-        (old-state slime-modeline-connection-state)
-        (new-pkg   (slime-compute-modeline-package))
-        (new-conn  (slime-compute-modeline-connection))
-        (new-state (slime-compute-modeline-connection-state)))
-    (when (or (not (equal old-pkg   new-pkg))
-              (not (equal old-conn  new-conn))
-              (not (equal old-state new-state)))
-      (setq slime-modeline-package new-pkg)
-      (setq slime-modeline-connection-name new-conn)
-      (setq slime-modeline-connection-state new-state)
-      (setq slime-modeline-string
-            (slime-compute-modeline-string new-conn new-state new-pkg)))))
-
-(defun slime-shall-we-update-modeline-p ()
-  (and slime-extended-modeline 
-       (or slime-mode slime-popup-buffer-mode)))
-
-(defun slime-update-all-modelines ()
-  (dolist (window (window-list))
-    (with-current-buffer (window-buffer window)
-      (when (slime-shall-we-update-modeline-p)
-        (slime-update-modeline-string)
-        (force-mode-line-update)))))
-
-(defvar slime-modeline-update-timer nil)
-
-(defun slime-restart-or-init-modeline-update-timer ()
-  (when slime-modeline-update-timer
-    (cancel-timer slime-modeline-update-timer))
-  (setq slime-modeline-update-timer
-        (run-with-idle-timer 0.1 nil 'slime-update-all-modelines)))
-
-(slime-restart-or-init-modeline-update-timer)
-
-(defun slime-recompute-modelines (delay)
-  (cond (delay
-         ;; Minimize flashing of modeline due to short lived
-         ;; requests such as those of autodoc.
-         (slime-restart-or-init-modeline-update-timer))
-        (t
-         ;; Must do this ourselves since emacs may have
-         ;; been idling long enough that
-         ;; SLIME-MODELINE-UPDATE-TIMER is not going to
-         ;; trigger by itself.
-         (slime-update-all-modelines))))
-
-;; Setup the mode-line to say when we're in slime-mode, which
-;; connection is active, and which CL package we think the current
-;; buffer belongs to.
-(add-to-list 'minor-mode-alist
-             '(slime-mode
-               (" Slime" slime-modeline-string)))
+(defun slime-recompute-modelines ()
+  (when (featurep 'xemacs)
+    (dolist (buffer (buffer-list))
+      (with-current-buffer buffer
+        (when (or slime-mode slime-popup-buffer-mode)
+          (setq slime-modeline-string (slime-modeline-string)))))
+    (force-mode-line-update t)))
 
 
 ;;;;; Key bindings
@@ -778,44 +711,6 @@ Single-line messages use the echo area."
 (defun slime-display-warning (message &rest args)
   (display-warning '(slime warning) (apply #'format message args)))
 
-(when (or (featurep 'xemacs))
-  (setq slime-message-function 'slime-format-display-message))
-
-(defun slime-format-display-message (format &rest args)
-  (slime-display-message (apply #'format format args) "*SLIME Note*"))
-
-(defun slime-display-message (message buffer-name) 
-  "Display MESSAGE in the echo area or in BUFFER-NAME.
-Use the echo area if MESSAGE needs only a single line.  If the MESSAGE
-requires more than one line display it in BUFFER-NAME and add a hook
-to `slime-pre-command-actions' to remove the window before the next
-command."
-  (when (get-buffer-window buffer-name) (delete-windows-on buffer-name))
-  (cond ((or (string-match "\n" message)
-             (> (length message) (1- (frame-width))))
-         (lexical-let ((buffer (get-buffer-create buffer-name)))
-           (with-current-buffer buffer
-             (erase-buffer)
-             (insert message)
-             (goto-char (point-min))
-             (let ((win (slime-create-message-window)))
-               (set-window-buffer win (current-buffer))
-               (shrink-window-if-larger-than-buffer
-                (display-buffer (current-buffer)))))
-           (push (lambda () (delete-windows-on buffer) (bury-buffer buffer))
-                 slime-pre-command-actions)))
-        (t (message "%s" message))))
-
-(defun slime-create-message-window ()
-  "Create a window at the bottom of the frame, above the minibuffer."
-  (let ((previous (previous-window (minibuffer-window))))
-    (when (<= (window-height previous) (* 2 window-min-height))
-      (save-selected-window 
-        (select-window previous)
-        (enlarge-window (- (1+ (* 2 window-min-height))
-                           (window-height previous)))))
-    (split-window previous)))
-
 (defvar slime-background-message-function 'slime-display-oneliner)
 
 ;; Interface
@@ -836,27 +731,6 @@ It should be used for \"background\" messages such as argument lists."
   (substring string 0 (min (length string)
                            (or (position ?\n string) most-positive-fixnum)
                            (1- (frame-width)))))
-
-(defun slime-bug (message &rest args)
-  (slime-display-warning 
-"%S:%d:%d (pt=%d).
-%s
-
-This is a bug in Slime itself. Please report this to the
-mailinglist slime-devel@common-lisp.net and include your Emacs
-version, the guilty Lisp source file, the header of this
-message, and the following backtrace.
-
-Backtrace:
-%s
---------------------------------------------------------------
-"
-   (buffer-name)
-   (line-number-at-pos)
-   (current-column)
-   (point)
-   (apply #'format message args)
-   (with-output-to-string (backtrace))))
 
 ;; Interface
 (defun slime-set-truncate-lines ()
@@ -1136,10 +1010,16 @@ can restore it later."
 (define-minor-mode slime-popup-buffer-mode 
   "Mode for displaying read only stuff"
   nil
-  (" Slime-Tmp" slime-modeline-string)
+  nil
   '(("q" . slime-popup-buffer-quit-function)
     ;;("\C-c\C-z" . slime-switch-to-output-buffer)
     ("\M-." . slime-edit-definition)))
+
+(add-to-list 'minor-mode-alist
+             `(slime-popup-buffer-mode
+               ,(if (featurep 'xemacs)
+                    'slime-modeline-string
+                  '(:eval (slime-modeline-string)))))
 
 (set-keymap-parent slime-popup-buffer-mode-map slime-parent-map)
 
@@ -1944,21 +1824,6 @@ If PROCESS is not specified, `slime-connection' is used.
 
 (put 'slime-with-connection-buffer 'lisp-indent-function 1)
 
-(defun slime-compute-connection-state (conn)
-  (cond ((null conn) :disconnected) 
-        ((slime-stale-connection-p conn) :stale)
-        ((and (slime-use-sigint-for-interrupt conn)
-              (slime-busy-p conn)) :busy)
-        ((eq slime-buffer-connection conn) :local)
-        (t :connected)))
-
-(defun slime-connection-state-as-string (state)
-  (case state
-    (:disconnected    "not connected")
-    (:busy            "busy..")
-    (:stale           "stale")
-    (:local           "local")))
-
 ;;; Connection-local variables:
 
 (defmacro slime-def-connection-var (varname &rest initial-value-and-doc)
@@ -2114,7 +1979,7 @@ This is automatically synchronized from Lisp.")
 (defun slime-disconnect ()
   "Close the current connection."
   (interactive)
-  (slime-net-close (or connection (slime-connection))))
+  (slime-net-close (slime-connection)))
 
 (defun slime-disconnect-all ()
   "Disconnect all connections."
@@ -2344,9 +2209,6 @@ or nil if nothing suitable can be found.")
     (error "Not connected. Use `%s' to start a Lisp."
            (substitute-command-keys "\\[slime]"))))
 
-(defun slime-stale-connection-p (conn)
-  (not (memq conn slime-net-processes)))
-
 ;; UNUSED
 (defun slime-debugged-connection-p (conn)
   ;; This previously was (AND (SLDB-DEBUGGED-CONTINUATIONS CONN) T),
@@ -2406,12 +2268,12 @@ Debugged requests are ignored."
            (let ((id (incf (slime-continuation-counter))))
              (slime-send `(:emacs-rex ,form ,package ,thread ,id))
              (push (cons id continuation) (slime-rex-continuations))
-             (slime-recompute-modelines t)))
+             (slime-recompute-modelines)))
           ((:return value id)
            (let ((rec (assq id (slime-rex-continuations))))
              (cond (rec (setf (slime-rex-continuations)
                               (remove rec (slime-rex-continuations)))
-                        (slime-recompute-modelines nil)
+                        (slime-recompute-modelines)
                         (funcall (cdr rec) value))
                    (t
                     (error "Unexpected reply: %S %S" id value)))))
@@ -2753,7 +2615,9 @@ with maximum debug setting. If invoked with a numeric prefix arg,
 compile with a debug setting of that number."
   (interactive "P")
   (let ((slime-compilation-policy (slime-compute-policy raw-prefix-arg)))
-    (apply #'slime-compile-region (slime-region-for-defun-at-point))))
+    (if (use-region-p)
+        (slime-compile-region (region-beginning) (region-end))
+        (apply #'slime-compile-region (slime-region-for-defun-at-point)))))
 
 (defun slime-compile-region (start end)
   "Compile the region."
@@ -5582,7 +5446,8 @@ CONTS is a list of pending Emacs continuations."
         (if frames 
             (sldb-insert-frames (sldb-prune-initial-frames frames) t)
           (insert "[No backtrace]")))
-      (run-hooks 'sldb-hook))
+      (run-hooks 'sldb-hook)
+      (set-syntax-table lisp-mode-syntax-table))
     (slime-display-popup-buffer t)
     (sldb-recenter-region (point-min) (point))
     (setq buffer-read-only t)
@@ -5787,7 +5652,9 @@ Called on the `point-entered' text-property hook."
 (defun sldb-backward-frame ()
   (when (> (point) sldb-backtrace-start-marker)
     (goto-char (previous-single-char-property-change
-                (car (sldb-frame-region))
+                (if (get-text-property (point) 'frame)
+                    (car (sldb-frame-region))
+                    (point))
                 'frame
                 nil sldb-backtrace-start-marker))))
 
@@ -6278,20 +6145,19 @@ was called originally."
       (let ((inhibit-read-only t))
         (erase-buffer)
         (loop for idx from 0 
-              for (id name status desc) in threads
-              do (slime-thread-insert idx name status desc id))
+              for (id name status) in threads
+              do (slime-thread-insert idx name status id))
         (goto-char (point-min))))))
 
-(defun slime-thread-insert (idx name status summary id)
+(defun slime-thread-insert (idx name status id)
   (slime-propertize-region `(thread-id ,idx)
     (insert (format "%3s: " id))
     (slime-insert-propertized '(face bold) name)
     (insert-char ?\  (- 30 (current-column)))
-    (let ((summary-start (point)))
+    (let ((start (point)))
       (insert " " status)
-      (insert " " summary)
       (unless (bolp) (insert "\n"))
-      (indent-rigidly summary-start (point) 2))))
+      (indent-rigidly start (point) 2))))
 
 
 ;;;;; Major mode
@@ -7609,10 +7475,26 @@ BODY returns true if the check succeeds."
   slime-test-symbols
   (slime-check-symbol-at-point "#+" sym ""))
 
-(def-slime-test symbol-at-point.17 (sym)
-  "symbol-at-point after #-"
-  slime-test-symbols
-  (slime-check-symbol-at-point "#-" sym ""))
+
+(def-slime-test sexp-at-point.1 (string)
+  "symbol-at-point after #'"
+  '(("foo")
+    ("#:foo")
+    ("#'foo")
+    ("#'(lambda (x) x)")
+    ("#\\space")
+    ("#\\(")
+    ("#\\)"))
+  (with-temp-buffer
+    (lisp-mode)
+    (insert string)
+    (goto-char (point-min))
+    (slime-test-expect (format "Check sexp `%s' (at %d)..."
+                               (buffer-string) (point))
+                       string
+                       (slime-sexp-at-point)
+                       #'equal)))
+
 
 (def-slime-test narrowing ()
     "Check that narrowing is properly sustained."
@@ -7748,12 +7630,12 @@ confronted with nasty #.-fu."
 Confirm that EXPECTED-ARGLIST is displayed."
     '(("swank::operator-arglist" "(swank::operator-arglist name package)")
       ("swank::create-socket" "(swank::create-socket host port)")
-      ("swank::emacs-connected" "(swank::emacs-connected )")
+      ("swank::emacs-connected" "(swank::emacs-connected)")
       ("swank::compile-string-for-emacs"
        "(swank::compile-string-for-emacs string buffer position filename policy)")
       ("swank::connection.socket-io"
        "(swank::connection.socket-io \\(struct\\(ure\\)?\\|object\\|instance\\|x\\))")
-      ("cl:lisp-implementation-type" "(cl:lisp-implementation-type )")
+      ("cl:lisp-implementation-type" "(cl:lisp-implementation-type)")
       ("cl:class-name" 
        "(cl:class-name \\(class\\|object\\|instance\\|structure\\))"))
   (let ((arglist (slime-eval `(swank:operator-arglist ,function-name 
@@ -8069,7 +7951,7 @@ the buffer's undo-list."
        ("23" "42")))
   (with-temp-buffer
     (lisp-mode)
-    (slime-mode 1)
+    (slime-lisp-mode-hook)
     (insert buffer-content)
     (slime-compile-region (point-min) (point-max))
     (slime-sync-to-top-level 3)
@@ -8336,6 +8218,18 @@ keys."
           until (= (point) (point-max))
           maximizing column)))
 
+(defun slime-inside-string-p ()
+  (nth 3 (slime-current-parser-state)))
+
+(defun slime-inside-comment-p ()
+  (nth 4 (slime-current-parser-state)))
+
+(defun slime-inside-string-or-comment-p ()
+  (let ((state (slime-current-parser-state)))
+    (or (nth 3 state) (nth 4 state))))
+
+
+
 ;;;;; CL symbols vs. Elisp symbols.
 
 (defun slime-cl-symbol-name (symbol)
@@ -8490,7 +8384,7 @@ within. This includes nested comments (#| ... |#)."
 
 (defun slime-end-of-symbol ()
   "Move to the end of the CL-style symbol at point."
-  (re-search-forward "\\=\\(\\sw\\|\\s_\\|\\s\\.\\|[#@|]\\)*"))
+  (re-search-forward "\\=\\(\\sw\\|\\s_\\|\\s\\.\\|#:\\|[@|]\\)*"))
 
 (put 'slime-symbol 'end-op 'slime-end-of-symbol)
 (put 'slime-symbol 'beginning-op 'slime-beginning-of-symbol)
@@ -8680,6 +8574,15 @@ for (somewhat) better multiframe support."
 
 (defun slime-local-variable-p (var &optional buffer)
   (local-variable-p var (or buffer (current-buffer)))) ; XEmacs
+
+(slime-DEFUN-if-undefined region-active-p ()
+  (and transient-mark-mode mark-active))
+
+(if (featurep 'xemacs)
+    (slime-DEFUN-if-undefined use-region-p ()
+      (region-active-p))
+    (slime-DEFUN-if-undefined use-region-p ()
+      (and transient-mark-mode mark-active)))
 
 (slime-DEFUN-if-undefined next-single-char-property-change
     (position prop &optional object limit)
@@ -8904,10 +8807,11 @@ If they are not, position point at the first syntax error found."
 (slime-DEFUN-if-undefined set-process-coding-system 
     (process &optional decoding encoding))
 
-(slime-DEFUN-if-undefined display-warning  
-                          (type message &optional level buffer-name)
-  (slime-display-message (apply #'format (concat "Warning (%s): " message) type args)
-                         "*Warnings*"))
+;; For Emacs 21
+(slime-DEFUN-if-undefined display-warning
+    (type message &optional level buffer-name)
+  (with-output-to-temp-buffer "*Warnings*"
+    (princ (format "Warning (%s %s): %s" type level message))))
 
 (unless (boundp 'temporary-file-directory)
   (defvar temporary-file-directory

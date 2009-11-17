@@ -1,3 +1,119 @@
+2009-11-16  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-asdf.lisp (asdf-determine-system): New function for
+	determining to what system a file belongs.
+
+	* slime-asdf.el (slime-rgrep-system): New function.
+
+2009-11-13  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* swank-arglists.lisp (extra-keywords/make-instance)
+	(extra-keywords/change-class): Wrap call to CLASS-PROTOTYPE in an
+	IGNORE-ERRORS because computing a class-prototype involves
+	evaluating initforms which may be calls to ERROR.
+
+2009-11-07  Stas Boukarev  <stassats@gmail.com>
+
+	* slime-package-fu.el (slime-find-package-definition-regexp): Go
+	one sexp backward to the defpackage beginning.
+
+2009-11-06  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime-autodoc.el (slime-arglist): Adapted to new code.
+	(slime-retrieve-arglist): New.
+
+	* slime-c-p-c.el (slime-get-arglist): Deleted.
+	(slime-complete-symbol*-fancy-bit): Use `slime-retrieve-arglist'.
+
+2009-11-05  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* swank-arglists.lisp (print-decoded-arglist): Fix printing of
+	&any and &key parameters.
+	(test-print-arglist): Slightly adapted.
+
+	* slime-autodoc.el ([test] autodoc.1): Slightly adapted.
+
+2009-11-02  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* swank-arglists.lisp (do-decoded-arglists): Remove L-V-T.
+
+2009-11-02  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime-parse.el (slime-make-form-spec-from-string): Break out of
+	the loop if we're at unbalanced parentheses.
+	(slime-compare-character-syntax): New helper.
+	(slime-parse-form-upto-point): Use it.
+	(slime-incomplete-form-at-point): Revert change.
+	([test] form-upto-point.1): New test case.
+
+2009-11-02  Stas Boukarev  <stassats@gmail.com>
+
+	* slime-parse.el (slime-incomplete-form-at-point): Concatenate " )"
+	not just ")", because the form's last char may be \, and the parenthesis
+	will be escaped.
+	That fixes a bug reported by Ariel Badichi.
+
+2009-10-31  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime-fontifying-fu.el (slime-search-suppressed-forms-internal):
+	Wrap form in `ignore-errors' again. People have been guinea pigs
+	long enough. Suppression of reader-conditionalized forms seems to
+	work pretty reliably now.
+
+2009-10-31  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime-autodoc.el, swank-arglists.lisp: Large parts were
+	rewritten. Autodoc is now able to highlight &key parameters, and
+	parameters in nested arglists.
+
+	* slime-parse.el, slime-c-p-c.el, slime-highlighting-edits.el:
+	Adapted to changes.
+
+2009-10-31  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* slime-autodoc.el (slime-autodoc-worthwile-p): New helper.
+	(slime-compute-autodoc-internal): Use it to only perform an RPC
+	request if it's worthwhile to do so. For example, don't do it if
+	the user only typed a single opening parenthesis.
+
+	* swank-arglists.lisp (variable-desc-for-echo-area):
+	Bind *PRINT-READABLY* to NIL as global variables may contain
+	objects which can't be printed readably.
+
+2009-10-31  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* swank-c-p-c.lisp (completion-set): Split into
+	`symbol-completion-set', and `package-completion-set'.
+	(completions): Updated accordingly. Also: complete packages
+	"hyphenated" by dots.
+	(find-matching-packages): Heed readtable-case.
+	(make-compound-prefix-matcher): Make it possible to pass list of
+	delimeters.
+	(compound-prefix-match): Deleted.
+
+	* swank-arglists.lisp (completions-for-keyword): Adapted so it
+	does not use `compound-prefix-match'.
+
+	* slime-c-p-c.el (complete-symbol* [test]): New test case.
+
+2009-10-31  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	* swank-arglists.lisp (extra-keywords :around): Sort keyword
+	parameters such that implementation-internal stuff is shown last.
+	(compose): New helper.
+	(make-package-comparator): New.
+	(sort-extra-keywords): New.
+
+2009-10-31  Tobias C. Rittweiler  <tcr@freebits.de>
+
+	`M-x slime-visit-sbcl-bug' will open a browser to visit SBCL's bug
+	tracker at Launchpad that describes the bug number at
+	point (#nnnnnn).
+
+	* slime-sbcl-exts.el (slime-visit-sbcl-bug): New.
+	(slime-read-sbcl-bug): New.
+	(slime-sbcl-bug-at-point): New.
+
 2009-10-21  Stas Boukarev  <stassats@gmail.com>
 
 	* slime-asdf.el (slime-browse-system): Open the parent directory of

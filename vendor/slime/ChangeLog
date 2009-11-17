@@ -1,3 +1,182 @@
+2009-11-13  Stas Boukarev  <stassats@gmail.com>
+
+	* swank.lisp (classify-symbol): Check fbound before calling fdefinition,
+	ECL doesn't like (fdefinition nil).
+
+	* swank-ecl.lisp (swank-mop:compute-applicable-methods-using-classes):
+	Add a dummy function. ECL doesn't have it, but some contribs are using it.
+	Patch by Andy Hefner.
+
+2009-11-13  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-ecl.lisp (function-name): Use clos:generic-function-name
+	for generic functions.
+	(arglist): Check fro symbol before calling special-operator-p and
+	macro-function.
+	Patch by Andy Hefner.
+
+2009-11-06  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-ecl.lisp (grovel-docstring-for-arglist): ECL's arglists
+	for macros include macro name at the first place, unlike arglists
+	for functions. cdr arglists only for macros and special operators.
+	Reported by Andy Hefner.
+	(find-source-location): Missing comma before error message formatting.
+	Patch by Andy Hefner.
+
+2009-11-05  Tobias C. Rittweiler <tcr@freebits.de>
+
+	Make C-c C-c operate on region if mark is active (and Transient
+	Mark mode is enabled.)
+
+	* slime.el (slime-compile-defun): Operate on region if
+	transient-mark-mode is active.
+
+2009-11-03  Helmut Eller  <heller@common-lisp.net>
+
+	Ask gdb for source lines of foreign functions.
+
+	* swank-cmucl.lisp (frame-source-location): Handle foreign
+	frames with gdb.
+	(frame-ip): Handle bogus frames (on x86)
+	(disassemble-frame): Use gdb for foreign frames.
+	(foreign-frame-p, foreign-frame-source-location): New functions.
+	(gdb-command, gdb-exec, parse-gdb-line-info, read-word)
+	(whitespacep, with-temporary-file, call/temporary-file): New
+	helpers.
+
+2009-11-03  Stas Boukarev  <stassats@gmail.com>
+
+	* slime.el (sldb-setup): Do (set-syntax-table lisp-mode-syntax-table)
+	otherwise functions used by autodoc do not work properly.
+
+2009-11-03  Stas Boukarev  <stassats@gmail.com>
+
+	* slime.el (sldb-backward-frame): If the point is at the end of
+	the buffer, there is no property, handle this case.
+
+	* swank.lisp (collect-notes): LOAD returns generalized boolean,
+	not just boolean, but make-compilation-result accepts only booleans
+	for its second argument.
+
+	Both bugs reported by Derrell Piper.
+
+2009-11-02  Tobias C. Rittweiler <tcr@freebits.de>
+
+	* slime.el (slime-end-of-symbol): Make sure not to move on #'foo.
+	([test] sexp-at-point.1): New test case.
+
+2009-11-02  Helmut Eller  <heller@common-lisp.net>
+
+	* swank.lisp (without-interrupts): Removed. No longer used.
+	* swank-backend.lisp (call-without-interrupts): Removed.
+	Update backends accoringly.
+
+2009-11-02  Helmut Eller  <heller@common-lisp.net>
+
+	CCL's lap-functions don't have source-notes but the name often
+	has.  E.g. ccl::%fixnum-truncate.  Use names as last resort.
+
+	* swank-ccl.lisp (function-name-source-note): New function.
+	(pc-source-location): Use it.
+
+2009-11-02  Stas Boukarev  <stassats@gmail.com>
+
+	* swank.lisp (tokenize-symbol-thoroughly): Return NIL
+	instead of throwing an error.
+	(parse-symbol): Handle null result of tokenize-symbol-thoroughly.
+
+	This fixes a bug reported by Derrell Piper.
+
+2009-10-31  Tobias C. Rittweiler <tcr@freebits.de>
+
+	* slime.el (slime-bug): Deleted.
+
+2009-10-31  Tobias C. Rittweiler <tcr@freebits.de>
+
+	* slime.el (slime-inside-string-p, slime-inside-comment-p)
+	(slime-inside-string-or-comment-p): New.
+
+	* swank-match.lisp: New file. Contains very simple pattern matcher
+	from the CMU AI archive.
+
+	* swank-loader.lisp: Compile swank-match.lisp.
+
+	* swank.lisp: Make SWANK package use new SWANK-MATCH package.
+
+2009-10-31  Tobias C. Rittweiler <tcr@freebits.de>
+
+	* swank.lisp (find-symbol-with-status): New.
+	(parse-symbol): Use it to correctly parse symbols where only one
+	colon is given. Consequences: Autodoc won't display an arglist on
+	`(foo:bar |' if BAR is not exported from FOO.
+
+2009-10-31  Helmut Eller  <heller@common-lisp.net>
+
+	* swank.lisp (list-threads): Remove thread-description.  Wasn't
+	used anymore.
+	* swank-backend.lisp (thread-description, set-thread-description):
+	Deleted.
+	* swank-abcl.lisp: Update accordingly.
+	* slime.el (slime-update-threads-buffer, slime-thread-insert):
+	Update accordingly.
+
+2009-10-31  Helmut Eller  <heller@common-lisp.net>
+
+	* swank-ccl.lisp (kill-thread): Don't signal conditions.
+	* swank-backend.lisp (kill-thread): Update docstring.
+
+2009-10-30  Stas Boukarev  <stassats@gmail.com>
+
+	* swank-loader.lisp (setup): Use EXT:PROBE-DIRECTORY on Clisp,
+	because PROBE-FILE doesn't want to work on directories.
+	Patch by Dirk Sondermann.
+
+2009-10-30  Helmut Eller  <heller@common-lisp.net>
+
+	* swank-openmcl.lisp: Removed. 1.4 is out so no longer needed.
+	* swank-ccl.lisp: Update accordingly.
+
+	* test-all.sh: Removed. Not used in ages.
+
+2009-10-28  Helmut Eller  <heller@common-lisp.net>
+
+	Simpler modeline code.
+
+	* slime.el (slime-modeline-string): Renamed from
+	slime-compute-modeline-string.
+	(slime-modeline-state-string): Renamed from
+	slime-compute-connection-state
+	(slime-modeline-package, slime-modeline-connection-name)
+	(slime-modeline-connection-state)
+	(slime-extended-modeline,slime-compute-modeline-package)
+	(slime-update-modeline-string, slime-shall-we-update-modeline-p)
+	(slime-update-all-modelines, slime-modeline-update-timer)
+	(slime-restart-or-init-modeline-update-timer)
+	(slime-connection-state-as-string): Deleted
+	(slime-stale-connection-p): Deleted.
+
+2009-10-28  Helmut Eller  <heller@common-lisp.net>
+
+	* slime.el (slime-disconnect): Don't reference connection.  Left
+	over from last change.
+	([test] arglist): Update expected results for slightly changed
+	printer settings.
+	([test] indentation): Install common-lisp-indent-function.
+	([undefun] display-warning): Fix it.
+
+	* test.sh: Don't copy contribs. Slime should work without them.
+	* swank-loader.lisp (setup): Compile contribs only if directory
+	exists.
+
+2009-10-28  Helmut Eller  <heller@common-lisp.net>
+
+	* slime.el (slime-format-display-message, slime-display-message)
+	(slime-create-message-window): Deleted.  The trick with the
+	pre-command-hook doesn't work in XEmacs 21.5.  So use the standard
+	message function.  One day XEmacs will learn how to resize the
+	minibuffer, but until then we have to live with one-line messages.
+
 2009-10-27  Helmut Eller  <heller@common-lisp.net>
 
 	* slime.el: Fix some docstrings and comments.

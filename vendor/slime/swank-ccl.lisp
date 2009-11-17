@@ -52,14 +52,6 @@
 
 (in-package :swank-backend)
 
-;; Backward compatibility
-(eval-when (:compile-toplevel)
-  (unless (fboundp 'ccl:compute-applicable-methods-using-classes)
-    (compile-file (make-pathname :name "swank-openmcl" :type "lisp" :defaults swank-loader::*source-directory*)
-                  :output-file (make-pathname :name "swank-ccl" :defaults swank-loader::*fasl-directory*)
-                  :verbose t)
-    (invoke-restart (find-restart 'ccl::skip-compile-file))))
-
 (eval-when (:compile-toplevel :execute :load-toplevel)
   (assert (and (= ccl::*openmcl-major-version* 1)
                (>= ccl::*openmcl-minor-version* 4))
@@ -162,12 +154,6 @@
                   *external-format-to-coding-system*)))
 
 ;;; Unix signals
-
-(defimplementation call-without-interrupts (fn)
-  ;; This prevents the current thread from being interrupted, but it doesn't
-  ;; keep other threads from running concurrently, so it's not an appropriate
-  ;; replacement for locking.
-  (ccl:without-interrupts (funcall fn)))
 
 (defimplementation getpid ()
   (ccl::getpid))
@@ -545,7 +531,8 @@
 
 (defun function-source-location (function)
   (source-note-to-source-location
-   (ccl:function-source-note function)
+   (or (ccl:function-source-note function)
+       (function-name-source-note function))
    (lambda ()
      (format nil "Function has no source note: ~A" function))
    (ccl:function-name function)))
@@ -553,10 +540,18 @@
 (defun pc-source-location (function pc)
   (source-note-to-source-location
    (or (ccl:find-source-note-at-pc function pc)
-       (ccl:function-source-note function))
+       (ccl:function-source-note function)
+       (function-name-source-note function))
    (lambda ()
      (format nil "No source note at PC: ~a[~d]" function pc))
    (ccl:function-name function)))
+
+(defun function-name-source-note (fun)
+  (let ((defs (ccl:find-definition-sources (ccl:function-name fun) 'function)))
+    (and defs
+         (destructuring-bind ((type . name) srcloc . srclocs) (car defs)
+           (declare (ignore type name srclocs))
+           srcloc))))
 
 (defun source-note-to-source-location (source if-nil-thunk &optional name)
   (labels ((filename-to-buffer (filename)
@@ -728,9 +723,8 @@
   (queue '() :type list))
 
 (defimplementation spawn (fun &key name)
-  (ccl:process-run-function 
-   (or name "Anonymous (Swank)")
-   fun))
+  (ccl:process-run-function (or name "Anonymous (Swank)")
+                            fun))
 
 (defimplementation thread-id (thread)
   (ccl:process-serial-number thread))
@@ -761,7 +755,8 @@
   (ccl:all-processes))
 
 (defimplementation kill-thread (thread)
-  (ccl:process-kill thread))
+  ;;(ccl:process-kill thread) ; doesn't cut it
+  (ccl::process-initial-form-exited thread :kill))
 
 (defimplementation thread-alive-p (thread)
   (not (ccl:process-exhausted-p thread)))
