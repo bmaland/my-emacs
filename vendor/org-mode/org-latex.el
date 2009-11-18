@@ -4,7 +4,7 @@
 ;;
 ;; Emacs Lisp Archive Entry
 ;; Filename: org-latex.el
-;; Version: 6.32trans
+;; Version: 6.32b
 ;; Author: Bastien Guerry <bzg AT altern DOT org>
 ;; Maintainer: Carsten Dominik <carsten.dominik AT gmail DOT com>
 ;; Keywords: org, wp, tex
@@ -1167,7 +1167,7 @@ links, keywords, lists, tables, fixed-width"
 			'(("\\(\\s-\\)\"" "«~")
 			  ("\\(\\S-\\)\"" "~»")
 			  ("\\(\\s-\\)'" "`"))
-		      '(("\\(\\s-\\|[[(]\\)\"" "``")
+		      '(("\\(\\s-\\|(\\)\"" "``")
 			("\\(\\S-\\)\"" "''")
 			("\\(\\s-\\|(\\)'" "`")))))
     (mapc (lambda(l) (goto-char (point-min))

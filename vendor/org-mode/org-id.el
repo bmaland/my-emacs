@@ -5,7 +5,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.32trans
+;; Version: 6.32b
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -392,32 +392,25 @@ When CHECK is given, prepare detailed information about duplicate IDs."
   (interactive)
   (if (not org-id-track-globally)
       (error "Please turn on `org-id-track-globally' if you want to track IDs")
-    (let* ((org-id-search-archives
-	    (or org-id-search-archives
-		(and (symbolp org-id-extra-files)
-		     (symbol-value org-id-extra-files)
-		     (member 'agenda-archives org-id-extra-files))))
-	   (files
-	    (or files
-		(append
-		 ;; Agenda files and all associated archives
-		 (org-agenda-files t org-id-search-archives)
-		 ;; Explicit extra files
-		 (if (symbolp org-id-extra-files)
-		     (symbol-value org-id-extra-files)
-		   org-id-extra-files)
+    (let ((files
+	   (or files
+	       (append
+		;; Agenda files and all associated archives
+		(org-agenda-files t org-id-search-archives)
+		;; Explicit extra files
+		(if (symbolp org-id-extra-files)
+		    (symbol-value org-id-extra-files)
+		  org-id-extra-files)
 	      ;; Files associated with live org-mode buffers
-		 (delq nil
-		       (mapcar (lambda (b)
-				 (with-current-buffer b
-				   (and (org-mode-p) (buffer-file-name))))
-			       (buffer-list)))
-		 ;; All files known to have IDs
-		 org-id-files)))
-	   org-agenda-new-buffers
-	   file nfiles tfile ids reg found id seen (ndup 0))
-      (when (member 'agenda-archives files)
-	(setq files (delq 'agenda-archives (copy-sequence files))))
+		(delq nil
+		      (mapcar (lambda (b)
+				(with-current-buffer b
+				  (and (org-mode-p) (buffer-file-name))))
+			      (buffer-list)))
+		;; All files known to have IDs
+		org-id-files)))
+	  org-agenda-new-buffers
+	  file nfiles tfile ids reg found id seen (ndup 0))
       (setq nfiles (length files))
       (while (setq file (pop files))
 	(message "Finding ID locations (%d/%d files): %s"

@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.32trans
+;; Version: 6.32b
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -95,7 +95,7 @@
 
 ;;; Version
 
-(defconst org-version "6.32trans"
+(defconst org-version "6.32b"
   "The version number of the file org.el.")
 
 (defun org-version (&optional here)
@@ -219,7 +219,6 @@ to add the symbol `xyz', and the package must have a call to
 	(const :tag "C  eval-light:        Evaluate inbuffer-code on demand" org-eval-light)
 	(const :tag "C  expiry:            Expiry mechanism for Org-mode entries" org-expiry)
 	(const :tag "C  exp-bibtex:        Export citations using BibTeX" org-exp-bibtex)
-	(const :tag "C  git-link:          Provide org links to specific file version" org-git-link)
 	(const :tag "C  interactive-query: Interactive modification of tags query\n\t\t\t(PARTIALLY OBSOLETE, see secondary filtering)" org-interactive-query)
 
         (const :tag "C  invoice            Help manage client invoices in Org-mode" org-invoice)
@@ -9195,7 +9194,6 @@ This function can be used in a hook."
     "BEGIN_SRC" "END_SRC"
     "CATEGORY" "COLUMNS"
     "CAPTION" "LABEL"
-    "SETUPFILE"
     "BIND"
     "MACRO"))
 

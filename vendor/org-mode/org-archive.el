@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.32trans
+;; Version: 6.32b
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -304,7 +304,12 @@ this heading."
 
 	  ;; Save and kill the buffer, if it is not the same buffer.
 	  (when (not (eq this-buffer buffer))
-	    (save-buffer))
+	    (save-buffer)
+	    ;; Check if it is OK to kill the buffer
+	    (unless
+		(or visiting
+		    (equal (marker-buffer org-clock-marker) (current-buffer)))
+	      (kill-buffer buffer)))
 	  ))
       ;; Here we are back in the original buffer.  Everything seems to have
       ;; worked.  So now cut the tree and finish up.
