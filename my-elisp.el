@@ -1,5 +1,8 @@
 ;;; my-elisp.el --- Various pieces of elisp created by myself and others
 
+(defun yas/org-very-safe-expand ()
+  (let ((yas/fallback-behavior 'return-nil)) (yas/expand)))
+
 ;; taken from http://gandalf.uib.no/lingkurs/webroot/static/replace-utils.el
 (defun replace-strings (&rest patterns)
   (while patterns

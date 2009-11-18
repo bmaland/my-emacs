@@ -163,13 +163,12 @@
 (add-hook 'org-mode-hook
           (lambda ()
             (reftex-mode t)
-            (require 'bbdb)
-            (bbdb-initialize)
 
-             ;; yasnippet
+            ;; yasnippet (using the new org-cycle hooks)
             (make-variable-buffer-local 'yas/trigger-key)
             (setq yas/trigger-key [tab])
-            ;;(define-key yas/keymap [tab] 'yas/next-field-group)
+            (add-to-list 'org-tab-first-hook 'yas/org-very-safe-expand)
+            (define-key yas/keymap [tab] 'yas/next-field)
 
             (set-pairs '("(" "{" "[" "\""))
 
