@@ -1,6 +1,9 @@
 (multi-term-keystroke-setup)
 
 (define-key global-map "\C-cr" 'org-remember)
+(global-set-key "\C-cl" 'org-store-link)
+(global-set-key "\C-ca" 'org-agenda)
+(global-set-key "\C-cb" 'org-iswitchb)
 
 ;; Align your code in a pretty way.
 (global-set-key (kbd "C-x \\") 'align-regexp)
@@ -42,6 +45,8 @@
 (global-set-key "\C-r"    'isearch-backward-regexp)
 (global-set-key "\C-\M-s" 'isearch-forward)
 (global-set-key "\C-\M-r" 'isearch-backward)
+
+(global-set-key "\M-%"     'query-replace-regexp)
 
 (global-set-key "\M-#"          'calc)
 (global-set-key "\C-xf"         'recentf-ido-find-file)

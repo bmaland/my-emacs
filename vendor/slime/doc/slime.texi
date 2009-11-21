@@ -12,7 +12,7 @@
 @set EDITION 3.0-alpha
 @set SLIMEVER 3.0-alpha
 @c @set UPDATED @today{}
-@set UPDATED @code{$Date: 2009-08-27 14:48:46 $}
+@set UPDATED @code{$Date: 2009-10-21 14:32:57 $}
 @set TITLE SLIME User Manual
 @settitle @value{TITLE}, version @value{EDITION}
 
@@ -233,7 +233,8 @@ Contributed Packages
 * Documentation Links::         
 * Xref and Class Browser::      
 * Highlight Edits::             
-* Scratch Buffer::              
+* Scratch Buffer::
+* slime-sprof::
 * slime-fancy::                 
 
 REPL: the ``top level''
@@ -779,7 +780,7 @@ You can assign or change default key bindings globally using the
 which binds @kbd{C-c s} to the function @code{slime-selector}.
 
 Alternatively, if you want to assign or change a key binding in just a
-particular slime mode, you can use the @code{global-set-key} function
+particular slime mode, you can use the @code{define-key} function
 in your @file{~/.emacs} file like this:
 @example
 (define-key slime-repl-mode-map (kbd "C-c ;") 
@@ -1794,7 +1795,7 @@ The default request handling style is chosen according to the
 capabilities of your Lisp system. The general order of preference is
 @code{:SPAWN}, then @code{:SIGIO}, then @code{:FD-HANDLER}, with
 @code{NIL} as a last resort. You can check the default style by
-calling @code{SWANK-BACKEND:PREFERRED-COMMUNICATION-STYLE}. You can
+calling @code{SWANK-BACKEND::PREFERRED-COMMUNICATION-STYLE}. You can
 also override the default by setting
 @code{SWANK:*COMMUNICATION-STYLE*} in your Swank init file.
 
@@ -2096,7 +2097,8 @@ particular packages do.
 * Documentation Links::         
 * Xref and Class Browser::      
 * Highlight Edits::             
-* Scratch Buffer::              
+* Scratch Buffer::
+* slime-sprof::
 * slime-fancy::                 
 @end menu
 
@@ -2518,6 +2520,10 @@ you will get errors about missing symbols.
 @cmditem{slime-load-system NAME}
 Compile and load an ASDF system.  The default system name is taken
 from the first file matching *.asd in the current directory.
+@cmditem{slime-open-system NAME &optional LOAD}
+Open all files in a system, optionally load it if LOAD is non-nil.
+@cmditem{slime-browse-system NAME}
+Browse files in a system using Dired.
 @end table
 
 The package also installs some new REPL shortcuts (@pxref{Shortcuts}):
@@ -2531,6 +2537,10 @@ Compile (but not load) an ASDF system.
 Recompile (but not load) an ASDF system.
 @item force-load-system
 Recompile and load an ASDF system.
+@item open-system
+Open all files in a system.
+@item browse-system
+Browse files in a system using Dired.
 @end table
 
 @node Banner
@@ -2839,6 +2849,39 @@ the current buffer.
 Create a @file{*slime-scratch*} buffer. In this
 buffer you can enter Lisp expressions and evaluate them with
 @kbd{C-j}, like in Emacs's @file{*scratch*} buffer.
+
+@end table
+
+@node slime-sprof
+@section @code{slime-sprof}
+
+@code{slime-sprof} is a package for integrating SBCL's statistical profiler, sb-sprof.
+
+The variable @code{slime-sprof-exclude-swank} controls whether to
+display swank functions. The default value is NIL.
+
+@table @kbd
+
+@cmditem{slime-sprof-start}
+Start profiling.
+
+@cmditem{slime-sprof-stop}
+Stop profiling.
+@cmditem{slime-sprof-browser}
+Report results of the profiling.
+@end table
+
+The following keys are defined in slime-sprof-browser mode:
+@table @kbd
+
+@kbditem{RET, slime-sprof-browser-toggle}
+Expand / collapse function details (callers, calls to)
+@kbditem{v, slime-sprof-browser-view-source}
+View function sources. 
+@kbditem{d, slime-sprof-browser-disassemble-function}
+Disassemble function.
+@kbditem{s, slime-sprof-toggle-swank-exclusion}
+Toggle exclusion of swank functions from the report.
 
 @end table
 

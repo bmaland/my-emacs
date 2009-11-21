@@ -242,14 +242,17 @@ Many Magit faces inherit from this one by default."
 	  (setq lines (cdr lines)))
       (nreverse lines))))
 
+(defun magit-git-insert (args)
+  (apply #'process-file
+	 magit-git-executable
+	 nil (list t nil) nil
+	 (append magit-git-standard-options args)))
+
 (defun magit-git-output (args)
   (with-output-to-string
     (with-current-buffer
         standard-output
-      (apply #'process-file
-	     magit-git-executable
-	     nil (list t nil) nil
-	     args))))
+      (magit-git-insert args))))
 
 (defun magit-git-string (&rest args)
   (magit-trim-line (magit-git-output args)))
@@ -258,7 +261,8 @@ Many Magit faces inherit from this one by default."
   (magit-split-lines (magit-git-output args)))
 
 (defun magit-git-exit-code (&rest args)
-  (apply #'process-file magit-git-executable nil nil nil args))
+  (apply #'process-file magit-git-executable nil nil nil
+	 (append magit-git-standard-options args)))
 
 (defun magit-file-lines (file)
   (when (file-exists-p file)
@@ -651,7 +655,7 @@ Many Magit faces inherit from this one by default."
 		(insert (propertize buffer-title 'face 'magit-section-title)
 			"\n"))
 	    (setq body-beg (point))
-	    (apply 'process-file cmd nil t nil args)
+	    (apply 'process-file cmd nil t nil (append magit-git-standard-options args))
 	    (if (not (eq (char-before) ?\n))
 		(insert "\n"))
 	    (if washer
@@ -1017,7 +1021,7 @@ Many Magit faces inherit from this one by default."
 		"\n")
 	(cond (nowait
 	       (setq magit-process
-		     (apply 'start-process cmd buf cmd args))
+		     (apply 'start-file-process cmd buf cmd args))
 	       (set-process-sentinel magit-process 'magit-process-sentinel)
 	       (set-process-filter magit-process 'magit-process-filter)
 	       (when input
@@ -1050,7 +1054,7 @@ Many Magit faces inherit from this one by default."
 	       (magit-need-refresh magit-process-client-buffer))
 	      (t
 	       (setq successp
-		     (equal (apply 'call-process cmd nil buf nil args) 0))
+		     (equal (apply 'process-file cmd nil buf nil args) 0))
 	       (magit-set-mode-line-process nil)
 	       (magit-need-refresh magit-process-client-buffer))))
       (or successp
@@ -1625,13 +1629,12 @@ Please see the manual for a complete description of Magit.
 
 (defun magit-insert-diff (file)
   (let ((cmd magit-git-executable)
-	(args (append magit-git-standard-options 
-		      (list "diff")
+	(args (append (list "diff")
 		      (list (magit-diff-U-arg))
 		      magit-diff-options
 		      (list "--" file))))
     (let ((p (point)))
-      (apply 'process-file cmd nil t nil args)
+      (magit-git-insert args)
       (if (not (eq (char-before) ?\n))
 	  (insert "\n"))
       (save-restriction
@@ -2855,7 +2858,7 @@ Prefix arg means justify as well."
 
 (defun magit-configure-have-decorate ()
   (if (eq magit-have-decorate 'unset)
-      (let ((res (magit-git-exit-code "log" "--decorate" "--max-count=0")))
+      (let ((res (magit-git-exit-code "log" "--decorate=full" "--max-count=0")))
 	(setq magit-have-decorate (eq res 0)))))
 
 (defun magit-refresh-log-buffer (range style args)
@@ -2868,7 +2871,7 @@ Prefix arg means justify as well."
 	   `("log"
 	     ,(format "--max-count=%s" magit-log-cutoff-length)
 	     ,style
-	     ,@(if magit-have-decorate (list "--decorate"))
+	     ,@(if magit-have-decorate (list "--decorate=full"))
 	     ,@(if magit-have-graph (list "--graph"))
 	     ,args "--"))))
 

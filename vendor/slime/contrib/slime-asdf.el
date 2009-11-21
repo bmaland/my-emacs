@@ -68,6 +68,38 @@ returns it if it's in `system-names'."
    `(swank:operate-on-system-for-emacs ,system ,operation ,@keyword-args)
    #'slime-compilation-finished))
 
+(defun slime-open-system (name &optional load)
+  "Open all files in an ASDF system."
+  (interactive (list (slime-read-system-name)))
+  (when (or load
+            (and (called-interactively-p)
+                 (not (slime-eval `(swank:asdf-system-loaded-p ,name)))
+                 (y-or-n-p "Load it? ")))
+    (slime-load-system name))
+  (slime-eval-async
+   `(swank:asdf-system-files ,name)
+   (lambda (files)
+     (when files
+       (let ((files (nreverse files)))
+         (find-file-other-window (car files))
+         (mapc 'find-file (cdr files)))))))
+
+(defun slime-browse-system (name)
+  "Browse files in an ASDF system using Dired."
+  (interactive (list (slime-read-system-name)))
+  (slime-eval-async `(asdf-system-directory ,name)
+   (lambda (directory)
+     (when directory
+       (dired directory)))))
+
+(defun slime-rgrep-system (system-name regexp)
+  (interactive (list (slime-read-system-name
+                      nil
+                      (slime-eval `(swank:asdf-determine-system ,(buffer-file-name))))
+                     (grep-read-regexp)))
+  (rgrep regexp "*.lisp"
+         (slime-eval `(swank:asdf-system-directory ,system-name))))
+
 (defslime-repl-shortcut slime-repl-load/force-system ("force-load-system")
   (:handler (lambda ()
               (interactive)
@@ -104,6 +136,18 @@ returns it if it's in `system-names'."
               (interactive)
               (slime-oos (slime-read-system-name) "COMPILE-OP" :force t)))
   (:one-liner "Recompile (but not load) an ASDF system."))
+
+(defslime-repl-shortcut slime-repl-open-system ("open-system")
+  (:handler (lambda ()
+              (interactive)
+              (call-interactively 'slime-open-system)))
+  (:one-liner "Open all files in an ASDF system."))
+
+(defslime-repl-shortcut slime-repl-browse-system ("browse-system")
+  (:handler (lambda ()
+              (interactive)
+              (call-interactively 'slime-browse-system)))
+  (:one-liner "Browse files in an ASDF system using Dired."))
 
 (defun slime-asdf-on-connect ()
   (slime-eval-async '(swank:swank-require :swank-asdf)))

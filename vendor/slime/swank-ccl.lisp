@@ -52,14 +52,6 @@
 
 (in-package :swank-backend)
 
-;; Backward compatibility
-(eval-when (:compile-toplevel)
-  (unless (fboundp 'ccl:compute-applicable-methods-using-classes)
-    (compile-file (make-pathname :name "swank-openmcl" :type "lisp" :defaults swank-loader::*source-directory*)
-                  :output-file (make-pathname :name "swank-ccl" :defaults swank-loader::*fasl-directory*)
-                  :verbose t)
-    (invoke-restart (find-restart 'ccl::skip-compile-file))))
-
 (eval-when (:compile-toplevel :execute :load-toplevel)
   (assert (and (= ccl::*openmcl-major-version* 1)
                (>= ccl::*openmcl-minor-version* 4))
@@ -162,12 +154,6 @@
                   *external-format-to-coding-system*)))
 
 ;;; Unix signals
-
-(defimplementation call-without-interrupts (fn)
-  ;; This prevents the current thread from being interrupted, but it doesn't
-  ;; keep other threads from running concurrently, so it's not an appropriate
-  ;; replacement for locking.
-  (ccl:without-interrupts (funcall fn)))
 
 (defimplementation getpid ()
   (ccl::getpid))
@@ -303,11 +289,14 @@
    :test 'equal))
 
 (defimplementation who-specializes (class)
-  (delete-duplicates
-   (mapcar (lambda (m) 
-             (car (find-definitions m)))
-           (ccl:specializer-direct-methods (if (symbolp class) (find-class class) class)))
-   :test 'equal))
+  (when (symbolp class)
+    (setq class (find-class class nil)))
+  (when class
+    (delete-duplicates
+     (mapcar (lambda (m) 
+               (car (find-definitions m)))
+             (ccl:specializer-direct-methods class))
+     :test 'equal)))
 
 (defimplementation list-callees (name)
   (remove-duplicates
@@ -385,16 +374,17 @@
   )
 
 (defun map-backtrace (function &optional
-                               (start-frame-number 0)
-                               (end-frame-number most-positive-fixnum))
+                      (start-frame-number 0)
+                      end-frame-number)
   "Call FUNCTION passing information about each stack frame
  from frames START-FRAME-NUMBER to END-FRAME-NUMBER."
-  (ccl:map-call-frames function
-                       :origin ccl:*top-error-frame*
-                       :start-frame-number start-frame-number
-                       :count (- end-frame-number start-frame-number)
-                       :test (and (not t) ;(not (symbol-value (swank-sym *sldb-show-internal-frames*)))
-                                  'interesting-frame-p)))
+  (let ((end-frame-number (or end-frame-number most-positive-fixnum)))
+    (ccl:map-call-frames function
+                         :origin ccl:*top-error-frame*
+                         :start-frame-number start-frame-number
+                         :count (- end-frame-number start-frame-number)
+                         :test (and (not t) ;(not (symbol-value (swank-sym *sldb-show-internal-frames*)))
+                                    'interesting-frame-p))))
 
 ;; Exceptions
 (defvar *interesting-internal-frames* ())
@@ -541,7 +531,8 @@
 
 (defun function-source-location (function)
   (source-note-to-source-location
-   (ccl:function-source-note function)
+   (or (ccl:function-source-note function)
+       (function-name-source-note function))
    (lambda ()
      (format nil "Function has no source note: ~A" function))
    (ccl:function-name function)))
@@ -549,10 +540,18 @@
 (defun pc-source-location (function pc)
   (source-note-to-source-location
    (or (ccl:find-source-note-at-pc function pc)
-       (ccl:function-source-note function))
+       (ccl:function-source-note function)
+       (function-name-source-note function))
    (lambda ()
      (format nil "No source note at PC: ~a[~d]" function pc))
    (ccl:function-name function)))
+
+(defun function-name-source-note (fun)
+  (let ((defs (ccl:find-definition-sources (ccl:function-name fun) 'function)))
+    (and defs
+         (destructuring-bind ((type . name) srcloc . srclocs) (car defs)
+           (declare (ignore type name srclocs))
+           srcloc))))
 
 (defun source-note-to-source-location (source if-nil-thunk &optional name)
   (labels ((filename-to-buffer (filename)
@@ -581,13 +580,17 @@
               (t `(:error ,(funcall if-nil-thunk))))
       (error (c) `(:error ,(princ-to-string c))))))
 
-(defimplementation find-definitions (obj)
-  (loop for ((type . name) . sources) in (ccl:find-definition-sources obj)
-        collect (list (definition-name type name)
-                      (source-note-to-source-location
-                       (find-if-not #'null sources)
-                       (lambda () "No source-note available")
-                       name))))
+(defimplementation find-definitions (name)
+  (let ((defs (or (ccl:find-definition-sources name)
+                  (and (symbolp name)
+                       (fboundp name)
+                       (ccl:find-definition-sources (symbol-function name))))))
+    (loop for ((type . name) . sources) in defs
+          collect (list (definition-name type name)
+                        (source-note-to-source-location
+                         (find-if-not #'null sources)
+                         (lambda () "No source-note available")
+                         name)))))
 
 (defimplementation find-source-location (obj)
   (let* ((defs (ccl:find-definition-sources obj))
@@ -720,9 +723,8 @@
   (queue '() :type list))
 
 (defimplementation spawn (fun &key name)
-  (ccl:process-run-function 
-   (or name "Anonymous (Swank)")
-   fun))
+  (ccl:process-run-function (or name "Anonymous (Swank)")
+                            fun))
 
 (defimplementation thread-id (thread)
   (ccl:process-serial-number thread))
@@ -753,7 +755,8 @@
   (ccl:all-processes))
 
 (defimplementation kill-thread (thread)
-  (ccl:process-kill thread))
+  ;;(ccl:process-kill thread) ; doesn't cut it
+  (ccl::process-initial-form-exited thread :kill))
 
 (defimplementation thread-alive-p (thread)
   (not (ccl:process-exhausted-p thread)))

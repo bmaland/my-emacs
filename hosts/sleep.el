@@ -9,7 +9,7 @@
 (setq snippet-dir "~/src/snippets")
 (yas/load-directory snippet-dir)
 ;; etc
-(setq browse-url-generic-program "chromium-browser")
+(setq browse-url-generic-program "firefox")
 
 ;; Imaxima
 (push "/home/bjorn/src/imaxima-imath-1.0" load-path)

@@ -6,7 +6,7 @@
 ;;          Lennart Staflin <lenst@lysator.liu.se>
 ;;          Phil Hagelberg <technomancy@gmail.com>
 ;; URL: http://www.emacswiki.org/cgi-bin/wiki/ClojureMode
-;; Version: 1.4
+;; Version: 1.5
 ;; Keywords: languages, lisp
 
 ;; This file is not part of GNU Emacs.
@@ -18,17 +18,15 @@
 
 ;;; Installation:
 
-;; If you use ELPA, you can install via the M-x package-list-packages
-;; interface. This is preferrable as you will have access to updates
-;; automatically.
+;; If you use ELPA (http://tromey.com/elpa), you can install via the
+;; M-x package-list-packages interface. This is preferrable as you
+;; will have access to updates automatically.
 
 ;; If you need to install by hand for some reason:
 
 ;; (0) Add this file to your load-path, usually the ~/.emacs.d directory.
 ;; (1) Either:
-;;     Add these lines to your .emacs:
-;;       (autoload 'clojure-mode "clojure-mode" "A major mode for Clojure" t)
-;;       (add-to-list 'auto-mode-alist '("\\.clj$" . clojure-mode))
+;;     Add this to your .emacs config: (require 'clojure-mode)
 ;;     Or generate autoloads with the `update-directory-autoloads' function.
 
 ;; The clojure-install function can check out and configure all the
@@ -49,11 +47,6 @@
 ;;   ;; require or autoload paredit-mode
 ;;   (defun lisp-enable-paredit-hook () (paredit-mode 1))
 ;;   (add-hook 'clojure-mode-hook 'lisp-enable-paredit-hook)
-
-;;; Todo:
-
-;; * make install command more recoverable
-;; * hashbang is also a valid comment character
 
 ;;; License:
 
@@ -147,6 +140,8 @@ if that value is non-nil."
        "\\(\\(^\\|[^\\\\\n]\\)\\(\\\\\\\\\\)*\\)\\(;+\\|#|\\) *")
   (set (make-local-variable 'lisp-indent-function)
        'clojure-indent-function)
+  (set (make-local-variable 'lisp-doc-string-elt-property)
+	   'clojure-doc-string-elt)
   (set (make-local-variable 'font-lock-multiline) t)
 
   (setq lisp-imenu-generic-expression
@@ -338,6 +333,12 @@ elements of a def* forms."
       ("\\<io\\!\\>" 0 font-lock-warning-face)))
   "Default expressions to highlight in Clojure mode.")
 
+;; Docstring positions
+(put 'defn 'clojure-doc-string-elt 2)
+(put 'defn- 'clojure-doc-string-elt 2)
+(put 'defmulti 'clojure-doc-string-elt 2)
+(put 'defmacro 'clojure-doc-string-elt 2)
+
 (defun clojure-indent-function (indent-point state)
   "This function is the normal value of the variable `lisp-indent-function'.
 It is used when indenting a line within a function call, to see if the
@@ -480,7 +481,8 @@ check for contextual indenting."
   (assoc 1)
   (condp 2)
 
-  (fn 'defun))
+  (fn 'defun)
+  (testing 1))
 
 ;; built-ins
 (define-clojure-indent
@@ -537,12 +539,17 @@ is bundled up as a function so that you can call it after you've set
 
     (slime-setup '(slime-fancy))
 
-    (setq swank-clojure-jar-path
-          (concat clojure-src-root "/clojure/clojure.jar"))
-    (unless (boundp 'swank-clojure-extra-classpaths)
-      (setq swank-clojure-extra-classpaths nil))
-    (add-to-list 'swank-clojure-extra-classpaths
-                 (concat clojure-src-root "/clojure-contrib/src/"))))
+    (setq swank-clojure-classpath
+          (list
+           (concat clojure-src-root "/clojure/clojure.jar")
+           (concat clojure-src-root "/clojure-contrib/clojure-contrib.jar")))
+    (eval-after-load 'slime
+      '(progn (require 'swank-clojure)
+              (setq slime-lisp-implementations
+                    (cons `(clojure ,(swank-clojure-cmd) :init
+                                    swank-clojure-init)
+                          (remove-if #'(lambda (x) (eq (car x) 'clojure))
+                                     slime-lisp-implementations)))))))
 
 ;;;###autoload
 (defun clojure-install (src-root)
@@ -596,7 +603,7 @@ lines to your personal Emacs config somewhere:
     (cd orig-directory)))
 
 (defun clojure-update ()
-  "Update clojure-related repositories and recompile clojure.
+  "Update clojure-related repositories from upstream master and recompile clojure.
 
 Works with clojure etc. installed via `clojure-install'. Code
 should be checked out in the `clojure-src-root' directory."
@@ -606,15 +613,15 @@ should be checked out in the `clojure-src-root' directory."
   (let ((orig-directory default-directory))
     (dolist (repo '("clojure" "clojure-contrib" "swank-clojure" "slime"))
       (cd (concat clojure-src-root "/" repo))
-      (unless (= 0 (shell-command "git pull"))
+      (unless (= 0 (shell-command "git checkout master && git pull"))
         (error "Clojure update failed: %s" repo)))
 
     (message "Compiling...")
-    (cd (format "%s/clojure" src-root))
+    (cd (format "%s/clojure" clojure-src-root))
     (unless (= 0 (shell-command "ant"))
       (error "Couldn't compile Clojure."))
 
-    (cd (format "%s/clojure-contrib" src-root))
+    (cd (format "%s/clojure-contrib" clojure-src-root))
     (unless (= 0 (shell-command "ant -Dclojure.jar=../clojure/clojure.jar"))
       (error "Couldn't compile Contrib."))
     
