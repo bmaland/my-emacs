@@ -50,8 +50,7 @@
              ;; (load "pylint-flymake.el")
              (set (make-variable-buffer-local 'beginning-of-defun-function)
                   'py-beginning-of-def-or-class)
-             ;; ( is handled by pycomplete.el
-             (set-pairs '("{" "[" "\"" "\'"))
+             (set-pairs '("{" "[" "\"" "\'" "("))
              (setq py-indent-offset 4
                    py-shell-switch-buffers-on-execute nil
                    outline-regexp "def\\|class ")
@@ -85,6 +84,12 @@
     (if (not (looking-at "^"))
         (forward-char))
     (insert "self.")))
+
+(defun py-next-block ()
+   "go to the next block.  Cf. `forward-sexp' for lisp-mode"
+   (interactive)
+   (py-mark-block nil 't)
+   (back-to-indentation))
 
 ;; NOTE Not sure if I really need this, py-complete works well enough I think.
 ;; Should be improved with completion etc

@@ -174,6 +174,8 @@
 
             (local-set-key (kbd "M-s-<left>") 'org-promote-subtree)
             (local-set-key (kbd "M-s-<right>") 'org-demote-subtree)
+            (local-set-key (kbd "C-M-e") 'org-forward-same-level)
+            (local-set-key (kbd "C-M-a") 'org-backward-same-level)
             (local-set-key (kbd "C-c d") '(lambda () (interactive)
                                             (org-todo 'done)))
             (local-set-key (kbd "C-c s") '(lambda () (interactive)
@@ -223,7 +225,6 @@
           (lambda ()
             (set-pairs '("(" "{" "[" "\""))
             (auto-fill-mode 1)
-            (bit-mode t)
             (setq tab-width 4)))
 
 (add-hook 'ibuffer-mode-hook
