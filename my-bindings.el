@@ -5,6 +5,15 @@
 (global-set-key "\C-ca" 'org-agenda)
 (global-set-key "\C-cb" 'org-iswitchb)
 
+(global-set-key (kbd "C-<return>") 'join-line)
+
+(global-set-key (kbd "C-o") '(lambda ()
+                               (interactive)
+                               (open-line 1)
+                               (next-line)
+                               (indent-according-to-mode)
+                               (previous-line)))
+
 ;; Align your code in a pretty way.
 (global-set-key (kbd "C-x \\") 'align-regexp)
 
