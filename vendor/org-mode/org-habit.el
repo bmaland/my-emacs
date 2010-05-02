@@ -1,12 +1,11 @@
 ;;; org-habit.el --- The habit tracking code for Org-mode
 
-;; Copyright (C) 2009
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw at gnu dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.32b
+;; Version: 6.35i
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -68,52 +67,52 @@ relative to the current effective date."
   :type 'boolean)
 
 (defface org-habit-clear-face
-  '((((background light)) (:background "slateblue"))
+  '((((background light)) (:background "#8270f9"))
     (((background dark)) (:background "blue")))
   "Face for days on which a task shouldn't be done yet."
   :group 'org-habit
   :group 'org-faces)
 (defface org-habit-clear-future-face
-  '((((background light)) (:background "powderblue"))
+  '((((background light)) (:background "#d6e4fc"))
     (((background dark)) (:background "midnightblue")))
   "Face for future days on which a task shouldn't be done yet."
   :group 'org-habit
   :group 'org-faces)
 
 (defface org-habit-ready-face
-  '((((background light)) (:background "green"))
+  '((((background light)) (:background "#4df946"))
     (((background dark)) (:background "forestgreen")))
   "Face for days on which a task should start to be done."
   :group 'org-habit
   :group 'org-faces)
 (defface org-habit-ready-future-face
-  '((((background light)) (:background "palegreen"))
+  '((((background light)) (:background "#acfca9"))
     (((background dark)) (:background "darkgreen")))
   "Face for days on which a task should start to be done."
   :group 'org-habit
   :group 'org-faces)
 
 (defface org-habit-alert-face
-  '((((background light)) (:background "yellow"))
+  '((((background light)) (:background "#f5f946"))
     (((background dark)) (:background "gold")))
   "Face for days on which a task is due."
   :group 'org-habit
   :group 'org-faces)
 (defface org-habit-alert-future-face
-  '((((background light)) (:background "palegoldenrod"))
+  '((((background light)) (:background "#fafca9"))
     (((background dark)) (:background "darkgoldenrod")))
   "Face for days on which a task is due."
   :group 'org-habit
   :group 'org-faces)
 
 (defface org-habit-overdue-face
-  '((((background light)) (:background "red"))
+  '((((background light)) (:background "#f9372d"))
     (((background dark)) (:background "firebrick")))
   "Face for days on which a task is overdue."
   :group 'org-habit
   :group 'org-faces)
 (defface org-habit-overdue-future-face
-  '((((background light)) (:background "mistyrose"))
+  '((((background light)) (:background "#fc9590"))
     (((background dark)) (:background "darkred")))
   "Face for days on which a task is overdue."
   :group 'org-habit
@@ -129,6 +128,7 @@ relative to the current effective date."
     (error "Invalid duration string: %s" ts)))
 
 (defun org-is-habit-p (&optional pom)
+  "Is the task at POM or point a habit?"
   (string= "habit" (org-entry-get (or pom (point)) "STYLE")))
 
 (defun org-habit-parse-todo (&optional pom)
@@ -149,19 +149,21 @@ This list represents a \"habit\" for the rest of this module."
 	   (scheduled-repeat (org-get-repeat org-scheduled-string))
 	   (sr-days (org-habit-duration-to-days scheduled-repeat))
 	   (end (org-entry-end-position))
+	   (habit-entry (org-no-properties (nth 5 (org-heading-components))))
 	   closed-dates deadline dr-days)
       (if scheduled
 	  (setq scheduled (time-to-days scheduled))
-	(error "Habit has no scheduled date"))
+	(error "Habit %s has no scheduled date" habit-entry))
       (unless scheduled-repeat
-	(error "Habit has no scheduled repeat period"))
+	(error "Habit %s has no scheduled repeat period" habit-entry))
       (unless (> sr-days 0)
-	(error "Habit's scheduled repeat period is less than 1d"))
+	(error "Habit %s scheduled repeat period is less than 1d" habit-entry))
       (when (string-match "/\\([0-9]+[dwmy]\\)" scheduled-repeat)
 	(setq dr-days (org-habit-duration-to-days
 		       (match-string-no-properties 1 scheduled-repeat)))
 	(if (<= dr-days sr-days)
-	    (error "Habit's deadline repeat period is less than or equal to scheduled"))
+	    (error "Habit %s deadline repeat period is less than or equal to scheduled (%s)"
+		   habit-entry scheduled-repeat))
 	(setq deadline (+ scheduled (- dr-days sr-days))))
       (org-back-to-heading t)
       (while (re-search-forward "- State \"DONE\".*\\[\\([^]]+\\)\\]" end t)
@@ -218,13 +220,13 @@ SCHEDULED-DAYS defaults to the habit's actual scheduled days if nil.
 Habits are assigned colors on the following basis:
   Blue      Task is before the scheduled date.
   Green     Task is on or after scheduled date, but before the
-            end of the schedule's repeat period.
+	    end of the schedule's repeat period.
   Yellow    If the task has a deadline, then it is after schedule's
-            repeat period, but before the deadline.
+	    repeat period, but before the deadline.
   Orange    The task has reached the deadline day, or if there is
-            no deadline, the end of the schedule's repeat period.
+	    no deadline, the end of the schedule's repeat period.
   Red       The task has gone beyond the deadline day or the
-            schedule's repeat period."
+	    schedule's repeat period."
   (let* ((scheduled (or scheduled-days (org-habit-scheduled habit)))
 	 (s-repeat (org-habit-scheduled-repeat habit))
 	 (scheduled-end (+ scheduled (1- s-repeat)))
@@ -303,6 +305,7 @@ current time."
 (defun org-habit-insert-consistency-graphs (&optional line)
   "Insert consistency graph for any habitual tasks."
   (let ((inhibit-read-only t) l c
+	(buffer-invisibility-spec '(org-link))
 	(moment (time-subtract (current-time)
 			       (list 0 (* 3600 org-extend-today-until) 0))))
     (save-excursion
@@ -337,6 +340,6 @@ current time."
 
 (provide 'org-habit)
 
-;; arch-tag: 
+;; arch-tag: 64e070d9-bd09-4917-bd44-44465f5ed348
 
 ;;; org-habit.el ends here

@@ -1,10 +1,10 @@
 ;;; org-mobile.el --- Code for asymmetric sync with a mobile device
-;; Copyright (C) 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2009, 2010 Free Software Foundation, Inc.
 ;;
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.32b
+;; Version: 6.35i
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -42,12 +42,12 @@
 
 (defcustom org-mobile-files '(org-agenda-files)
   "Files to be staged for MobileOrg.
-This is basically a list of filesand directories.  Files will be staged
+This is basically a list of files and directories.  Files will be staged
 directly.  Directories will be search for files with the extension `.org'.
 In addition to this, the list may also contain the following symbols:
 
 org-agenda-files
-     This means, include the complete, unrestricted list of files given in
+     This means include the complete, unrestricted list of files given in
      the variable `org-agenda-files'.
 org-agenda-text-search-extra-files
      Include the files given in the variable
@@ -64,6 +64,34 @@ org-agenda-text-search-extra-files
   "The WebDAV directory where the interaction with the mobile takes place."
   :group 'org-mobile
   :type 'directory)
+
+(defcustom org-mobile-use-encryption nil
+  "Non-nil means keep only encrypted files on the webdav server.
+Encryption uses AES-256, with a password given in
+`org-mobile-encryption-password'.
+When nil, plain files are kept on the server.
+Turning on encryption requires to set the same password in the MobileOrg
+application."
+  :group 'org-mobile
+  :type 'boolean)
+
+(defcustom org-mobile-encryption-tempfile "~/orgtmpcrypt"
+  "File that is being used as a temporary file for encryption.
+This must be local file on your local machine (not on the webdav server).
+You might want to put this file into a directory where only you have access."
+  :group 'org-mobile
+  :type 'directory)
+
+(defcustom org-mobile-encryption-password ""
+  "Password for encrypting files uploaded to the server.
+This is a single password which is used for AES-256 encryption.  The same
+password must also be set in the MobileOrg application.  All Org files,
+including mobileorg.org will be encrypted using this password.
+Note that, whe Org runs the encryption commands, the password could
+be visible on your system with the `ps' command.  So this method is only
+intended to keep the files secure on the server, not on your own machine."
+  :group 'org-mobile
+  :type '(string :tag "Password"))
 
 (defcustom org-mobile-inbox-for-pull "~/org/from-mobile.org"
   "The file where captured notes and flags will be appended to.
@@ -85,13 +113,29 @@ should point to this file."
   :group 'org-mobile
   :type 'file)
 
+(defcustom org-mobile-agendas 'all
+  "The agendas that should be pushed to MobileOrg.
+Allowed values:
+
+default  the weekly agenda and the global TODO list
+custom   all custom agendas defined by the user
+all      the custom agendas and the default ones
+list     a list of selection key(s) as string."
+  :group 'org-mobile
+  :type '(choice
+	  (const :tag "Default Agendas" default)
+	  (const :tag "Custom Agendas" custom)
+	  (const :tag "Default and Custom Agendas" all)
+	  (repeat :tag "Selected"
+		  (string :tag "Selection Keys"))))
+
 (defcustom org-mobile-force-id-on-agenda-items t
   "Non-nil means make all agenda items carry and ID."
   :group 'org-mobile
   :type 'boolean)
 
 (defcustom org-mobile-force-mobile-change nil
-  "Non-nil means, force the change made on the mobile device.
+  "Non-nil means force the change made on the mobile device.
 So even if there have been changes to the computer version of the entry,
 force the new value set on the mobile.
 When nil, mark the entry from the mobile with an error message.
@@ -166,7 +210,7 @@ capture file `mobileorg.org' back to the WebDAV directory, for example
 using `rsync' or `scp'.")
 
 (defvar org-mobile-last-flagged-files nil
-  "List of files containing entreis flagged in the latest pull.")
+  "List of files containing entries flagged in the latest pull.")
 
 (defvar org-mobile-files-alist nil)
 (defvar org-mobile-checksum-files nil)
@@ -177,19 +221,27 @@ using `rsync' or `scp'.")
 
 (defun org-mobile-files-alist ()
   "Expand the list in `org-mobile-files' to a list of existing files."
-  (let* ((files
-	  (apply 'append (mapcar
-			  (lambda (f)
-			    (cond
-			     ((eq f 'org-agenda-files) (org-agenda-files t))
-			     ((eq f 'org-agenda-text-search-extra-files)
-			      org-agenda-text-search-extra-files)
-			     ((and (stringp f) (file-directory-p f))
-			      (directory-files f 'full "\\.org\\'"))
-			     ((and (stringp f) (file-exists-p f))
-			      (list f))
-			     (t nil)))
-			  org-mobile-files)))
+  (let* ((include-archives
+	  (and (member 'org-agenda-text-search-extra-files org-mobile-files)
+	       (member 'agenda-archives	org-agenda-text-search-extra-files)
+	       t))
+	 (files
+	  (apply 'append
+		 (mapcar
+		  (lambda (f)
+		    (cond
+		     ((eq f 'org-agenda-files)
+		      (org-agenda-files	t include-archives))
+		     ((eq f 'org-agenda-text-search-extra-files)
+		      (delq 'agenda-archives
+			    (copy-sequence
+			     org-agenda-text-search-extra-files)))
+		     ((and (stringp f) (file-directory-p f))
+		      (directory-files f 'full "\\.org\\'"))
+		     ((and (stringp f) (file-exists-p f))
+		      (list f))
+		     (t nil)))
+		  org-mobile-files)))
 	 (orgdir-uname (file-name-as-directory (file-truename org-directory)))
 	 (orgdir-re (concat "\\`" (regexp-quote orgdir-uname)))
 	 uname seen rtn file link-name)
@@ -213,16 +265,40 @@ using `rsync' or `scp'.")
 This will create the index file, copy all agenda files there, and also
 create all custom agenda views, for upload to the mobile phone."
   (interactive)
-  (org-mobile-check-setup)
-  (org-mobile-prepare-file-lists)
-  (run-hooks 'org-mobile-pre-push-hook)
-  (org-mobile-create-sumo-agenda)
-  (org-save-all-org-buffers) ; to save any IDs created by this process
-  (org-mobile-copy-agenda-files)
-  (org-mobile-create-index-file)
-  (org-mobile-write-checksums)
-  (run-hooks 'org-mobile-post-push-hook)
+  (let ((a-buffer (get-buffer org-agenda-buffer-name)))
+    (let ((org-agenda-buffer-name "*SUMO*")
+	  (org-agenda-filter org-agenda-filter)
+	  (org-agenda-redo-command org-agenda-redo-command))
+      (save-excursion
+	(save-window-excursion
+	  (org-mobile-check-setup)
+	  (org-mobile-prepare-file-lists)
+	  (run-hooks 'org-mobile-pre-push-hook)
+	  (message "Creating agendas...")
+	  (let ((inhibit-redisplay t)) (org-mobile-create-sumo-agenda))
+	  (message "Creating agendas...done")
+	  (org-save-all-org-buffers) ; to save any IDs created by this process
+	  (message "Copying files...")
+	  (org-mobile-copy-agenda-files)
+	  (message "Writing index file...")
+	  (org-mobile-create-index-file)
+	  (message "Writing checksums...")
+	  (org-mobile-write-checksums)
+	  (run-hooks 'org-mobile-post-push-hook))))
+    (redraw-display)
+    (when (and a-buffer (buffer-live-p a-buffer))
+      (if (not (get-buffer-window a-buffer))
+	  (kill-buffer a-buffer)
+	(let ((cw (selected-window)))
+	  (select-window (get-buffer-window a-buffer))
+	  (org-agenda-redo)
+	  (select-window cw)))))
   (message "Files for mobile viewer staged"))
+
+(defvar org-mobile-before-process-capture-hook nil
+  "Hook that is run after content was moved to `org-mobile-inbox-for-pull'.
+The inbox file is visited by the current buffer, and the buffer is
+narrowed to the newly captured data.")
 
 ;;;###autoload
 (defun org-mobile-pull ()
@@ -236,6 +312,10 @@ agenda view showing the flagged items."
     (if (not (markerp insertion-marker))
 	(message "No new items")
       (org-with-point-at insertion-marker
+	(save-restriction
+	  (narrow-to-region (point) (point-max))
+	  (run-hooks 'org-mobile-before-process-capture-hook)))
+      (org-with-point-at insertion-marker
 	(org-mobile-apply (point) (point-max)))
       (move-marker insertion-marker nil)
       (run-hooks 'org-mobile-post-pull-hook)
@@ -243,7 +323,7 @@ agenda view showing the flagged items."
 	;; Make an agenda view of flagged entries, but only in the files
 	;; where stuff has been added.
 	(put 'org-agenda-files 'org-restrict org-mobile-last-flagged-files)
-	(let ((org-agenda-keep-restriced-file-list t))
+	(let ((org-agenda-keep-restricted-file-list t))
 	  (org-agenda nil "?"))))))
 
 (defun org-mobile-check-setup ()
@@ -268,7 +348,16 @@ agenda view showing the flagged items."
 	       (file-exists-p
 		(file-name-directory org-mobile-inbox-for-pull)))
     (error
-     "Variable `org-mobile-inbox-for-pull' must point to a file in an existing directory")))
+     "Variable `org-mobile-inbox-for-pull' must point to a file in an existing directory"))
+  (when org-mobile-use-encryption
+    (unless (string-match "\\S-" org-mobile-encryption-password)
+      (error
+       "To use encryption, you must set `org-mobile-encryption-password'"))
+    (unless (file-writable-p org-mobile-encryption-tempfile)
+      (error "Cannot write to entryption tempfile %s"
+	     org-mobile-encryption-tempfile))
+    (unless (executable-find "openssl")
+      (error "openssl is needed to encrypt files."))))
 
 (defun org-mobile-create-index-file ()
   "Write the index file in the WebDAV directory."
@@ -277,7 +366,7 @@ agenda view showing the flagged items."
 	(def-todo (default-value 'org-todo-keywords))
 	(def-tags (default-value 'org-tag-alist))
 	file link-name todo-kwds done-kwds tags drawers entry kwds dwds twds)
-    
+
     (org-prepare-agenda-buffers (mapcar 'car files-alist))
     (setq done-kwds (org-uniquify org-done-keywords-for-agenda))
     (setq todo-kwds (org-delete-all
@@ -348,7 +437,9 @@ agenda view showing the flagged items."
 	      target-dir (file-name-directory target-path))
 	(unless (file-directory-p target-dir)
 	  (make-directory target-dir 'parents))
-	(copy-file file target-path 'ok-if-exists)
+	(if org-mobile-use-encryption
+	    (org-mobile-encrypt-and-move file target-path)
+	  (copy-file file target-path 'ok-if-exists))
 	(setq check (shell-command-to-string
 		     (concat org-mobile-checksum-binary " "
 			     (shell-quote-argument (expand-file-name file)))))
@@ -372,6 +463,7 @@ The table of checksums is written to the file mobile-checksums."
 	(files org-mobile-checksum-files)
 	entry file sum)
     (with-temp-file sumfile
+      (set-buffer-file-coding-system 'undecided-unix nil)
       (while (setq entry (pop files))
 	(setq file (car entry) sum (cdr entry))
 	(insert (format "%s  %s\n" sum file))))))
@@ -388,8 +480,22 @@ The table of checksums is written to the file mobile-checksums."
 			((not (nth 1 x)) (cons (car x) (cons "" (cddr x))))
 			(t (cons (car x) (cons "" (cdr x))))))
 		org-agenda-custom-commands)))
-	new e key desc type match settings cmds gkey gdesc gsettings cnt)
-    (while (setq e (pop custom-list))
+	(default-list '(("a" "Agenda" agenda) ("t" "All TODO" alltodo)))
+	thelist	new e key desc type match settings cmds gkey gdesc gsettings cnt)
+    (cond
+     ((eq org-mobile-agendas 'custom)
+      (setq thelist custom-list))
+     ((eq org-mobile-agendas 'default)
+      (setq thelist default-list))
+     ((eq org-mobile-agendas 'all)
+      (setq thelist custom-list)
+      (unless (assoc "t" thelist) (push '("t" "ALL TODO" alltodo) thelist))
+      (unless (assoc "a" thelist) (push '("a" "Agenda" agenda) thelist)))
+     ((listp org-mobile-agendas)
+      (setq thelist (append custom-list default-list))
+      (setq thelist (delq nil (mapcar (lambda (k) (assoc k thelist))
+				      org-mobile-agendas)))))
+    (while (setq e (pop thelist))
       (cond
        ((stringp (cdr e))
 	;; this is a description entry - skip it
@@ -400,7 +506,12 @@ The table of checksums is written to the file mobile-checksums."
        ((memq (nth 2 e) '(todo-tree tags-tree occur-tree))
 	;; These are trees, not really agenda commands
 	)
-       ((memq (nth 2 e) '(agenda todo tags))
+       ((and (memq (nth 2 e) '(todo tags tags-todo))
+	     (or (null (nth 3 e))
+		 (not (string-match "\\S-" (nth 3 e)))))
+	;; These would be interactive because the match string is empty
+	)
+       ((memq (nth 2 e) '(agenda alltodo todo tags tags-todo))
 	;; a normal command
 	(setq key (car e) desc (nth 1 e) type (nth 2 e) match (nth 3 e)
 	      settings (nth 4 e))
@@ -503,28 +614,67 @@ The table of checksums is written to the file mobile-checksums."
   (interactive)
   (let* ((file (expand-file-name "agendas.org"
 				 org-mobile-directory))
+	 (file1 (if org-mobile-use-encryption
+		    org-mobile-encryption-tempfile
+		  file))
 	 (sumo (org-mobile-sumo-agenda-command))
 	 (org-agenda-custom-commands
-	  (list (append sumo (list (list file)))))
+	  (list (append sumo (list (list file1)))))
 	 (org-mobile-creating-agendas t))
-    (unless (file-writable-p file)
-      (error "Cannot write to file %s" file))
+    (unless (file-writable-p file1)
+      (error "Cannot write to file %s" file1))
     (when sumo
-      (org-store-agenda-views))))
+      (org-store-agenda-views))
+    (when org-mobile-use-encryption
+      (org-mobile-encrypt-file file1 file)
+      (delete-file file1))))
+
+(defun org-mobile-encrypt-and-move (infile outfile)
+  "Encrypt INFILE locally to INFILE_enc, then move it to OUTFILE.
+We do this in two steps so that remote paths will work, even if the
+encryption program does not understand them."
+  (let ((encfile (concat infile "_enc")))
+    (org-mobile-encrypt-file infile encfile)
+    (when outfile
+      (copy-file encfile outfile 'ok-if-exists)
+      (delete-file encfile))))
+
+(defun org-mobile-encrypt-file (infile outfile)
+  "Encrypt INFILE to OUTFILE, using `org-mobile-encryption-password'."
+  (shell-command
+   (format "openssl enc -aes-256-cbc -salt -pass %s -in %s -out %s"
+	   (shell-quote-argument (concat "pass:" org-mobile-encryption-password))
+	   (shell-quote-argument (expand-file-name infile))
+	   (shell-quote-argument (expand-file-name outfile)))))
+
+(defun org-mobile-decrypt-file (infile outfile)
+  "Decrypt INFILE to OUTFILE, using `org-mobile-encryption-password'."
+  (shell-command
+   (format "openssl enc -d -aes-256-cbc -salt -pass %s -in %s -out %s"
+	   (shell-quote-argument (concat "pass:" org-mobile-encryption-password))
+	   (shell-quote-argument (expand-file-name infile))
+	   (shell-quote-argument (expand-file-name outfile)))))
 
 (defun org-mobile-move-capture ()
   "Move the contents of the capture file to the inbox file.
 Return a marker to the location where the new content has been added.
-If nothing new has beed added, return nil."
+If nothing new has been added, return nil."
   (interactive)
-  (let ((inbox-buffer (find-file-noselect org-mobile-inbox-for-pull))
-	(capture-buffer (find-file-noselect
-			 (expand-file-name org-mobile-capture-file
-					   org-mobile-directory)))
-	(insertion-point (make-marker))
-	not-empty content)
-    (save-excursion
-      (set-buffer capture-buffer)
+  (let* ((encfile nil)
+	 (capture-file (expand-file-name org-mobile-capture-file
+					 org-mobile-directory))
+	 (inbox-buffer (find-file-noselect org-mobile-inbox-for-pull))
+	 (capture-buffer
+	  (if (not org-mobile-use-encryption)
+	      (find-file-noselect capture-file)
+	    (delete-file org-mobile-encryption-tempfile)
+	    (setq encfile (concat org-mobile-encryption-tempfile "_enc"))
+	    (copy-file capture-file encfile)
+	    (org-mobile-decrypt-file encfile org-mobile-encryption-tempfile)
+	    (find-file-noselect org-mobile-encryption-tempfile)))
+	 (insertion-point (make-marker))
+	 not-empty content)
+    (with-current-buffer capture-buffer
       (setq content (buffer-string))
       (setq not-empty (string-match "\\S-" content))
       (when not-empty
@@ -540,9 +690,13 @@ If nothing new has beed added, return nil."
 	(save-buffer)
 	(org-mobile-update-checksum-for-capture-file (buffer-string))))
     (kill-buffer capture-buffer)
+    (when org-mobile-use-encryption
+      (org-mobile-encrypt-and-move org-mobile-encryption-tempfile
+				   capture-file))
     (if not-empty insertion-point)))
 
 (defun org-mobile-update-checksum-for-capture-file (buffer-string)
+  "Find the checksum line and modify it to match BUFFER-STRING."
   (let* ((file (expand-file-name "checksums.dat" org-mobile-directory))
 	 (buffer (find-file-noselect file)))
     (when buffer
@@ -597,7 +751,7 @@ If BEG and END are given, only do this in that region."
 		 (not (member (marker-buffer id-pos) buf-list)))
 	(org-mobile-timestamp-buffer (marker-buffer id-pos))
 	(push (marker-buffer id-pos) buf-list))
-				     
+
       (if (or (not id-pos) (stringp id-pos))
 	  (progn
 	    (goto-char (+ 2 (point-at-bol)))
@@ -663,7 +817,7 @@ If BEG and END are given, only do this in that region."
 	      (insert "BAD FLAG ")
 	      (incf cnt-error)
 	      (throw 'next t))
-	    ;; Remember this place so tha we can return
+	    ;; Remember this place so that we can return
 	    (move-marker marker (point))
 	    (setq org-mobile-error nil)
 	    (save-excursion
@@ -702,10 +856,13 @@ If BEG and END are given, only do this in that region."
       (save-restriction
 	(widen)
 	(goto-char (point-min))
-	(when (re-search-forward
-	       "^\\([ \t]*\\)#\\+LAST_MOBILE_CHANGE:.*\n?" nil t)
-	  (goto-char (match-end 1))
-	  (delete-region (point) (match-end 0)))
+	(if (re-search-forward
+	     "^\\([ \t]*\\)#\\+LAST_MOBILE_CHANGE:.*\n?" nil t)
+	    (progn
+              (goto-char (match-end 1))
+	      (delete-region (point) (match-end 0)))
+          (if (looking-at ".*?-\\*-.*-\\*-")
+              (forward-line 1)))
 	(insert "#+LAST_MOBILE_CHANGE: "
 		(format-time-string "%Y-%m-%d %T") "\n")))))
 
@@ -719,7 +876,7 @@ The entry is expected to contain an inactive time stamp indicating when
 the entry was created.  When setting dates and
 times (for example for deadlines), the time strings are interpreted
 relative to that creation date.
-Abbreviations are expected to take up entire lines, jst because it is so
+Abbreviations are expected to take up entire lines, just because it is so
 easy to type RET on a mobile device.  Abbreviations start with one or two
 letters, followed immediately by a dot and then additional information.
 Generally the entire shortcut line is removed after action have been taken.
@@ -792,7 +949,7 @@ as a string."
 	(org-find-olp (cons file path))))))
 
 (defun org-mobile-edit (what old new)
-  "Edit item WHAT in the current entry by replacing OLD wih NEW.
+  "Edit item WHAT in the current entry by replacing OLD with NEW.
 WHAT can be \"heading\", \"todo\", \"tags\", \"priority\", or \"body\".
 The edit only takes place if the current value is equal (except for
 white space) the OLD.  If this is so, OLD will be replace by NEW
@@ -816,7 +973,7 @@ be returned that indicates what went wrong."
 	(org-todo (or new 'none)) t)
        (t (error "State before change was expected as \"%s\", but is \"%s\""
 		 old current))))
-      
+
      ((eq what 'tags)
       (setq current (org-get-tags)
 	    new1 (and new (org-split-string new ":+"))
@@ -829,7 +986,7 @@ be returned that indicates what went wrong."
 	(org-set-tags-to new1) t)
        (t (error "Tags before change were expected as \"%s\", but are \"%s\""
 		 (or old "") (or current "")))))
-     
+
      ((eq what 'priority)
       (when (looking-at org-complex-heading-regexp)
 	(setq current (and (match-end 3) (substring (match-string 3) 2 3)))
@@ -855,14 +1012,14 @@ be returned that indicates what went wrong."
 	  (delete-region (point) (+ (point) (length current)))
 	  (org-set-tags nil 'align))
 	 (t (error "Heading changed in MobileOrg and on the computer")))))
-     
+
      ((eq what 'body)
       (setq current (buffer-substring (min (1+ (point-at-eol)) (point-max))
 				      (save-excursion (outline-next-heading)
 						      (point))))
       (if (not (string-match "\\S-" current)) (setq current nil))
       (cond
-       ((org-mobile-bodies-same-p current new) t) ; no ation necesary
+       ((org-mobile-bodies-same-p current new) t) ; no action necessary
        ((or (org-mobile-bodies-same-p current old)
 	    (eq org-mobile-force-mobile-change t)
 	    (memq 'body org-mobile-force-mobile-change))
@@ -875,7 +1032,7 @@ be returned that indicates what went wrong."
 					(point))))
 	t)
        (t (error "Body was changed in MobileOrg and on the computer")))))))
-       
+
 
 (defun org-mobile-tags-same-p (list1 list2)
   "Are the two tag lists the same?"

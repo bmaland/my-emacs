@@ -1,10 +1,10 @@
 ;;; org-docbook.el --- DocBook exporter for org-mode
 ;;
-;; Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 ;;
 ;; Emacs Lisp Archive Entry
 ;; Filename: org-docbook.el
-;; Version: 6.32b
+;; Version: 6.35i
 ;; Author: Baoqiu Cui <cbaoqiu AT yahoo DOT com>
 ;; Maintainer: Baoqiu Cui <cbaoqiu AT yahoo DOT com>
 ;; Keywords: org, wp, docbook
@@ -119,7 +119,7 @@ entities, you can set this variable to:
 ]>
 \"
 
-If you want to process DocBook documents without internet
+If you want to process DocBook documents without an Internet
 connection, it is suggested that you download the required entity
 file(s) and use system identifier(s) (external files) in the
 DOCTYPE declaration."
@@ -285,8 +285,7 @@ then use this command to convert it."
 			 beg end t 'string))
 	(setq reg (buffer-substring beg end)
 	      buf (get-buffer-create "*Org tmp*"))
-	(save-excursion
-	  (set-buffer buf)
+	(with-current-buffer buf
 	  (erase-buffer)
 	  (insert reg)
 	  (org-mode)
@@ -385,6 +384,8 @@ header and footer, simply return the content of the document (all
 top-level sections).  When PUB-DIR is set, use this as the
 publishing directory."
   (interactive "P")
+  (run-hooks 'org-export-first-hook)
+
   ;; Make sure we have a file name when we need it.
   (when (and (not (or to-buffer body-only))
 	     (not buffer-file-name))
@@ -411,7 +412,7 @@ publishing directory."
 	 (rbeg (and region-p (region-beginning)))
 	 (rend (and region-p (region-end)))
 	 (subtree-p
-	  (if (plist-get opt-plist :ignore-subree-p)
+	  (if (plist-get opt-plist :ignore-subtree-p)
 	      nil
 	    (when region-p
 	      (save-excursion
@@ -610,7 +611,9 @@ publishing directory."
   </info>\n"
 		 (org-docbook-expand title)
 		 firstname othername surname
-		 (if email (concat "<email>" email "</email>") "")
+		 (if (and org-export-email-info
+			  email (string-match "\\S-" email))
+		     (concat "<email>" email "</email>") "")
 		 )))
 
       (org-init-section-numbers)
@@ -623,7 +626,7 @@ publishing directory."
 
 	  ;; End of quote section?
 	  (when (and inquote (string-match "^\\*+ " line))
-	    (insert "]]>\n</programlisting>\n")
+	    (insert "]]></programlisting>\n")
 	    (org-export-docbook-open-para)
 	    (setq inquote nil))
 	  ;; Inside a quote section?
@@ -643,7 +646,7 @@ publishing directory."
 		      (not (string-match "^[ \t]*\\(:.*\\)"
 					 (car lines))))
 	      (setq infixed nil)
-	      (insert "]]>\n</programlisting>\n")
+	      (insert "]]></programlisting>\n")
 	      (org-export-docbook-open-para))
 	    (throw 'nextline nil))
 
@@ -737,8 +740,12 @@ publishing directory."
 	  ;; Make targets to anchors.  Note that currently FOP does not
 	  ;; seem to support <anchor> tags when generating PDF output,
 	  ;; but this can be used in DocBook --> HTML conversion.
-	  (while (string-match "<<<?\\([^<>]*\\)>>>?\\((INVISIBLE)\\)?[ \t]*\n?" line)
+	  (setq start 0)
+	  (while (string-match
+		  "<<<?\\([^<>]*\\)>>>?\\((INVISIBLE)\\)?[ \t]*\n?" line start)
 	    (cond
+	     ((get-text-property (match-beginning 1) 'org-protected line)
+	      (setq start (match-end 1)))
 	     ((match-end 2)
 	      (setq line (replace-match
 			  (format "@<anchor xml:id=\"%s\"/>"
@@ -907,7 +914,8 @@ publishing directory."
 	    (while (string-match "\\([^* \t].*?\\)\\[\\([0-9]+\\)\\]" line start)
 	      (if (get-text-property (match-beginning 2) 'org-protected line)
 		  (setq start (match-end 2))
-		(let ((num (match-string 2 line)))
+		(let* ((num (match-string 2 line))
+		       (footnote-def (assoc num footnote-list)))
 		  (if (assoc num footref-seen)
 		      (setq line (replace-match
 				  (format "%s<footnoteref linkend=\"%s%s\"/>"
@@ -919,9 +927,10 @@ publishing directory."
 					(match-string 1 line)
 					org-export-docbook-footnote-id-prefix
 					num
-					(save-match-data
-					  (org-docbook-expand
-					   (cdr (assoc num footnote-list)))))
+					(if footnote-def
+					    (save-match-data
+					      (org-docbook-expand (cdr footnote-def)))
+					  (format "FOOTNOTE DEFINITION NOT FOUND: %s" num)))
 				t t line))
 		    (push (cons num 1) footref-seen))))))
 
@@ -1087,7 +1096,7 @@ publishing directory."
 
       ;; Properly close all local lists and other lists
       (when inquote
-	(insert "]]>\n</programlisting>\n")
+	(insert "]]></programlisting>\n")
 	(org-export-docbook-open-para))
       (when in-local-list
 	;; Close any local lists before inserting a new header line
@@ -1116,6 +1125,13 @@ publishing directory."
 	      "[ \r\n\t]*\\(<para>\\)[ \r\n\t]*</para>[ \r\n\t]*" nil t)
 	(when (not (get-text-property (match-beginning 1) 'org-protected))
 	  (replace-match "\n")
+	  ;; Avoid empty <listitem></listitem> caused by inline tasks.
+	  ;; We should add an empty para to make everything valid.
+	  (when (and (looking-at "</listitem>")
+		     (save-excursion
+		       (backward-char (length "<listitem>\n"))
+		       (looking-at "<listitem>")))
+	    (insert "<para></para>"))
 	  (backward-char 1)))
       ;; Fill empty sections with <para></para>.  This is to make sure
       ;; that the DocBook document generated is valid and well-formed.
@@ -1243,16 +1259,14 @@ string, don't modify these."
   (if org-export-with-sub-superscripts
       (setq s (org-export-docbook-convert-sub-super s)))
   (if org-export-with-TeX-macros
-      (let ((start 0) wd ass)
+      (let ((start 0) wd rep)
 	(while (setq start (string-match "\\\\\\([a-zA-Z]+\\)\\({}\\)?"
 					 s start))
 	  (if (get-text-property (match-beginning 0) 'org-protected s)
 	      (setq start (match-end 0))
 	    (setq wd (match-string 1 s))
-	    (if (setq ass (assoc wd org-html-entities))
-		(setq s (replace-match (or (cdr ass)
-					   (concat "&" (car ass) ";"))
-				       t t s))
+	    (if (setq rep (org-entity-get-representation wd 'html))
+		(setq s (replace-match rep t t s))
 	      (setq start (+ start (length wd))))))))
   s)
 
@@ -1309,6 +1323,7 @@ string, don't modify these."
 	   (label (org-find-text-property-in-string 'org-label src))
 	   (default-attr org-export-docbook-default-image-attributes)
 	   tmp)
+      (setq caption (and caption (org-html-do-expand caption)))
       (while (setq tmp (pop default-attr))
 	(if (not (string-match (concat (car tmp) "=") attr))
 	    (setq attr (concat attr " " (car tmp) "=" (cdr tmp)))))
@@ -1334,18 +1349,33 @@ string, don't modify these."
 	(replace-match ""))))
 
 (defun org-export-docbook-finalize-table (table)
-  "Change TABLE to informaltable if caption does not exist.
+  "Clean up TABLE and turn it into DocBook format.
+This function adds a label to the table if it is available, and
+also changes TABLE to informaltable if caption does not exist.
 TABLE is a string containing the HTML code generated by
 `org-format-table-html' for a table in Org-mode buffer."
-  (if (string-match
-       "^<table \\(\\(.\\|\n\\)+\\)<caption></caption>\n\\(\\(.\\|\n\\)+\\)</table>"
-       table)
-      (replace-match (concat "<informaltable "
-			     (match-string 1 table)
-			     (match-string 3 table)
-			     "</informaltable>")
-		     nil nil table)
-    table))
+  (let (table-with-label)
+    ;; Get the label if it exists, and move it into the <table> element.
+    (setq table-with-label
+	  (if (string-match
+	       "^<table \\(\\(.\\|\n\\)+\\)<a name=\"\\(.+\\)\" id=\".+\"></a>\n\\(\\(.\\|\n\\)+\\)</table>"
+	       table)
+	      (replace-match (concat "<table xml:id=\"" (match-string 3 table) "\" "
+				     (match-string 1 table)
+				     (match-string 4 table)
+				     "</table>")
+			     nil nil table)
+	    table))
+    ;; Change <table> into <informaltable> if caption does not exist.
+    (if (string-match
+	 "^<table \\(\\(.\\|\n\\)+\\)<caption></caption>\n\\(\\(.\\|\n\\)+\\)</table>"
+	 table-with-label)
+	(replace-match (concat "<informaltable "
+			       (match-string 1 table-with-label)
+			       (match-string 3 table-with-label)
+			       "</informaltable>")
+		       nil nil table-with-label)
+      table-with-label)))
 
 ;; Note: This function is very similar to
 ;; org-export-html-convert-sub-super.  They can be merged in the future.

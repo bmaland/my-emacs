@@ -1,10 +1,10 @@
 ;;; org-attach.el --- Manage file attachments to org-mode tasks
 
-;; Copyright (C) 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@newartisans.com>
 ;; Keywords: org data task
-;; Version: 6.32b
+;; Version: 6.35i
 
 ;; This file is part of GNU Emacs.
 ;;
@@ -92,7 +92,7 @@ ln    create a hard link.  Note that this is not supported
   :type 'boolean)
 
 (defcustom org-attach-allow-inheritance t
-  "Non-nil means, allow attachment directories be inherited."
+  "Non-nil means allow attachment directories be inherited."
   :group 'org-attach
   :type 'boolean)
 
@@ -209,7 +209,7 @@ the directory and (if necessary) the corresponding ID will be created."
 	   attach-dir))))
 
 (defun org-attach-check-absolute-path (dir)
-  "Check if we have enough information to root the atachment directory.
+  "Check if we have enough information to root the attachment directory.
 When DIR is given, check also if it is already absolute.  Otherwise,
 assume that it will be relative, and check if `org-attach-directory' is
 absolute, or if at least the current buffer has a file name.
@@ -241,12 +241,17 @@ the ATTACH_DIR property) their own attachment directory."
   "Commit changes to git if `org-attach-directory' is properly initialized.
 This checks for the existence of a \".git\" directory in that directory."
   (let ((dir (expand-file-name org-attach-directory)))
-    (if (file-exists-p (expand-file-name ".git" dir))
-	(shell-command
-	 (concat "(cd " dir "; "
-		 " git add .; "
-		 " git ls-files --deleted -z | xargs -0 git rm; "
-		 " git commit -m 'Synchronized attachments')")))))
+    (when (file-exists-p (expand-file-name ".git" dir))
+      (with-temp-buffer
+	(cd dir)
+	(shell-command "git add .")
+	(shell-command "git ls-files --deleted" t)
+	(mapc '(lambda (file)
+		 (unless (string= file "")
+		   (shell-command
+		    (concat "git rm \"" file "\""))))
+	      (split-string (buffer-string) "\n"))
+	(shell-command "git commit -m 'Synchronized attachments'")))))
 
 (defun org-attach-tag (&optional off)
   "Turn the autotag on or (if OFF is set) off."
@@ -322,7 +327,8 @@ The attachment is created as an Emacs buffer."
     (setq file (expand-file-name file attach-dir))
     (unless (file-exists-p file)
       (error "No such attachment: %s" file))
-    (delete-file file)))
+    (delete-file file)
+    (org-attach-commit)))
 
 (defun org-attach-delete-all (&optional force)
   "Delete all attachments from the current task.
@@ -365,11 +371,11 @@ This ignores files starting with a \".\", and files ending in \"~\"."
 	(mapcar (lambda (x) (if (string-match "^\\." x) nil x))
 		(directory-files dir nil "[^~]\\'"))))
 
-(defun org-attach-reveal ()
+(defun org-attach-reveal (&optional if-exists)
   "Show the attachment directory of the current task in dired."
-  (interactive)
-  (let ((attach-dir (org-attach-dir t)))
-    (org-open-file attach-dir)))
+  (interactive "P")
+  (let ((attach-dir (org-attach-dir (not if-exists))))
+    (and attach-dir (org-open-file attach-dir))))
 
 (defun org-attach-reveal-in-emacs ()
   "Show the attachment directory of the current task.

@@ -1,13 +1,13 @@
 ;;; org-bbdb.el --- Support for links to BBDB entries from within Org-mode
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <carsten at orgmode dot org>,
 ;;         Thomas Baumann <thomas dot baumann at ch dot tum dot de>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.32b
+;; Version: 6.35i
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -64,7 +64,7 @@
 ;;
 ;;  - an identifier for a class of anniversaries (eg. birthday or
 ;;    wedding) from `org-bbdb-anniversary-format-alist' which then
-;;    defines the format tring for this class
+;;    defines the format string for this class
 ;;  - the (format) string displayed in the diary.
 ;;
 ;; You can enter multiple anniversaries for a single BBDB record by

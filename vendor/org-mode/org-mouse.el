@@ -1,10 +1,10 @@
 ;;; org-mouse.el --- Better mouse support for org-mode
 
-;; Copyright (C) 2006, 2007, 2008, 2009 Free Software Foundation
+;; Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation
 ;;
 ;; Author: Piotr Zielinski <piotr dot zielinski at gmail dot com>
 ;; Maintainer: Carsten Dominik <carsten at orgmode dot org>
-;; Version: 6.32b
+;; Version: 6.35i
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -189,7 +189,7 @@ Changing this variable requires a restart of Emacs to get activated."
   (interactive)
   (end-of-line)
   (skip-chars-backward "\t ")
-  (when (looking-back ":[A-Za-z]+:")
+  (when (org-looking-back ":[A-Za-z]+:")
     (skip-chars-backward ":A-Za-z")
     (skip-chars-backward "\t ")))
 
@@ -607,7 +607,7 @@ SCHEDULED: or DEADLINE: or ANYTHINGLIKETHIS:"
     (:end				; insert text here
      (skip-chars-backward " \t")
      (kill-region (point) (point-at-eol))
-     (unless (looking-back org-mouse-punctuation)
+     (unless (org-looking-back org-mouse-punctuation)
        (insert (concat org-mouse-punctuation " ")))))
 
   (insert text)
@@ -674,7 +674,7 @@ SCHEDULED: or DEADLINE: or ANYTHINGLIKETHIS:"
 				      'org-mode-restart))))
    ((or (eolp)
 	(and (looking-at "\\(  \\|\t\\)\\(+:[0-9a-zA-Z_:]+\\)?\\(  \\|\t\\)+$")
-	     (looking-back "  \\|\t")))
+	     (org-looking-back "  \\|\t")))
     (org-mouse-popup-global-menu))
    ((get-context :checkbox)
     (popup-menu
@@ -1042,11 +1042,10 @@ SCHEDULED: or DEADLINE: or ANYTHINGLIKETHIS:"
 	   (org-mouse-direct nil)
 	   (org-mouse-main-buffer (current-buffer)))
       (when (eq (with-current-buffer buffer major-mode) 'org-mode)
-	(let ((endmarker (save-excursion
-			  (set-buffer buffer)
-			  (outline-end-of-subtree)
-			  (forward-char 1)
-			  (copy-marker (point)))))
+	(let ((endmarker (with-current-buffer buffer
+			   (outline-end-of-subtree)
+			   (forward-char 1)
+			   (copy-marker (point)))))
 	  (org-with-remote-undo buffer
 	    (with-current-buffer buffer
 	      (widen)
@@ -1132,13 +1131,13 @@ SCHEDULED: or DEADLINE: or ANYTHINGLIKETHIS:"
 (add-hook 'org-agenda-mode-hook
    '(lambda ()
      (setq org-mouse-context-menu-function 'org-mouse-agenda-context-menu)
-     (define-key org-agenda-keymap
+     (define-key org-agenda-mode-map
        (if (featurep 'xemacs) [button3] [mouse-3])
        'org-mouse-show-context-menu)
-     (define-key org-agenda-keymap [down-mouse-3] 'org-mouse-move-tree-start)
-     (define-key org-agenda-keymap (if (featurep 'xemacs) [(control mouse-4)] [C-mouse-4]) 'org-agenda-earlier)
-     (define-key org-agenda-keymap (if (featurep 'xemacs) [(control mouse-5)] [C-mouse-5]) 'org-agenda-later)
-     (define-key org-agenda-keymap [drag-mouse-3]
+     (define-key org-agenda-mode-map [down-mouse-3] 'org-mouse-move-tree-start)
+     (define-key org-agenda-mode-map (if (featurep 'xemacs) [(control mouse-4)] [C-mouse-4]) 'org-agenda-earlier)
+     (define-key org-agenda-mode-map (if (featurep 'xemacs) [(control mouse-5)] [C-mouse-5]) 'org-agenda-later)
+     (define-key org-agenda-mode-map [drag-mouse-3]
        '(lambda (event) (interactive "e")
 	  (case (org-mouse-get-gesture event)
 	    (:left (org-agenda-earlier 1))

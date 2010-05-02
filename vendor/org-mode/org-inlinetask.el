@@ -1,11 +1,11 @@
 ;;; org-inlinetask.el --- Tasks independent of outline hierarchy
 
-;; Copyright (C) 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2009, 2010 Free Software Foundation, Inc.
 ;;
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.32b
+;; Version: 6.35i
 
 ;; This file is part of GNU Emacs.
 
@@ -35,7 +35,7 @@
 ;;
 ;; Visibility cycling exempts these nodes from cycling. So whenever their
 ;; parent is opened, so are these tasks.  This will only work with
-;; `org-cycle', so if you are also using orther commands to show/hide
+;; `org-cycle', so if you are also using other commands to show/hide
 ;; entries, you will occasionally find these tasks to behave like
 ;; all other outline nodes, seemingly splitting the text of the parent
 ;; into children.
@@ -70,7 +70,7 @@
 ;; Also, if you want to use refiling and archiving for inline tasks,
 ;; The END line must be present to make things work properly.
 ;;
-;; This package installs one new comand:
+;; This package installs one new command:
 ;;
 ;; C-c C-x t      Insert a new inline task with END line
 
@@ -94,7 +94,7 @@ the value of this variable."
   :type 'boolean)
 
 (defcustom org-inlinetask-export t
-  "Non-nil means, export inline tasts.
+  "Non-nil means export inline tasks.
 When nil, they will not be exported."
   :group 'org-inlinetask
   :type 'boolean)
@@ -149,7 +149,17 @@ Either remove headline and meta data, or do special formatting."
 	(when (string-match org-complex-heading-regexp headline)
 	  (setq headline (concat
 			  (if (match-end 2)
-			      (concat (match-string 2 headline) " ") "")
+			      (concat
+			       (org-add-props
+				   (format
+				    "@<span class=\"%s %s\"> %s@</span>"
+				    (if (member (match-string 2 headline)
+						org-done-keywords)
+					"done" "todo")
+				    (match-string 2 headline)
+				    (match-string 2 headline))
+				   nil 'org-protected t)
+			       " ") "")
 			  (match-string 4 headline)))
 	  (when content
 	    (if (not (string-match "\\S-" content))

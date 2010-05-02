@@ -1,11 +1,11 @@
 ;;; org-mac-message.el --- Links to Apple Mail.app messages from within Org-mode
 
-;; Copyright (C) 2008, 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2008, 2009, 2010 Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 ;;         Christopher Suckling <suckling at gmail dot com>
 
-;; Version: 6.32b
+;; Version: 6.35i
 ;; Keywords: outlines, hypermedia, calendar, wp
 
 ;; This file is part of GNU Emacs.
@@ -193,8 +193,7 @@ If heading exists, delete all message:// links within heading's first
 level.  If heading doesn't exist, create it at point-max.  Insert
 list of message:// links to flagged mail after heading."
   (interactive "bBuffer in which to insert links: \nsHeading after which to insert links: ")
-  (save-excursion
-    (set-buffer org-buffer)
+  (with-current-buffer org-buffer
     (goto-char (point-min))
     (let ((isearch-forward t)
 	  (message-re "\\[\\[\\(message:\\)\\([^]]+\\)\\]\\(\\[\\([^]]+\\)\\]\\)?\\]"))
@@ -210,7 +209,7 @@ list of message:// links to flagged mail after heading."
 	    (insert "\n" (org-mac-message-get-links "f")))
 	(goto-char (point-max))
 	(insert "\n")
-	(org-insert-heading)
+	(org-insert-heading nil t)
 	(insert org-heading "\n" (org-mac-message-get-links "f"))))))
 
 (provide 'org-mac-message)

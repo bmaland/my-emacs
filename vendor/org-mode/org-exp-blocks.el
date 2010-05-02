@@ -1,9 +1,10 @@
 ;;; org-exp-blocks.el --- pre-process blocks when exporting org files
 
-;; Copyright (C) 2009
+;; Copyright (C) 2009, 2010
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Eric Schulte
+;; Version: 6.35i
 
 ;; This file is part of GNU Emacs.
 ;;
@@ -158,7 +159,7 @@ CLOSE tags will be inserted around BODY."
    "#+END_LaTeX\n"))
 
 (defun org-export-blocks-preprocess ()
-  "Export all blocks acording to the `org-export-blocks' block
+  "Export all blocks according to the `org-export-blocks' block
 exportation alist.  Does not export block types specified in
 specified in BLOCKS which default to the value of
 `org-export-blocks-witheld'."
@@ -166,7 +167,7 @@ specified in BLOCKS which default to the value of
   (save-window-excursion
     (let ((case-fold-search t)
 	  (types '())
-	  indentation type func start)
+	  indentation type func start body headers preserve-indent progress-marker)
       (flet ((interblock (start end)
 			 (mapcar (lambda (pair) (funcall (second pair) start end))
 				 org-export-interblocks)))
@@ -175,18 +176,23 @@ specified in BLOCKS which default to the value of
 	(while (re-search-forward
 		"^\\([ \t]*\\)#\\+begin_\\(\\S-+\\)[ \t]*\\(.*\\)?[\r\n]\\([^\000]*?\\)[\r\n][ \t]*#\\+end_\\S-+.*" nil t)
           (setq indentation (length (match-string 1)))
-	  (setq type (intern (match-string 2)))
+	  (setq type (intern (downcase (match-string 2))))
+	  (setq headers (save-match-data (org-split-string (match-string 3) "[ \t]+")))
+	  (setq body (match-string 4))
+	  (setq preserve-indent (or org-src-preserve-indentation (member "-i" headers)))
+	  (unless preserve-indent
+	    (setq body (save-match-data (org-remove-indentation body))))
 	  (unless (memq type types) (setq types (cons type types)))
 	  (save-match-data (interblock start (match-beginning 0)))
-	  (if (setq func (cadr (assoc type org-export-blocks)))
-	      (progn
-                (replace-match (save-match-data
-                                 (if (memq type org-export-blocks-witheld)
-                                     ""
-                                   (apply func (save-match-data (org-remove-indentation (match-string 4)))
-                                          (split-string (match-string 3) " ")))) t t)
-                ;; indent block
-                (indent-code-rigidly (match-beginning 0) (match-end 0) indentation)))
+	  (when (setq func (cadr (assoc type org-export-blocks)))
+            (let ((replacement (save-match-data
+                                 (if (memq type org-export-blocks-witheld) ""
+                                   (apply func body headers)))))
+              (when replacement
+                (replace-match replacement t t)
+                (unless preserve-indent
+                  (indent-code-rigidly
+                   (match-beginning 0) (match-end 0) indentation)))))
 	  (setq start (match-end 0)))
 	(interblock start (point-max))))))
 
@@ -214,9 +220,15 @@ Specify the path at which the image should be saved as the first
 element of headers, any additional elements of headers will be
 passed to the ditaa utility as command line arguments."
   (message "ditaa-formatting...")
-  (let ((out-file (if headers (car headers)))
-	(args (if (cdr headers) (mapconcat 'identity (cdr headers) " ")))
-	(data-file (make-temp-file "org-ditaa")))
+  (let* ((args (if (cdr headers) (mapconcat 'identity (cdr headers) " ")))
+         (data-file (make-temp-file "org-ditaa"))
+         (hash (sha1 (prin1-to-string (list body args))))
+         (raw-out-file (if headers (car headers)))
+         (out-file-parts (if (string-match "\\(.+\\)\\.\\([^\\.]+\\)$" raw-out-file)
+                             (cons (match-string 1 raw-out-file)
+                                   (match-string 2 raw-out-file))
+                           (cons raw-out-file "png")))
+         (out-file (concat (car out-file-parts) "_" hash "." (cdr out-file-parts))))
     (unless (file-exists-p org-ditaa-jar-path)
       (error (format "Could not find ditaa.jar at %s" org-ditaa-jar-path)))
     (setq body (if (string-match "^\\([^:\\|:[^ ]\\)" body)
@@ -226,9 +238,21 @@ passed to the ditaa utility as command line arguments."
 			    "\n")))
     (cond
      ((or htmlp latexp docbookp)
-      (with-temp-file data-file (insert body))
-      (message (concat "java -jar " org-ditaa-jar-path " " args " " data-file " " out-file))
-      (shell-command (concat "java -jar " org-ditaa-jar-path " " args " " data-file " " out-file))
+      (unless (file-exists-p out-file)
+        (mapc ;; remove old hashed versions of this file
+         (lambda (file)
+           (when (and (string-match (concat (regexp-quote (car out-file-parts))
+                                            "_\\([[:alnum:]]+\\)\\."
+                                            (regexp-quote (cdr out-file-parts)))
+                                    file)
+                      (= (length (match-string 1 out-file)) 40))
+             (delete-file (expand-file-name file
+                                            (file-name-directory out-file)))))
+         (directory-files (or (file-name-directory out-file)
+                              default-directory)))
+        (with-temp-file data-file (insert body))
+        (message (concat "java -jar " org-ditaa-jar-path " " args " " data-file " " out-file))
+        (shell-command (concat "java -jar " org-ditaa-jar-path " " args " " data-file " " out-file)))
       (format "\n[[file:%s]]\n" out-file))
      (t (concat
 	 "\n#+BEGIN_EXAMPLE\n"
@@ -256,14 +280,32 @@ digraph data_relationships {
 }
 #+end_dot"
   (message "dot-formatting...")
-  (let ((out-file (if headers (car headers)))
-	(args (if (cdr headers) (mapconcat 'identity (cdr headers) " ")))
-	(data-file (make-temp-file "org-ditaa")))
+  (let* ((args (if (cdr headers) (mapconcat 'identity (cdr headers) " ")))
+         (data-file (make-temp-file "org-ditaa"))
+         (hash (sha1 (prin1-to-string (list body args))))
+         (raw-out-file (if headers (car headers)))
+         (out-file-parts (if (string-match "\\(.+\\)\\.\\([^\\.]+\\)$" raw-out-file)
+                             (cons (match-string 1 raw-out-file)
+                                   (match-string 2 raw-out-file))
+                           (cons raw-out-file "png")))
+         (out-file (concat (car out-file-parts) "_" hash "." (cdr out-file-parts))))
     (cond
      ((or htmlp latexp docbookp)
-      (with-temp-file data-file (insert body))
-      (message (concat "dot " data-file " " args " -o " out-file))
-      (shell-command (concat "dot " data-file " " args " -o " out-file))
+      (unless (file-exists-p out-file)
+        (mapc ;; remove old hashed versions of this file
+         (lambda (file)
+           (when (and (string-match (concat (regexp-quote (car out-file-parts))
+                                            "_\\([[:alnum:]]+\\)\\."
+                                            (regexp-quote (cdr out-file-parts)))
+                                    file)
+                      (= (length (match-string 1 out-file)) 40))
+             (delete-file (expand-file-name file
+                                            (file-name-directory out-file)))))
+         (directory-files (or (file-name-directory out-file)
+                              default-directory)))
+        (with-temp-file data-file (insert body))
+        (message (concat "dot " data-file " " args " -o " out-file))
+        (shell-command (concat "dot " data-file " " args " -o " out-file)))
       (format "\n[[file:%s]]\n" out-file))
      (t (concat
 	 "\n#+BEGIN_EXAMPLE\n"

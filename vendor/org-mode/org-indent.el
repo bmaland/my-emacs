@@ -1,10 +1,10 @@
 ;;; org-indent.el --- Dynamic indentation for  Org-mode
-;; Copyright (C) 2009 Free Software Foundation, Inc.
+;; Copyright (C) 2009, 2010 Free Software Foundation, Inc.
 ;;
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.32b
+;; Version: 6.35i
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -38,7 +38,7 @@
 
 (defgroup org-indent nil
   "Options concerning dynamic virtual outline indentation."
-  :tag "Org Structure"
+  :tag "Org Indent"
   :group 'org)
 
 (defconst org-indent-max 40
@@ -67,13 +67,13 @@ it may be prettier to customize the org-indent face."
   :type 'character)
 
 (defcustom org-indent-mode-turns-off-org-adapt-indentation t
-  "Non-nil means, turning on org-indent-mode turns off indentation adaptation.
+  "Non-nil means turning on `org-indent-mode' turns off indentation adaptation.
 For details see the variable `org-adapt-indentation'."
   :group 'org-indent
   :type 'boolean)
 
 (defcustom org-indent-mode-turns-on-hiding-stars t
-  "Non-nil means, turning on org-indent-mode turns on `org-hide-leading-stars'."
+  "Non-nil means turning on `org-indent-mode' turns on `org-hide-leading-stars'."
   :group 'org-indent
   :type 'boolean)
 
@@ -106,8 +106,8 @@ this variable can be set to nil to get rid of the timer."
   ;; Initialize the indentation and star vectors
   (setq org-indent-strings (make-vector (1+ org-indent-max) nil))
   (setq org-indent-stars (make-vector (1+ org-indent-max) nil))
-  (aset org-indent-strings 0 "")
-  (aset org-indent-stars 0 "")
+  (aset org-indent-strings 0 nil)
+  (aset org-indent-stars 0 nil)
   (loop for i from 1 to org-indent-max do
 	(aset org-indent-strings i
 	      (org-add-props
@@ -171,7 +171,7 @@ FIXME:  How to update when broken?"
   (org-compatible-face nil nil)
   "Face for outline indentation.
 The default is to make it look like whitespace.  But you may find it
-useful to make it evver so slightly different."
+useful to make it ever so slightly different."
   :group 'org-faces)
 
 (defun org-indent-indent-buffer ()
@@ -227,7 +227,7 @@ Assumes that BEG is at the beginning of a line."
 	      b  e (list 'line-prefix (aref org-indent-strings n)
 			 'wrap-prefix (aref org-indent-strings n))))
 	   (setq b (1+ (point-at-eol))
-		 n (* level org-indent-indentation-per-level))))))))
+		 n (* (or level 0) org-indent-indentation-per-level))))))))
 
 (defun org-indent-refresh-section ()
   "Refresh indentation properties in the current outline section.
