@@ -35,24 +35,24 @@ CORE = ess.elc ess-site.elc
 ###		  ess-send.el , ess-send2.el
 ### DEPRECATED:  essl-bug.el
 ##
-ELC = $(CORE) ess-comp.elc ess-cust.elc \
-	ess-dde.elc ess-emcs.elc ess-font-lock.elc \
+ELC = $(CORE) ess-comp.elc ess-custom.elc \
+	ess-dde.elc ess-compat.elc ess-font-lock.elc \
 	ess-help.elc ess-inf.elc ess-mode.elc \
-	ess-menu.elc ess-mous.elc mouseme.elc \
+	ess-menu.elc ess-mouse.elc mouseme.elc \
 	ess-swv.elc ess-toolbar.elc \
 	ess-trns.elc ess-utils.elc \
-	essl-s.elc essd-s3.elc essd-s4.elc \
-	essd-sp3.elc essd-sp4.elc essd-sp5.elc essd-sp6.elc \
-	essd-r.elc ess-rdired.elc essd-r-args.elc \
 	essd-els.elc \
-	essl-lsp.elc essd-xls.elc essd-vst.elc essd-arc.elc \
-	essl-sas.elc essd-sas.elc essa-sas.elc \
-	essl-sta.elc essd-sta.elc make-regexp.elc \
-	essl-omg.elc essd-omg.elc \
-	essl-bugs.elc essd-bugs.elc essd-jags.elc \
+	ess-lsp-l.elc ess-xls-d.elc ess-vst-d.elc ess-arc-d.elc \
+	ess-sas-l.elc ess-sas-d.elc ess-sas-a.elc \
+	ess-sta-l.elc ess-sta-d.elc make-regexp.elc \
+	ess-omg-l.elc ess-omg-d.elc \
+	ess-bugs-l.elc ess-bugs-d.elc ess-jags-d.elc \
 	ess-noweb.elc noweb-mode.elc noweb-font-lock-mode.elc \
-	essa-r.elc essddr.elc ess-eldoc.elc ess-roxygen.elc \
-	essd-sp6w.elc msdos.elc
+	ess-eldoc.elc ess-roxy.elc \
+	ess-s-l.elc ess-s3-d.elc ess-s4-d.elc \
+	ess-sp3-d.elc ess-sp4-d.elc ess-sp5-d.elc ess-sp6-d.elc \
+	ess-r-d.elc ess-rdired.elc ess-r-args.elc ess-r-d.elc ess-rd.elc \
+	ess-sp6w-d.elc msdos.elc
 ##      ^^^^^^^^^^^^^^^^^^^^^^^ Windows only (but be platform-oblivious)
 
 ### Targets
@@ -65,12 +65,21 @@ install: $(ELC)
 	export J; for I in *.elc; do J=$$I; $(INSTALL) `basename $$J .elc`.el $(LISPDIR); done
 #	test "$(LISPDIR)" = "." || $(INSTALL) *.elc $(LISPDIR)
 
-dist: ess-cust.el
+dist: ess-custom.el
 	@touch dist
 ## svn committing happens in ../Makefile
 
 clean:
-	rm -f $(ELC)
+	rm -f $(ELC) \
+	ess-cust.elc ess-emcs.elc essl-bug.elc \
+	essl-sas.elc essd-sas.elc essa-sas.elc \
+	essl-bugs.elc essd-bugs.elc essd-jags.elc \
+	essl-sta.elc essd-sta.elc \
+	essl-s.elc essd-s3.elc essd-s4.elc \
+	essd-sp3.elc essd-sp4.elc essd-sp5.elc essd-sp6.elc \
+	essd-r.elc ess-rdired.elc essd-r-args.elc essa-r.elc essddr.elc \
+	essd-sp6w.elc \
+	essd-arc.elc essd-omg.elc essd-vst.elc essd-xls.elc essl-lsp.elc essl-omg.elc ess-mous.elc
 
 distclean: clean
 # and potentially more
@@ -79,7 +88,7 @@ distclean: clean
 ### Targets below here are only for developers - and these must have perl
 
 ### Replace Version numbers (as in ../doc/Makefile !):
-ess-cust.el: ../VERSION
+ess-custom.el: ../VERSION
 	perl -pi -e 's/".*"/"$(ESSVERSION)"/ if /ess-version/' $@
 
 
@@ -89,15 +98,15 @@ ess-cust.el: ../VERSION
 	$(EMACSBATCH) $(PRELOADS) -f batch-byte-compile $<
 
 
-ess-cust.elc:	ess-cust.el
-	$(EMACSBATCH) $(PRELOADS) -f batch-byte-compile ess-cust.el
+ess-custom.elc: ess-custom.el ess-comp.el
+	$(EMACSBATCH) $(PRELOADS) -f batch-byte-compile ess-custom.el
 
-ess.elc: ess.el ess-cust.elc
-	$(EMACSBATCH) $(PRELOADS) -l ess-cust.elc -f batch-byte-compile ess.el
+ess.elc: ess.el ess-comp.el ess-custom.elc
+	$(EMACSBATCH) $(PRELOADS) -l ess-custom.elc -f batch-byte-compile ess.el
 
 ess-site.elc: ess-site.el ess.elc
 
-ess-inf.elc: ess-inf.el $(CORE)
+ess-inf.elc: ess-inf.el ess-comp.el $(CORE)
 # 	@echo " "
 # 	@echo "For the next compile, please disregard the messages"
 # 	@echo " ** the function set-keymap-parent is not known to be defined."
@@ -106,59 +115,59 @@ ess-inf.elc: ess-inf.el $(CORE)
 	$(EMACSBATCH) $(PRELOADS) -f batch-byte-compile ess-inf.el
 
 
-ess-mode.elc: ess-mode.el $(CORE)
+ess-mode.elc: ess-mode.el ess-comp.el $(CORE)
 	$(EMACSBATCH) $(PRELOADS) -f batch-byte-compile ess-mode.el
 
-ess-trns.elc: ess-trns.el $(CORE)
+ess-trns.elc: ess-trns.el ess-comp.el $(CORE)
 	$(EMACSBATCH) $(PRELOADS) -f batch-byte-compile ess-trns.el
 
 ess-help.elc: ess-help.el $(CORE)
 
 ## S languages
 
-essl-s.elc : essl-s.el ess.elc
+ess-s-l.elc : ess-s-l.el ess.elc
 
-essd-sas.elc : essd-sas.el ess.elc
+ess-sas-d.elc : ess-sas-d.el ess.elc
 
-essd-s3.elc : essd-s3.el essl-s.elc ess.elc
+ess-s3-d.elc : ess-s3-d.el ess-s-l.elc ess.elc
 
-essd-sp3.elc : essd-sp3.el essl-s.elc ess.elc
+ess-sp3-d.elc : ess-sp3-d.el ess-s-l.elc ess.elc
 
-essd-s4.elc : essd-s4.el essl-s.elc ess.elc
+ess-s4-d.elc : ess-s4-d.el ess-s-l.elc ess.elc
 
-essd-r.elc : essd-r.el essl-s.elc ess.elc
+ess-r-d.elc : ess-r-d.el ess-s-l.elc ess.elc
 
 ess-swv.elc: ess-swv.el ess-noweb.elc
 
 ## Lisp Languages
 
-essl-lsp.elc : essl-lsp.el ess.elc
+ess-lsp-l.elc : ess-lsp-l.el ess.elc
 
-essd-xls.elc : essd-xls.el essl-lsp.elc ess.elc
+essd-xls.elc : essd-xls.el ess-lsp-l.elc ess.elc
 
-essd-vst.elc : essd-vst.el essl-lsp.elc ess.elc
+essd-vst.elc : essd-vst.el ess-lsp-l.elc ess.elc
 
 ## SAS
 
-essl-sas.elc : essl-sas.el essa-sas.el ess.elc
+ess-sas-l.elc : ess-sas-l.el ess-sas-a.el ess.elc
 
-essd-sas.elc : essd-sas.el essl-sas.elc ess.elc
+ess-sas-d.elc : ess-sas-d.el ess-sas-l.elc ess.elc
 
 ## Stata
 
-essl-sta.elc : essl-sta.el ess.elc
+ess-sta-l.elc : ess-sta-l.el ess.elc
 
-essd-sta.elc : essd-sta.el ess.elc
+ess-sta-d.elc : ess-sta-d.el ess.elc
 
 ## BUGS
 
-essl-bugs.elc : essl-bugs.el ess-emcs.elc
+ess-bugs-l.elc : ess-bugs-l.el ess-compat.elc
 
-essd-bugs.elc : essd-bugs.el essl-bugs.elc
+ess-bugs-d.elc : ess-bugs-d.el ess-bugs-l.elc
 
-## JAGS 
+## JAGS
 
-essd-jags.elc : essd-jags.el essl-bugs.elc ess-utils.elc ess-inf.elc
+ess-jags-d.elc : ess-jags-d.el ess-bugs-l.elc ess-utils.elc ess-inf.elc
 
 # Ignore this.
 #(defun S-insert-make-rule (file)
