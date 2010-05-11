@@ -29,7 +29,6 @@
 (require 'pastie)
 (require 'conservative-mode)
 (require 'kill-wspace-mode)
-(require 'magit) ; Can't autoload magit, need some of the functions earlier
 (require 'ack)
 (require 'filecache)
 (require 'textmate)

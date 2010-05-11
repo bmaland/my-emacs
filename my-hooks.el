@@ -109,6 +109,7 @@
           '(lambda ()
              (coding-hook)
              (set-pairs '("{" "[" "\"" "\'"))
+             (setq inferior-ess-r-help-command "help(\"%s\", help_type=\"text\")\n")
              (local-set-key [return] 'reindent-then-newline-and-indent)))
 
 (add-hook 'sml-mode-hook

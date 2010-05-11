@@ -40,7 +40,7 @@
  '(pc-select-selection-keys-only t)
  '(pc-selection-mode t)
  '(require-final-newline t)
- '(safe-local-variable-values (quote ((tex-main-file . "termpaper.tex") (org-time-stamp-custom-formats quote ("<%m/%d/%y %a>" . "<%m/%d/%y %a %H:%M>")) (tex-main-file . "semopg.tex") (ruby-compilation-executable . "ruby") (ruby-compilation-executable . "ruby1.8") (ruby-compilation-executable . "ruby1.9") (ruby-compilation-executable . "rbx") (ruby-compilation-executable . "jruby") (Package . cl-USER) (Syntax . Common-Lisp))))
+ '(safe-local-variable-values (quote ((tex-main-file . "corpus-ovingsopg.tex") (tex-main-file . "termpaper.tex") (org-time-stamp-custom-formats quote ("<%m/%d/%y %a>" . "<%m/%d/%y %a %H:%M>")) (tex-main-file . "semopg.tex") (ruby-compilation-executable . "ruby") (ruby-compilation-executable . "ruby1.8") (ruby-compilation-executable . "ruby1.9") (ruby-compilation-executable . "rbx") (ruby-compilation-executable . "jruby") (Package . cl-USER) (Syntax . Common-Lisp))))
  '(slime-sbcl-manual-root "file:///usr/share/doc/sbcl-doc/html/sbcl/")
  '(uniquify-buffer-name-style (quote forward) nil (uniquify))
  '(w3m-cookie-accept-domains (quote (".github.com" ".google.com" ".google.no")))
