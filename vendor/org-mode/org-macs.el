@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.35i
+;; Version: 6.36
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -269,7 +269,6 @@ This is in contrast to merely setting it to 0."
 	  (setq p (plist-put p (car plist) (nth 1 plist))))
       (setq plist (cddr plist)))
     p))
-
 
 (defun org-replace-match-keep-properties (newtext &optional fixedcase
 						  literal string)

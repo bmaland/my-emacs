@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.35i
+;; Version: 6.36
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -30,8 +30,7 @@
 
 (require 'org)
 (eval-when-compile
-  (require 'cl)
-  (require 'calendar))
+  (require 'cl))
 
 (declare-function calendar-absolute-from-iso    "cal-iso"    (&optional date))
 (defvar org-time-stamp-formats)
@@ -501,7 +500,8 @@ the mode line."
        ;; A string.  See if it is a delta
        (setq sign (string-to-char value))
        (if (member sign '(?- ?+))
-	   (setq current (org-hh:mm-string-to-minutes (substring current 1)))
+	   (setq current (org-hh:mm-string-to-minutes current)
+		 value (substring value 1))
 	 (setq current 0))
        (setq value (org-hh:mm-string-to-minutes value))
        (if (equal ?- sign)
@@ -760,11 +760,10 @@ was started."
 			     (goto-char (match-end 0)))
 			   nil))))))
 	      (let (char-pressed)
-		(if (featurep 'xemacs)
-		    (progn
-		      (message (concat (funcall prompt-fn clock)
-				       " [(kK)eep (sS)ubtract (C)ancel]? "))
-		      (setq char-pressed (read-char-exclusive)))
+		(when (featurep 'xemacs)
+		  (message (concat (funcall prompt-fn clock)
+				   " [(kK)eep (sS)ubtract (C)ancel]? "))
+		  (setq char-pressed (read-char-exclusive)))
 		(while (or (null char-pressed)
 			   (and (not (memq char-pressed '(?k ?K ?s ?S ?C ?i)))
 				(or (ding) t)))
@@ -772,7 +771,7 @@ was started."
 			(read-char (concat (funcall prompt-fn clock)
 					   " [(kK)p (sS)ub (C)ncl (i)gn]? ")
 				   nil 45)))
-		(and (not (eq char-pressed ?i)) char-pressed))))))
+		(and (not (eq char-pressed ?i)) char-pressed)))))
 	 (default (floor (/ (org-float-time
 			     (time-subtract (current-time) last-valid)) 60)))
 	 (keep (and (memq ch '(?k ?K))
@@ -1059,7 +1058,7 @@ the clocking selection, associated with the letter `d'."
   "Task currently clocked in.")
 (defun org-clock-set-current ()
   "Set `org-clock-current-task' to the task currently clocked in."
-  (setq org-clock-current-task (org-get-heading)))
+  (setq org-clock-current-task (nth 4 (org-heading-components))))
 (defun org-clock-delete-current ()
   "Reset `org-clock-current-task' to nil."
   (setq org-clock-current-task nil))
@@ -1196,11 +1195,14 @@ line and position cursor in that line."
 If there is no running clock, throw an error, unless FAIL-QUIETLY is set."
   (interactive)
   (catch 'exit
-    (if (not (org-clocking-p))
-	(if fail-quietly (throw 'exit t) (error "No active clock")))
+    (when (not (org-clocking-p))
+      (setq global-mode-string
+	    (delq 'org-mode-line-string global-mode-string))
+      (force-mode-line-update)
+      (if fail-quietly (throw 'exit t) (error "No active clock")))
     (let (ts te s h m remove)
-      (save-excursion
-	(set-buffer (org-clocking-buffer))
+      (save-excursion ; Do not replace this with `with-current-buffer'.
+	(with-no-warnings (set-buffer (org-clocking-buffer)))
 	(save-restriction
 	  (widen)
 	  (goto-char org-clock-marker)
@@ -1265,10 +1267,13 @@ If there is no running clock, throw an error, unless FAIL-QUIETLY is set."
 (defun org-clock-cancel ()
   "Cancel the running clock be removing the start timestamp."
   (interactive)
-  (if (not (org-clocking-p))
-      (error "No active clock"))
-  (save-excursion
-    (set-buffer (org-clocking-buffer))
+  (when (not (org-clocking-p))
+    (setq global-mode-string
+         (delq 'org-mode-line-string global-mode-string))
+    (force-mode-line-update)
+    (error "No active clock"))
+  (save-excursion ; Do not replace this with `with-current-buffer'.
+    (with-no-warnings (set-buffer (org-clocking-buffer)))
     (goto-char org-clock-marker)
     (delete-region (1- (point-at-bol)) (point-at-eol))
     ;; Just in case, remove any empty LOGBOOK left over
@@ -1313,10 +1318,13 @@ With prefix arg SELECT, offer recently clocked tasks for selection."
   "Holds the file total time in minutes, after a call to `org-clock-sum'.")
 (make-variable-buffer-local 'org-clock-file-total-minutes)
 
-(defun org-clock-sum (&optional tstart tend)
+(defun org-clock-sum (&optional tstart tend headline-filter)
   "Sum the times for each subtree.
 Puts the resulting times in minutes as a text property on each headline.
-TSTART and TEND can mark a time range to be considered."
+TSTART and TEND can mark a time range to be considered.  HEADLINE-FILTER is a
+zero-arg function that, if specified, is called for each headline in the time 
+range with point at the headline.  Headlines for which HEADLINE-FILTER returns
+nil are excluded from the clock summation."
   (interactive)
   (let* ((bmp (buffer-modified-p))
 	 (re (concat "^\\(\\*+\\)[ \t]\\|^[ \t]*"
@@ -1332,7 +1340,9 @@ TSTART and TEND can mark a time range to be considered."
     (if (stringp tend) (setq tend (org-time-string-to-seconds tend)))
     (if (consp tstart) (setq tstart (org-float-time tstart)))
     (if (consp tend) (setq tend (org-float-time tend)))
-    (remove-text-properties (point-min) (point-max) '(:org-clock-minutes t))
+    (remove-text-properties (point-min) (point-max)
+                            '(:org-clock-minutes t
+                              :org-clock-force-headline-inclusion t))
     (save-excursion
       (goto-char (point-max))
       (while (re-search-backward re nil t)
@@ -1361,15 +1371,34 @@ TSTART and TEND can mark a time range to be considered."
 	      (let ((time (floor (- (org-float-time)
 				    (org-float-time org-clock-start-time)) 60)))
 		(setq t1 (+ t1 time))))
-	  (setq level (- (match-end 1) (match-beginning 1)))
-	  (when (or (> t1 0) (> (aref ltimes level) 0))
-	    (loop for l from 0 to level do
-		  (aset ltimes l (+ (aref ltimes l) t1)))
-	    (setq t1 0 time (aref ltimes level))
-	    (loop for l from level to (1- lmax) do
-		  (aset ltimes l 0))
-	    (goto-char (match-beginning 0))
-	    (put-text-property (point) (point-at-eol) :org-clock-minutes time)))))
+	  (let* ((headline-forced
+                  (get-text-property (point)
+                                     :org-clock-force-headline-inclusion))
+                 (headline-included
+                  (or (null headline-filter)
+                      (save-excursion
+                        (save-match-data (funcall headline-filter))))))
+	    (setq level (- (match-end 1) (match-beginning 1)))
+	    (when (or (> t1 0) (> (aref ltimes level) 0))
+	      (when (or headline-included headline-forced)
+                (if headline-included
+                    (loop for l from 0 to level do
+                          (aset ltimes l (+ (aref ltimes l) t1))))
+		(setq time (aref ltimes level))
+		(goto-char (match-beginning 0))
+		(put-text-property (point) (point-at-eol) :org-clock-minutes time)
+                (if headline-filter
+                    (save-excursion
+                      (save-match-data
+                        (while
+                            (> (funcall outline-level) 1)
+                          (outline-up-heading 1 t)
+                          (put-text-property
+                           (point) (point-at-eol)
+                           :org-clock-force-headline-inclusion t))))))
+	      (setq t1 0)
+	      (loop for l from level to (1- lmax) do
+		    (aset ltimes l 0)))))))
       (setq org-clock-file-total-minutes (aref ltimes 0)))
     (set-buffer-modified-p bmp)))
 
@@ -1430,7 +1459,7 @@ will be easy to remove."
     (org-move-to-column c)
     (unless (eolp) (skip-chars-backward "^ \t"))
     (skip-chars-backward " \t")
-    (setq ov (org-make-overlay (1- (point)) (point-at-eol))
+    (setq ov (make-overlay (1- (point)) (point-at-eol))
 	  tx (concat (buffer-substring (1- (point)) (point))
 		     (make-string (+ off (max 0 (- c (current-column)))) ?.)
 		     (org-add-props (if org-time-clocksum-use-fractional
@@ -1444,9 +1473,9 @@ will be easy to remove."
 			 (list 'face 'org-clock-overlay))
 		     ""))
     (if (not (featurep 'xemacs))
-	(org-overlay-put ov 'display tx)
-      (org-overlay-put ov 'invisible t)
-      (org-overlay-put ov 'end-glyph (make-glyph tx)))
+	(overlay-put ov 'display tx)
+      (overlay-put ov 'invisible t)
+      (overlay-put ov 'end-glyph (make-glyph tx)))
     (push ov org-clock-overlays)))
 
 (defun org-clock-remove-overlays (&optional beg end noremove)
@@ -1455,7 +1484,7 @@ BEG and END are ignored.  If NOREMOVE is nil, remove this function
 from the `before-change-functions' in the current buffer."
   (interactive)
   (unless org-inhibit-highlight-removal
-    (mapc 'org-delete-overlay org-clock-overlays)
+    (mapc 'delete-overlay org-clock-overlays)
     (setq org-clock-overlays nil)
     (unless noremove
       (remove-hook 'before-change-functions
@@ -1689,6 +1718,8 @@ the currently selected interval size."
 	   (te (plist-get params :tend))
 	   (block (plist-get params :block))
 	   (link (plist-get params :link))
+	   (tags (plist-get params :tags))
+	   (matcher (if tags (cdr (org-make-tags-matcher tags))))
 	   ipos time p level hlc hdl tsp props content recalc formula pcol
 	   cc beg end pos tbl tbl1 range-text rm-file-column scope-is-list st)
       (setq org-clock-file-total-minutes nil)
@@ -1770,7 +1801,14 @@ the currently selected interval size."
 	(goto-char pos)
 
 	(unless scope-is-list
-	  (org-clock-sum ts te)
+	  (org-clock-sum ts te
+			 (unless (null matcher)
+			   (lambda ()
+			     (let ((tags-list
+				    (org-split-string
+				     (or (org-entry-get (point) "ALLTAGS") "")
+				     ":")))
+			       (eval matcher)))))
 	  (goto-char (point-min))
 	  (setq st t)
 	  (while (or (and (bobp) (prog1 st (setq st nil))

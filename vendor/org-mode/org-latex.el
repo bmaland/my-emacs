@@ -4,7 +4,7 @@
 ;;
 ;; Emacs Lisp Archive Entry
 ;; Filename: org-latex.el
-;; Version: 6.35i
+;; Version: 6.36
 ;; Author: Bastien Guerry <bzg AT altern DOT org>
 ;; Maintainer: Carsten Dominik <carsten.dominik AT gmail DOT com>
 ;; Keywords: org, wp, tex
@@ -584,6 +584,7 @@ simply return the content of \begin{document}...\end{document},
 without even the \begin{document} and \end{document} commands.
 when PUB-DIR is set, use this as the publishing directory."
   (interactive "P")
+  (when (and (not body-only) arg (listp arg)) (setq body-only t))
   (run-hooks 'org-export-first-hook)
 
   ;; Make sure we have a file name when we need it.
@@ -792,7 +793,9 @@ when PUB-DIR is set, use this as the publishing directory."
 	  (replace-match "\n")))
 
     (run-hooks 'org-export-latex-final-hook)
-    (or to-buffer (save-buffer))
+    (if to-buffer
+	(unless (eq major-mode 'latex-mode) (latex-mode))
+      (save-buffer))
     (org-export-latex-fix-inputenc)
     (run-hooks 'org-export-latex-after-save-hook)
     (goto-char (point-min))
@@ -1085,7 +1088,7 @@ LEVEL indicates the default depth for export."
 	      (save-restriction
 		(widen)
 		(goto-char (point-min))
-		(and (re-search-forward "^#\\+LaTeX_CLASS:[ \t]*\\([a-zA-Z]+\\)" nil t)
+		(and (re-search-forward "^#\\+LaTeX_CLASS:[ \t]*\\(-[a-zA-Z]+\\)" nil t)
 		     (match-string 1))))
 	    (plist-get org-export-latex-options-plist :latex-class)
 	    org-export-latex-default-class)
@@ -1144,7 +1147,7 @@ OPT-PLIST is the options plist for current buffer."
      (org-splice-latex-header
       (org-export-apply-macros-in-string org-export-latex-header)
       org-export-latex-default-packages-alist
-      org-export-latex-packages-alist
+      org-export-latex-packages-alist nil
       (org-export-apply-macros-in-string
        (plist-get opt-plist :latex-header-extra)))
      ;; append another special variable
@@ -1469,7 +1472,9 @@ Convert CHAR depending on STRING-BEFORE and STRING-AFTER."
 	       ((and (> (length string-after) 1)
 		     (or (eq subsup t)
 			 (and (equal subsup '{}) (eq (string-to-char string-after) ?\{)))
-		     (string-match "[({]?\\([^)}]+\\)[)}]?" string-after))
+		     (or (string-match "[{]?\\([^}]+\\)[}]?" string-after)
+			 (string-match "[(]?\\([^)]+\\)[)]?" string-after)))
+
 		(org-export-latex-protect-string
 		 (format "%s$%s{%s}$" string-before char
 			 (if (and (> (match-end 1) (1+ (match-beginning 1)))
@@ -2163,13 +2168,23 @@ The conversion is made depending of STRING-BEFORE and STRING-AFTER."
 
 (defun org-export-latex-lists ()
   "Convert plain text lists in current buffer into LaTeX lists."
-  (goto-char (point-min))
-  (while (re-search-forward org-list-beginning-re nil t)
-    (org-if-unprotected
-     (beginning-of-line)
-     (insert (org-list-to-latex (org-list-parse-list t)
-				org-export-latex-list-parameters))
-     "\n")))
+  (let (res)
+    (goto-char (point-min))
+    (while (re-search-forward org-list-beginning-re nil t)
+      (org-if-unprotected
+       (beginning-of-line)
+       (setq res (org-list-to-latex (org-list-parse-list t)
+				    org-export-latex-list-parameters))
+       (while (string-match "^\\(\\\\item[ \t]+\\)\\[@start:\\([0-9]+\\)\\]"
+			    res)
+	 (setq res (replace-match
+		    (concat (format "\\setcounter{enumi}{%d}"
+				    (1- (string-to-number
+					 (match-string 2 res))))
+			    "\n"
+			    (match-string 1 res))
+		    t t res)))
+       (insert res "\n")))))
 
 (defconst org-latex-entities
  '("\\!"

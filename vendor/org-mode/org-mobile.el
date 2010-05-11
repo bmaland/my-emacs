@@ -4,7 +4,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.35i
+;; Version: 6.36
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -349,6 +349,9 @@ agenda view showing the flagged items."
 		(file-name-directory org-mobile-inbox-for-pull)))
     (error
      "Variable `org-mobile-inbox-for-pull' must point to a file in an existing directory"))
+  (unless (and org-mobile-checksum-binary
+	       (string-match "\\S-" org-mobile-checksum-binary))
+    (error "No executable found to compute checksums"))
   (when org-mobile-use-encryption
     (unless (string-match "\\S-" org-mobile-encryption-password)
       (error

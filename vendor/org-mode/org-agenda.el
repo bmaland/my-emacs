@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.35i
+;; Version: 6.36
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -32,8 +32,7 @@
 
 (require 'org)
 (eval-when-compile
-  (require 'cl)
-  (require 'calendar))
+  (require 'cl))
 
 (declare-function diary-add-to-list "diary-lib"
                   (date string specifier &optional marker globcolor literal))
@@ -212,6 +211,7 @@ you can \"misuse\" it to also add other text to the header.  However,
     (const todo-state-up) (const todo-state-down)
     (const effort-up) (const effort-down)
     (const habit-up) (const habit-down)
+    (const alpha-up) (const alpha-down)
     (const user-defined-up) (const user-defined-down))
   "Sorting choices.")
 
@@ -1121,6 +1121,8 @@ user-defined-up    Sort according to `org-agenda-cmp-user-defined', high last.
 user-defined-down  Sort according to `org-agenda-cmp-user-defined', high first.
 habit-up           Put entries that are habits first
 habit-down         Put entries that are habits last
+alpha-up           Sort headlines alphabetically
+alpha-down         Sort headlines alphabetically, reversed
 
 The different possibilities will be tried in sequence, and testing stops
 if one comparison returns a \"not-equal\".  For example, the default
@@ -1663,10 +1665,8 @@ The following commands are available:
 (org-defkey org-agenda-mode-map "\C-c\C-x\C-mg"    'org-mobile-pull)
 (org-defkey org-agenda-mode-map "\C-c\C-x\C-mp"    'org-mobile-push)
 
-(org-defkey org-agenda-mode-map
-  (if (featurep 'xemacs) [(button2)] [(mouse-2)]) 'org-agenda-goto-mouse)
-(org-defkey org-agenda-mode-map
-  (if (featurep 'xemacs) [(button3)] [(mouse-3)]) 'org-agenda-show-mouse)
+(org-defkey org-agenda-mode-map [mouse-2] 'org-agenda-goto-mouse)
+(org-defkey org-agenda-mode-map [mouse-3] 'org-agenda-show-mouse)
 (when org-agenda-mouse-1-follows-link
   (org-defkey org-agenda-mode-map [follow-link] 'mouse-face))
 (easy-menu-define org-agenda-menu org-agenda-mode-map "Agenda menu"
@@ -1967,7 +1967,6 @@ Pressing `<' twice means to restrict to the current subtree or region
 	    (move-marker org-agenda-restrict-end
 			 (progn (org-end-of-subtree t)))))))
 
-      (require 'calendar)  ; FIXME: can we avoid this for some commands?
       ;; For example the todo list should not need it (but does...)
       (cond
        ((setq entry (assoc keys org-agenda-custom-commands))
@@ -2518,9 +2517,9 @@ higher priority settings."
   (let ((inhibit-read-only t))
     (mapc
      (lambda (o)
-       (when (equal (org-overlay-buffer o) (current-buffer))
+       (when (equal (overlay-buffer o) (current-buffer))
 	 (put-text-property
-	  (org-overlay-start o) (org-overlay-end o)
+	  (overlay-start o) (overlay-end o)
 	  'org-filtered t)))
      org-agenda-filter-overlays)))
 
@@ -2797,9 +2796,9 @@ bind it in the options section.")
 (defun org-agenda-mark-clocking-task ()
   "Mark the current clock entry in the agenda if it is present."
   (mapc (lambda (o)
-	  (if (eq (org-overlay-get o 'type) 'org-agenda-clocking)
-	      (org-delete-overlay o)))
-	(org-overlays-in (point-min) (point-max)))
+	  (if (eq (overlay-get o 'type) 'org-agenda-clocking)
+	      (delete-overlay o)))
+	(overlays-in (point-min) (point-max)))
   (when (marker-buffer org-clock-hd-marker)
     (save-excursion
       (goto-char (point-min))
@@ -2808,18 +2807,18 @@ bind it in the options section.")
 	  (goto-char s)
 	  (when (equal (org-get-at-bol 'org-hd-marker)
 		       org-clock-hd-marker)
-	    (setq ov (org-make-overlay (point-at-bol) (1+ (point-at-eol))))
-	    (org-overlay-put ov 'type 'org-agenda-clocking)
-	    (org-overlay-put ov 'face 'org-agenda-clocking)
-	    (org-overlay-put ov 'help-echo
+	    (setq ov (make-overlay (point-at-bol) (1+ (point-at-eol))))
+	    (overlay-put ov 'type 'org-agenda-clocking)
+	    (overlay-put ov 'face 'org-agenda-clocking)
+	    (overlay-put ov 'help-echo
 			     "The clock is running in this item")))))))
 
 (defun org-agenda-fontify-priorities ()
   "Make highest priority lines bold, and lowest italic."
   (interactive)
-  (mapc (lambda (o) (if (eq (org-overlay-get o 'org-type) 'org-priority)
-			(org-delete-overlay o)))
-	(org-overlays-in (point-min) (point-max)))
+  (mapc (lambda (o) (if (eq (overlay-get o 'org-type) 'org-priority)
+			(delete-overlay o)))
+	(overlays-in (point-min) (point-max)))
   (save-excursion
     (let ((inhibit-read-only t)
 	  b e p ov h l)
@@ -2834,8 +2833,8 @@ bind it in the options section.")
 	      e (if (eq org-agenda-fontify-priorities 'cookies)
 		    (match-end 0)
 		  (point-at-eol))
-	      ov (org-make-overlay b e))
-	(org-overlay-put
+	      ov (make-overlay b e))
+	(overlay-put
 	 ov 'face
 	 (cond ((org-face-from-face-or-color
 		 'priority nil
@@ -2846,13 +2845,13 @@ bind it in the options section.")
 		      (cdr (assoc p org-agenda-fontify-priorities)))))
 	       ((equal p l) 'italic)
 	       ((equal p h) 'bold)))
-	(org-overlay-put ov 'org-type 'org-priority)))))
+	(overlay-put ov 'org-type 'org-priority)))))
 
 (defun org-agenda-dim-blocked-tasks ()
   "Dim currently blocked TODO's in the agenda display."
-  (mapc (lambda (o) (if (eq (org-overlay-get o 'org-type) 'org-blocked-todo)
-			(org-delete-overlay o)))
-	(org-overlays-in (point-min) (point-max)))
+  (mapc (lambda (o) (if (eq (overlay-get o 'org-type) 'org-blocked-todo)
+			(delete-overlay o)))
+	(overlays-in (point-min) (point-max)))
   (save-excursion
     (let ((inhibit-read-only t)
 	  (org-depend-tag-blocked nil)
@@ -2881,11 +2880,11 @@ bind it in the options section.")
 			(max (point-min) (1- (point-at-bol)))
 		      (point-at-bol))
 		  e (point-at-eol)
-		  ov (org-make-overlay b e))
+		  ov (make-overlay b e))
 	    (if invis1
-		(org-overlay-put ov 'invisible t)
-	      (org-overlay-put ov 'face 'org-agenda-dimmed-todo-face))
-	    (org-overlay-put ov 'org-type 'org-blocked-todo)))))))
+		(overlay-put ov 'invisible t)
+	      (overlay-put ov 'face 'org-agenda-dimmed-todo-face))
+	    (overlay-put ov 'org-type 'org-blocked-todo)))))))
 
 (defvar org-agenda-skip-function nil
   "Function to be called at each match during agenda construction.
@@ -2958,10 +2957,10 @@ no longer in use."
 			    (org-agenda-get-some-entry-text
 			     m org-agenda-entry-text-maxlines "    > "))))
     (when (string-match "\\S-" txt)
-      (setq o (org-make-overlay (point-at-bol) (point-at-eol)))
-      (org-overlay-put o 'evaporate t)
-      (org-overlay-put o 'org-overlay-type 'agenda-entry-content)
-      (org-overlay-put o 'after-string txt))))
+      (setq o (make-overlay (point-at-bol) (point-at-eol)))
+      (overlay-put o 'evaporate t)
+      (overlay-put o 'org-overlay-type 'agenda-entry-content)
+      (overlay-put o 'after-string txt))))
 
 (defun org-agenda-entry-text-show ()
   "Add entry context for all agenda lines."
@@ -2978,10 +2977,10 @@ no longer in use."
   "Remove any shown entry context."
   (delq nil
 	(mapcar (lambda (o)
-		  (if (eq (org-overlay-get o 'org-overlay-type)
+		  (if (eq (overlay-get o 'org-overlay-type)
 			  'agenda-entry-content)
-		      (progn (org-delete-overlay o) t)))
-		(org-overlays-in (point-min) (point-max)))))
+		      (progn (delete-overlay o) t)))
+		(overlays-in (point-min) (point-max)))))
 
 ;;; Agenda timeline
 
@@ -2995,7 +2994,6 @@ under the current date.
 If the buffer contains an active region, only check the region for
 dates."
   (interactive "P")
-  (require 'calendar)
   (org-compile-prefix-format 'timeline)
   (org-set-sorting-strategy 'timeline)
   (let* ((dopast t)
@@ -3197,7 +3195,6 @@ given in `org-agenda-start-on-weekday'."
   (setq org-agenda-last-arguments (list include-all start-day ndays))
   (org-compile-prefix-format 'agenda)
   (org-set-sorting-strategy 'agenda)
-  (require 'calendar)
   (let* ((org-agenda-start-on-weekday
 	  (if (or (equal ndays 7) (and (null ndays) (equal 7 org-agenda-ndays)))
 	      org-agenda-start-on-weekday nil))
@@ -3624,7 +3621,6 @@ the list to these.  When using \\[universal-argument], you will be prompted
 for a keyword.  A numeric prefix directly selects the Nth keyword in
 `org-todo-keywords-1'."
   (interactive "P")
-  (require 'calendar)
   (org-compile-prefix-format 'todo)
   (org-set-sorting-strategy 'todo)
   (org-prepare-agenda "TODO")
@@ -3981,7 +3977,6 @@ MATCH is being ignored."
   "Get the (Emacs Calendar) diary entries for DATE."
   (require 'diary-lib)
   (let* ((diary-fancy-buffer "*temporary-fancy-diary-buffer*")
-	 (fancy-diary-buffer diary-fancy-buffer)
 	 (diary-display-hook '(fancy-diary-display))
 	 (diary-display-function 'fancy-diary-display)
 	 (pop-up-frames nil)
@@ -5216,6 +5211,28 @@ HH:MM."
 	  ((< lb la) +1)
 	  (t nil))))
 
+(defsubst org-cmp-alpha (a b)
+  "Compare the headlines, alphabetically."
+  (let* ((pla (get-text-property 0 'prefix-length a))
+	 (plb (get-text-property 0 'prefix-length b))
+	 (ta (and pla (substring a pla)))
+	 (tb (and plb (substring b plb))))
+    (when pla
+      (if (string-match (concat "\\`[ \t]*" (or (get-text-property 0 'org-todo-regexp a) "")
+				"\\([ \t]*\\[[a-zA-Z0-9]\\]\\)? *") ta)
+	  (setq ta (substring ta (match-end 0))))
+      (setq ta (downcase ta)))
+    (when plb
+      (if (string-match (concat "\\`[ \t]*" (or (get-text-property 0 'org-todo-regexp b) "")
+				"\\([ \t]*\\[[a-zA-Z0-9]\\]\\)? *") tb)
+	  (setq tb (substring tb (match-end 0))))
+      (setq tb (downcase tb)))
+    (cond ((not ta) +1)
+	  ((not tb) -1)
+	  ((string-lessp ta tb) -1)
+	  ((string-lessp tb ta) +1)
+	  (t nil))))
+
 (defsubst org-cmp-tag (a b)
   "Compare the string values of the first tags of A and B."
   (let ((ta (car (last (get-text-property 1 'tags a))))
@@ -5243,25 +5260,39 @@ HH:MM."
 	  ((and (not ha) hb) +1)
 	  (t nil))))
 
+(defsubst org-em (x y list) (or (memq x list) (memq y list)))
+
 (defun org-entries-lessp (a b)
   "Predicate for sorting agenda entries."
   ;; The following variables will be used when the form is evaluated.
   ;; So even though the compiler complains, keep them.
-  (let* ((time-up (org-cmp-time a b))
-	 (time-down (if time-up (- time-up) nil))
-	 (priority-up (org-cmp-priority a b))
-	 (priority-down (if priority-up (- priority-up) nil))
-	 (effort-up (org-cmp-effort a b))
-	 (effort-down (if effort-up (- effort-up) nil))
-	 (category-up (org-cmp-category a b))
-	 (category-down (if category-up (- category-up) nil))
-	 (category-keep (if category-up +1 nil))
-	 (tag-up (org-cmp-tag a b))
-	 (tag-down (if tag-up (- tag-up) nil))
-	 (todo-state-up (org-cmp-todo-state a b))
+  (let* ((ss org-agenda-sorting-strategy-selected)
+	 (time-up         (and (org-em 'time-up 'time-down ss)
+			       (org-cmp-time a b)))
+	 (time-down       (if time-up (- time-up) nil))
+	 (priority-up     (and (org-em 'priority-up 'priority-down ss)
+			       (org-cmp-priority a b)))
+	 (priority-down   (if priority-up (- priority-up) nil))
+	 (effort-up       (and (org-em 'effort-up 'effort-down ss)
+			       (org-cmp-effort a b)))
+	 (effort-down     (if effort-up (- effort-up) nil))
+	 (category-up     (and (or (org-em 'category-up 'category-down ss)
+				   (memq 'category-keep ss))
+			       (org-cmp-category a b)))
+	 (category-down   (if category-up (- category-up) nil))
+	 (category-keep   (if category-up +1 nil))
+	 (tag-up          (and (org-em 'tag-up 'tag-down ss)
+			       (org-cmp-tag a b)))
+	 (tag-down        (if tag-up (- tag-up) nil))
+	 (todo-state-up   (and (org-em 'todo-state-up 'todo-state-down ss)
+			       (org-cmp-todo-state a b)))
 	 (todo-state-down (if todo-state-up (- todo-state-up) nil))
-	 (habit-up (org-cmp-habit-p a b))
-	 (habit-down (if habit-up (- habit-up) nil))
+	 (habit-up        (and (org-em 'habit-up 'habit-down ss)
+			       (org-cmp-habit-p a b)))
+	 (habit-down      (if habit-up (- habit-up) nil))
+	 (alpha-up        (and (org-em 'alpha-up 'alpha-down ss)
+			       (org-cmp-alpha a b)))
+	 (alpha-down      (if alpha-up (- alpha-up) nil))
 	 user-defined-up user-defined-down)
     (if (and org-agenda-cmp-user-defined
 	     (functionp org-agenda-cmp-user-defined))
@@ -5274,12 +5305,12 @@ HH:MM."
 
 ;;; Agenda restriction lock
 
-(defvar org-agenda-restriction-lock-overlay (org-make-overlay 1 1)
+(defvar org-agenda-restriction-lock-overlay (make-overlay 1 1)
   "Overlay to mark the headline to which agenda commands are restricted.")
-(org-overlay-put org-agenda-restriction-lock-overlay
-		 'face 'org-agenda-restriction-lock)
-(org-overlay-put org-agenda-restriction-lock-overlay
-		 'help-echo "Agendas are currently limited to this subtree.")
+(overlay-put org-agenda-restriction-lock-overlay
+	     'face 'org-agenda-restriction-lock)
+(overlay-put org-agenda-restriction-lock-overlay
+	     'help-echo "Agendas are currently limited to this subtree.")
 (org-detach-overlay org-agenda-restriction-lock-overlay)
 
 (defun org-agenda-set-restriction-lock (&optional type)
@@ -5302,7 +5333,7 @@ in the file.  Otherwise, restriction will be to the current subtree."
 	(put 'org-agenda-files 'org-restrict
 	     (list (buffer-file-name (buffer-base-buffer))))
 	(org-back-to-heading t)
-	(org-move-overlay org-agenda-restriction-lock-overlay (point) (point-at-eol))
+	(move-overlay org-agenda-restriction-lock-overlay (point) (point-at-eol))
 	(move-marker org-agenda-restrict-begin (point))
 	(move-marker org-agenda-restrict-end
 		     (save-excursion (org-end-of-subtree t)))
@@ -5588,25 +5619,25 @@ If the line does not have an effort defined, return nil."
 
 (defun org-agenda-filter-by-tag-hide-line ()
   (let (ov)
-    (setq ov (org-make-overlay (max (point-min) (1- (point-at-bol)))
+    (setq ov (make-overlay (max (point-min) (1- (point-at-bol)))
 			       (point-at-eol)))
-    (org-overlay-put ov 'invisible t)
-    (org-overlay-put ov 'type 'tags-filter)
+    (overlay-put ov 'invisible t)
+    (overlay-put ov 'type 'tags-filter)
     (push ov org-agenda-filter-overlays)))
 
 (defun org-agenda-fix-tags-filter-overlays-at (&optional pos)
   (setq pos (or pos (point)))
   (save-excursion
-    (dolist (ov (org-overlays-at pos))
-      (when (and (org-overlay-get ov 'invisible)
-		 (eq (org-overlay-get ov 'type) 'tags-filter))
+    (dolist (ov (overlays-at pos))
+      (when (and (overlay-get ov 'invisible)
+		 (eq (overlay-get ov 'type) 'tags-filter))
 	(goto-char pos)
-	(if (< (org-overlay-start ov) (point-at-eol))
-	    (org-move-overlay ov (point-at-eol)
-			      (org-overlay-end ov)))))))
+	(if (< (overlay-start ov) (point-at-eol))
+	    (move-overlay ov (point-at-eol)
+			      (overlay-end ov)))))))
 
 (defun org-agenda-filter-by-tag-show-all ()
-  (mapc 'org-delete-overlay org-agenda-filter-overlays)
+  (mapc 'delete-overlay org-agenda-filter-overlays)
   (setq org-agenda-filter-overlays nil)
   (setq org-agenda-filter nil)
   (setq org-agenda-filter-form nil)
@@ -5881,17 +5912,16 @@ so that the date SD will be in that range."
       (error "No previous date before this line in this buffer")))
 
 ;; Initialize the highlight
-(defvar org-hl (org-make-overlay 1 1))
-(org-overlay-put org-hl 'face 'highlight)
+(defvar org-hl (make-overlay 1 1))
+(overlay-put org-hl 'face 'highlight)
 
 (defun org-highlight (begin end &optional buffer)
   "Highlight a region with overlay."
-  (funcall (if (featurep 'xemacs) 'set-extent-endpoints 'move-overlay)
-	   org-hl begin end (or buffer (current-buffer))))
+  (move-overlay org-hl begin end (or buffer (current-buffer))))
 
 (defun org-unhighlight ()
   "Detach overlay INDEX."
-  (funcall (if (featurep 'xemacs) 'detach-extent 'delete-overlay) org-hl))
+  (org-detach-overlay org-hl))
 
 ;; FIXME this is currently not used.
 (defun org-highlight-until-next-command (beg end &optional buffer)
@@ -6091,6 +6121,7 @@ and by additional input from the age of a schedules or deadline entry."
 	 (pos (marker-position marker)))
     (switch-to-buffer-other-window buffer)
     (widen)
+    (push-mark)
     (goto-char pos)
     (when (org-mode-p)
       (org-show-context 'agenda)
@@ -6207,7 +6238,7 @@ If this information is not given, the function uses the tree at point."
 	      (delete-region (point-at-bol) (1+ (point-at-eol)))))
 	  (beginning-of-line 0))))))
 
-(defun org-agenda-refile (&optional goto rfloc)
+(defun org-agenda-refile (&optional goto rfloc no-update)
   "Refile the item at point."
   (interactive "P")
   (if (equal goto '(16))
@@ -6226,7 +6257,8 @@ If this information is not given, the function uses the tree at point."
 	    (widen)
 	    (goto-char marker)
 	    (org-remove-subtree-entries-from-agenda)
-	    (org-refile goto buffer rfloc)))))))
+	    (org-refile goto buffer rfloc)))))
+    (unless no-update (org-agenda-redo))))
 
 (defun org-agenda-open-link (&optional arg)
   "Follow the link in the current line, if any.
@@ -7313,9 +7345,7 @@ argument, latitude and longitude will be prompted for."
 	 (date (calendar-gregorian-from-absolute day))
 	 (calendar-move-hook nil)
 	 (calendar-view-holidays-initially-flag nil)
-	 (calendar-view-diary-initially-flag nil)
-	 (view-calendar-holidays-initially nil)
-	 (view-diary-entries-initially nil))
+	 (calendar-view-diary-initially-flag nil))
     (calendar)
     (calendar-goto-date date)))
 
@@ -7374,11 +7404,11 @@ This is a command that has to be installed in `calendar-mode-map'."
     (unless (org-agenda-bulk-marked-p)
       (unless m (error "Nothing to mark at point"))
       (push m org-agenda-bulk-marked-entries)
-      (setq ov (org-make-overlay (point-at-bol) (+ 2 (point-at-bol))))
+      (setq ov (make-overlay (point-at-bol) (+ 2 (point-at-bol))))
       (org-overlay-display ov "> "
 			   (org-get-todo-face "TODO")
 			   'evaporate)
-      (org-overlay-put ov 'type 'org-marked-entry-overlay))
+      (overlay-put ov 'type 'org-marked-entry-overlay))
     (beginning-of-line 2)
     (while (and (get-char-property (point) 'invisible) (not (eobp)))
       (beginning-of-line 2))
@@ -7415,9 +7445,9 @@ This only removes the overlays, it does not remove the markers
 from the list in `org-agenda-bulk-marked-entries'."
   (interactive)
   (mapc (lambda (ov)
-	  (and (eq (org-overlay-get ov 'type) 'org-marked-entry-overlay)
-	       (org-delete-overlay ov)))
-	(org-overlays-in (or beg (point-min)) (or end (point-max)))))
+	  (and (eq (overlay-get ov 'type) 'org-marked-entry-overlay)
+	       (delete-overlay ov)))
+	(overlays-in (or beg (point-min)) (or end (point-max)))))
 
 (defun org-agenda-bulk-remove-all-marks ()
   "Remove all marks in the agenda buffer.
@@ -7437,6 +7467,7 @@ The prefix arg is passed through to the command if possible."
   (let* ((action (read-char-exclusive))
 	 (org-log-refile (if org-log-refile 'time nil))
 	 (entries (reverse org-agenda-bulk-marked-entries))
+	 redo-at-end
 	 cmd rfloc state e tag pos (cnt 0) (cntskip 0))
     (cond
      ((equal action ?$)
@@ -7456,7 +7487,8 @@ The prefix arg is passed through to the command if possible."
 			       (find-buffer-visiting (nth 1 rfloc))
 			       (error "This should not happen"))))
 
-      (setq cmd (list 'org-agenda-refile nil (list 'quote rfloc))))
+      (setq cmd (list 'org-agenda-refile nil (list 'quote rfloc) t)
+	    redo-at-end t))
 
      ((equal action ?t)
       (setq state (org-icompleting-read
@@ -7517,6 +7549,7 @@ The prefix arg is passed through to the command if possible."
 	(setq cnt (1+ cnt))))
     (setq org-agenda-bulk-marked-entries nil)
     (org-agenda-bulk-remove-all-marks)
+    (when redo-at-end (org-agenda-redo))
     (message "Acted on %d entries%s"
 	     cnt
 	     (if (= cntskip 0)
@@ -7596,7 +7629,6 @@ either 'headline or 'category.  For example:
 will only add headlines containing IMPORTANT or headlines
 belonging to the \"Work\" category."
   (interactive "P")
-  (require 'calendar)
   (if refresh (setq appt-time-msg-list nil))
   (if (eq filter t)
       (setq filter (read-from-minibuffer "Regexp filter: ")))

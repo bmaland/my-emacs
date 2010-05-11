@@ -5,7 +5,7 @@
 ;; Author: John Wiegley <johnw at gnu dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.35i
+;; Version: 6.36
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -30,8 +30,7 @@
 (require 'org)
 (require 'org-agenda)
 (eval-when-compile
-  (require 'cl)
-  (require 'calendar))
+  (require 'cl))
 
 (defgroup org-habit nil
   "Options concerning habit tracking in Org-mode."

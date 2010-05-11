@@ -4,7 +4,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.35i
+;; Version: 6.36
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -131,6 +131,7 @@ FIXME:  How to update when broken?"
       (setq org-indent-mode nil)
     (if org-indent-mode
 	(progn
+	  (org-set-local 'indent-tabs-mode nil)
 	  (or org-indent-strings (org-indent-initialize))
 	  (when org-indent-mode-turns-off-org-adapt-indentation
 	    (org-set-local 'org-adapt-indentation nil))

@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.35i
+;; Version: 6.36
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -42,6 +42,8 @@
 (declare-function org-export-htmlize-region-for-paste "org-html" (beg end))
 (declare-function htmlize-buffer "ext:htmlize" (&optional buffer))
 (declare-function org-inlinetask-remove-END-maybe "org-inlinetask" ())
+(declare-function org-table-cookie-line-p "org-table" (line))
+(declare-function org-table-colgroup-line-p "org-table" (line))
 (autoload 'org-export-generic "org-export-generic" "Export using the generic exporter" t)
 (defgroup org-export nil
   "Options for exporting org-listings."
@@ -1205,43 +1207,48 @@ on this string to produce the exported version."
 
 (defun org-export-define-heading-targets (target-alist)
   "Find all headings and define the targets for them.
-The new targets are added to TARGET-ALIST, which is also returned."
+The new targets are added to TARGET-ALIST, which is also returned.
+Also find all ID and CUSTOM_ID propertiess and store them."
   (goto-char (point-min))
   (org-init-section-numbers)
   (let ((re (concat "^" org-outline-regexp
-		    "\\| [ \t]*:\\(ID\\|CUSTOM_ID\\):[ \t]*\\([^ \t\r\n]+\\)"))
+		    "\\|"
+		    "^[ \t]*:\\(ID\\|CUSTOM_ID\\):[ \t]*\\([^ \t\r\n]+\\)"))
 	level target last-section-target a id)
     (while (re-search-forward re nil t)
-      (if (match-end 2)
-	  (progn
-	    (setq id (org-match-string-no-properties 2))
-	    (push (cons id target) target-alist)
-	    (setq a (or (assoc last-section-target org-export-target-aliases)
-			(progn
-			  (push (list last-section-target)
-				org-export-target-aliases)
-			  (car org-export-target-aliases))))
-	    (push (caar target-alist) (cdr a))
-	    (when (equal (match-string 1) "CUSTOM_ID")
-	      (if (not (assoc last-section-target
-			      org-export-preferred-target-alist))
-		  (push (cons last-section-target id)
-			org-export-preferred-target-alist)))
-	    (when (equal (match-string 1) "ID")
-	      (if (not (assoc last-section-target
-			      org-export-id-target-alist))
-		  (push (cons last-section-target (concat "ID-" id))
-			org-export-id-target-alist))))
-	(setq level (org-reduced-level
-		     (save-excursion (goto-char (point-at-bol))
-				     (org-outline-level))))
-	(setq target (org-solidify-link-text
-		      (format "sec-%s" (org-section-number level))))
-	(setq last-section-target target)
-	(push (cons target target) target-alist)
-	(add-text-properties
-	 (point-at-bol) (point-at-eol)
-	 (list 'target target)))))
+      (org-if-unprotected-at (match-beginning 0)
+	(if (match-end 2)
+	    (progn
+	      (setq id (org-match-string-no-properties 2))
+	      (push (cons id target) target-alist)
+	      (setq a (or (assoc last-section-target org-export-target-aliases)
+			  (progn
+			    (push (list last-section-target)
+				  org-export-target-aliases)
+			    (car org-export-target-aliases))))
+	      (push (caar target-alist) (cdr a))
+	      (when (equal (match-string 1) "CUSTOM_ID")
+		(if (not (assoc last-section-target
+				org-export-preferred-target-alist))
+		    (push (cons last-section-target id)
+			  org-export-preferred-target-alist)))
+	      (when (equal (match-string 1) "ID")
+		(if (not (assoc last-section-target
+				org-export-id-target-alist))
+		    (push (cons last-section-target (concat "ID-" id))
+			  org-export-id-target-alist))))
+	  (setq level (org-reduced-level
+		       (save-excursion (goto-char (point-at-bol))
+				       (org-outline-level))))
+	  (setq target (org-solidify-link-text
+			(format "sec-%s" (replace-regexp-in-string
+					  "\\." "_"
+					  (org-section-number level)))))
+	  (setq last-section-target target)
+	  (push (cons target target) target-alist)
+	  (add-text-properties
+	   (point-at-bol) (point-at-eol)
+	   (list 'target target))))))
   target-alist)
 
 (defun org-export-handle-invisible-targets (target-alist)
@@ -1338,9 +1345,9 @@ the current file."
 (defvar org-export-format-drawer-function nil
   "Function to be called to format the contents of a drawer.
 The function must accept three parameters:
-  BACKEND  one of the symbols html, docbook, latex, ascii, xoxo
   NAME     the drawer name, like \"PROPERTIES\"
   CONTENT  the content of the drawer.
+  BACKEND  one of the symbols html, docbook, latex, ascii, xoxo
 The function should return the text to be inserted into the buffer.
 If this is nil, `org-export-format-drawer' is used as a default.")
 
@@ -2490,7 +2497,8 @@ directory."
 			  filename)))
 	 (backup-inhibited t)
 	 (buffer (find-file-noselect filename))
-	 (region (buffer-string)))
+	 (region (buffer-string))
+         str-ret)
     (save-excursion
       (switch-to-buffer buffer)
       (erase-buffer)
@@ -2536,7 +2544,11 @@ directory."
 	    (write-file (concat filename ".html")))
 	  (kill-buffer newbuf)))
       (set-buffer-modified-p nil)
-      (kill-buffer (current-buffer)))))
+      (if (equal to-buffer 'string)
+          (progn (setq str-ret (buffer-string))
+                 (kill-buffer (current-buffer))
+                 str-ret)
+        (kill-buffer (current-buffer))))))
 
 (defvar org-archive-location)  ;; gets loaded with the org-archive require.
 (defun org-get-current-options ()
@@ -2650,13 +2662,16 @@ If yes remove the column and the special lines."
 				"^[ \t]*| *\\([\#!$*_^ /]\\) *|")
 			      x)))
 	     lines))
+      ;; No special marking column
       (progn
 	(setq org-table-clean-did-remove-column nil)
 	(delq nil
 	      (mapcar
 	       (lambda (x)
 		 (cond
-		  ((string-match  "^[ \t]*| */ *|" x)
+		  ((org-table-colgroup-line-p x)
+		   ;; This line contains colgroup info, extract it
+		   ;; and then discard the line
 		   (setq org-table-colgroup-info
 			 (mapcar (lambda (x)
 				   (cond ((member x '("<" "&lt;")) :start)
@@ -2665,14 +2680,20 @@ If yes remove the column and the special lines."
 					 (t nil)))
 				 (org-split-string x "[ \t]*|[ \t]*")))
 		   nil)
+		  ((org-table-cookie-line-p x)
+		   ;; This line contains formatting cookies, discard it
+		   nil)
 		  (t x)))
 	       lines)))
+    ;; there is a special marking column
     (setq org-table-clean-did-remove-column t)
     (delq nil
 	  (mapcar
 	   (lambda (x)
 	     (cond
-	      ((string-match  "^[ \t]*| */ *|" x)
+	      ((org-table-colgroup-line-p x)
+	       ;; This line contains colgroup info, extract it
+	       ;; and then discard the line
 	       (setq org-table-colgroup-info
 		     (mapcar (lambda (x)
 			       (cond ((member x '("<" "&lt;")) :start)
@@ -2681,8 +2702,12 @@ If yes remove the column and the special lines."
 				     (t nil)))
 			     (cdr (org-split-string x "[ \t]*|[ \t]*"))))
 	       nil)
+	      ((org-table-cookie-line-p x)
+	       ;; This line contains formatting cookies, discard it
+	       nil)
 	      ((string-match "^[ \t]*| *[!_^/] *|" x)
-	       nil) ; ignore this line
+	       ;; ignore this line
+	       nil)
 	      ((or (string-match "^\\([ \t]*\\)|-+\\+" x)
 		   (string-match "^\\([ \t]*\\)|[^|]*|" x))
 	       ;; remove the first column

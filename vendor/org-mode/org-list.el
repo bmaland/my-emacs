@@ -7,7 +7,7 @@
 ;;	   Bastien Guerry <bzg AT altern DOT org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.35i
+;; Version: 6.36
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -119,7 +119,7 @@ When a string, it will be used as a regular expression.	 When the bullet
 type of a list is changed, the new bullet type will be matched against this
 regexp.	 If it matches, there will be two spaces instead of one after
 the bullet in each item of he list."
-  :group 'org-plain-list
+  :group 'org-plain-lists
   :type '(choice
 	  (const :tag "never" nil)
 	  (regexp)))
@@ -197,17 +197,25 @@ list, obtained by prompting the user."
 
 ;;; Plain list items
 
+(defun org-item-re (&optional general)
+  "Return the correct regular expression for plain lists.
+If GENERAL is non-nil, return the general regexp independent of the value
+of `org-plain-list-ordered-item-terminator'."
+  (cond
+   ((or general (eq org-plain-list-ordered-item-terminator t))
+    "\\([ \t]*\\([-+]\\|\\([0-9]+[.)]\\)\\)\\|[ \t]+\\*\\)\\( \\|$\\)")
+   ((= org-plain-list-ordered-item-terminator ?.)
+    "\\([ \t]*\\([-+]\\|\\([0-9]+\\.\\)\\)\\|[ \t]+\\*\\)\\( \\|$\\)")
+   ((= org-plain-list-ordered-item-terminator ?\))
+    "\\([ \t]*\\([-+]\\|\\([0-9]+)\\)\\)\\|[ \t]+\\*\\)\\( \\|$\\)")
+   (t (error "Invalid value of `org-plain-list-ordered-item-terminator'"))))
+
 (defun org-at-item-p ()
   "Is point in a line starting a hand-formatted item?"
-  (let ((llt org-plain-list-ordered-item-terminator))
-    (save-excursion
-      (goto-char (point-at-bol))
-      (looking-at
-       (cond
-	((eq llt t)  "\\([ \t]*\\([-+]\\|\\([0-9]+[.)]\\)\\)\\|[ \t]+\\*\\)\\( \\|$\\)")
-	((= llt ?.)  "\\([ \t]*\\([-+]\\|\\([0-9]+\\.\\)\\)\\|[ \t]+\\*\\)\\( \\|$\\)")
-	((= llt ?\)) "\\([ \t]*\\([-+]\\|\\([0-9]+)\\)\\)\\|[ \t]+\\*\\)\\( \\|$\\)")
-	(t (error "Invalid value of `org-plain-list-ordered-item-terminator'")))))))
+
+  (save-excursion
+    (goto-char (point-at-bol))
+    (looking-at (org-item-re))))
 
 (defun org-at-item-bullet-p ()
   "Is point at the bullet of a plain list item?"
@@ -216,7 +224,7 @@ list, obtained by prompting the user."
        (< (point) (match-end 0))))
 
 (defun org-in-item-p ()
-  "It the cursor inside a plain list item.
+  "Is the cursor inside a plain list item.
 Does not have to be the first line."
   (save-excursion
     (condition-case nil
@@ -590,6 +598,17 @@ If the cursor is not in an item, throw an error."
       (goto-char pos)
       (error "Not in an item"))))
 
+(defun org-end-of-item-text-before-children ()
+  "Move to the end of the item text, stops before the first child if any.
+Assumes that the cursor is in the first ine of an item."
+  (goto-char
+   (min (save-excursion (org-end-of-item) (point))
+	(save-excursion
+	  (goto-char (point-at-eol))
+	  (if (re-search-forward (concat "^" (org-item-re t)) nil 'move)
+	      (match-beginning 0)
+	    (point-max))))))
+
 (defun org-next-item ()
   "Move to the beginning of the next item in the current plain list.
 Error if not at a plain list, or if this is the last item in the list."
@@ -823,6 +842,10 @@ with something like \"1.\" or \"2)\"."
     (setq bobp (bobp))
     (looking-at "[ \t]*[0-9]+\\([.)]\\)")
     (setq fmt (concat "%d" (or (match-string 1) ".")))
+    (save-excursion
+      (goto-char (match-end 0))
+      (if (looking-at "[ \t]*\\[@start:\\([0-9]+\\)")
+	  (setq n (1- (string-to-number (match-string 1))))))
     (beginning-of-line 0)
     ;; walk forward and replace these numbers
     (catch 'exit
@@ -961,12 +984,24 @@ I.e. to the text after the last item."
 (defvar org-last-indent-end-marker (make-marker))
 
 (defun org-outdent-item (arg)
-  "Outdent a local list item."
+  "Outdent a local list item, but not its children."
   (interactive "p")
-  (org-indent-item (- arg)))
+  (org-indent-item-tree (- arg) 'no-subtree))
 
 (defun org-indent-item (arg)
-  "Indent a local list item."
+  "Indent a local list item, but not its children."
+  (interactive "p")
+  (org-indent-item-tree arg 'no-subtree))
+
+(defun org-outdent-item-tree (arg &optional no-subtree)
+  "Outdent a local list item including its children.
+If NO-SUBTREE is set, only outdend the item itself, not its children."
+  (interactive "p")
+  (org-indent-item-tree (- arg) no-subtree))
+
+(defun org-indent-item-tree (arg &optional no-subtree)
+  "Indent a local list item including its children.
+If NO-SUBTREE is set, only indent the item itself, not its children."
   (interactive "p")
   (and (org-region-active-p) (org-cursor-to-region-beginning))
   (unless (org-at-item-p)
@@ -975,12 +1010,15 @@ I.e. to the text after the last item."
     (setq firstp (org-first-list-item-p))
     (save-excursion
       (setq end (and (org-region-active-p) (region-end)))
-      (if (memq last-command '(org-shiftmetaright org-shiftmetaleft))
+      (if (and (memq last-command '(org-shiftmetaright org-shiftmetaleft))
+	       (memq this-command '(org-shiftmetaright org-shiftmetaleft)))
 	  (setq beg org-last-indent-begin-marker
 		end org-last-indent-end-marker)
 	(org-beginning-of-item)
 	(setq beg (move-marker org-last-indent-begin-marker (point)))
-	(org-end-of-item)
+	(if no-subtree
+	    (org-end-of-item-text-before-children)
+	  (org-end-of-item))
 	(setq end (move-marker org-last-indent-end-marker (or end (point)))))
       (goto-char beg)
       (setq ind-bul (org-item-indent-positions)

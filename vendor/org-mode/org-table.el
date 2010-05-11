@@ -6,7 +6,7 @@
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.35i
+;; Version: 6.36
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -326,6 +326,33 @@ outside the table.")
    "\\.\\."
    "\\(" "@?[-0-9I$&]+" "\\|" "[a-zA-Z]\\{1,2\\}\\([0-9]+\\|&\\)" "\\|" "\\$[a-zA-Z0-9]+" "\\)")
   "Match a range for reference display.")
+
+(defun org-table-colgroup-line-p (line)
+  "Is this a table line colgroup information?"
+  (save-match-data
+    (and (string-match "[<>]\\|&[lg]t;" line)
+	 (string-match "\\`[ \t]*|[ \t]*/[ \t]*\\(|[ \t<>0-9|lgt&;]+\\)\\'"
+		       line)
+	 (not (delq
+	       nil
+	       (mapcar
+		(lambda (s)
+		  (not (member s '("" "<" ">" "<>" "&lt;" "&gt;" "&lt;&gt;"))))
+		(org-split-string (match-string 1 line) "[ \t]*|[ \t]*")))))))
+
+(defun org-table-cookie-line-p (line)
+  "Is this a table line with only alignment/width cookies?"
+
+  (save-match-data
+    (and (string-match "[<>]\\|&[lg]t;" line)
+	 (or (string-match "\\`[ \t]*|[ \t]*/[ \t]*\\(|[ \t<>0-9|lgt&;]+\\)\\'" line)
+	     (string-match "\\(\\`[ \t<>lr0-9|gt&;]+\\'\\)" line))
+	 (not (delq nil (mapcar
+			 (lambda (s)
+			   (not (or (equal s "")
+				    (string-match "\\`<\\([lr]?[0-9]+\\|[lr]\\)>\\'" s)
+				    (string-match "\\`&lt;\\([lr]?[0-9]+\\|[lr]\\)&gt;\\'" s))))
+			 (org-split-string (match-string 1 line) "[ \t]*|[ \t]*")))))))
 
 (defconst org-table-translate-regexp
   (concat "\\(" "@[-0-9I$]+" "\\|" "[a-zA-Z]\\{1,2\\}\\([0-9]+\\|&\\)" "\\)")
@@ -764,14 +791,6 @@ When nil, simply write \"#ERROR\" in corrupted fields.")
     (setq org-table-may-need-update nil)
     ))
 
-
-
-
-
-
-
-
-
 (defun org-table-begin (&optional table-type)
   "Find the beginning of the table and return its position.
 With argument TABLE-TYPE, go to the beginning of a table.el-type table."
@@ -830,6 +849,7 @@ Optional argument NEW may specify text to replace the current field content."
 		  (if (<= (length new) l)      ;; FIXME: length -> str-width?
 		      (setq n (format f new))
 		    (setq n (concat new "|") org-table-may-need-update t)))
+	      (if (equal (string-to-char n) ?-) (setq n (concat " " n)))
 	      (or (equal n o)
 		  (let (org-table-may-need-update)
 		    (replace-match n t t))))
@@ -1728,23 +1748,6 @@ the table and kill the editing buffer."
     (org-table-get-field nil text)
     (org-table-align)
     (message "New field value inserted")))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 (defvar org-timecnt) ; dynamically scoped parameter
 
@@ -2682,6 +2685,36 @@ known that the table will be realigned a little later anyway."
 	  (throw 'exit t)))
       (error "No convergence after %d iterations" i))))
 
+(defun org-table-recalculate-buffer-tables ()
+  "Recalculate all tables in the current buffer."
+  (interactive)
+  (save-excursion
+    (save-restriction
+      (widen)
+      (org-table-map-tables (lambda () (org-table-recalculate t)) t))))
+
+(defun org-table-iterate-buffer-tables ()
+  "Iterate all tables in the buffer, to converge inter-table dependencies."
+ (interactive)
+ (let* ((imax 10)
+        (checksum (md5 (buffer-string)))
+
+        c1
+        (i imax))
+   (save-excursion
+     (save-restriction
+       (widen)
+       (catch 'exit
+	 (while (> i 0)
+	   (setq i (1- i))
+	   (org-table-map-tables (lambda () (org-table-recalculate t)) t)
+	   (if (equal checksum (setq c1 (md5 (buffer-string))))
+	       (progn
+		 (message "Convergence after %d iterations" (- imax i))
+		 (throw 'exit t))
+	     (setq checksum c1)))
+	 (error "No convergence after %d iterations" imax))))))
+
 (defun org-table-formula-substitute-names (f)
   "Replace $const with values in string F."
   (let ((start 0) a (f1 f) (pp (/= (string-to-char f) ?')))
@@ -3282,8 +3315,8 @@ Use COMMAND to do the motion, repeat if necessary to end up in a data line."
 
 (defun org-table-add-rectangle-overlay (beg end &optional face)
   "Add a new overlay."
-  (let ((ov (org-make-overlay beg end)))
-    (org-overlay-put ov 'face (or face 'secondary-selection))
+  (let ((ov (make-overlay beg end)))
+    (overlay-put ov 'face (or face 'secondary-selection))
     (push ov org-table-rectangle-overlays)))
 
 (defun org-table-highlight-rectangle (&optional beg end face)
@@ -3318,7 +3351,7 @@ Use COMMAND to do the motion, repeat if necessary to end up in a data line."
   "Remove the rectangle overlays."
   (unless org-inhibit-highlight-removal
     (remove-hook 'before-change-functions 'org-table-remove-rectangle-highlight)
-    (mapc 'org-delete-overlay org-table-rectangle-overlays)
+    (mapc 'delete-overlay org-table-rectangle-overlays)
     (setq org-table-rectangle-overlays nil)))
 
 (defvar org-table-coordinate-overlays nil
@@ -3328,14 +3361,14 @@ Use COMMAND to do the motion, repeat if necessary to end up in a data line."
 (defun org-table-overlay-coordinates ()
   "Add overlays to the table at point, to show row/column coordinates."
   (interactive)
-  (mapc 'org-delete-overlay org-table-coordinate-overlays)
+  (mapc 'delete-overlay org-table-coordinate-overlays)
   (setq org-table-coordinate-overlays nil)
   (save-excursion
     (let ((id 0) (ih 0) hline eol s1 s2 str ic ov beg)
       (goto-char (org-table-begin))
       (while (org-at-table-p)
 	(setq eol (point-at-eol))
-	(setq ov (org-make-overlay (point-at-bol) (1+ (point-at-bol))))
+	(setq ov (make-overlay (point-at-bol) (1+ (point-at-bol))))
 	(push ov org-table-coordinate-overlays)
 	(setq hline (looking-at org-table-hline-regexp))
 	(setq str (if hline (format "I*%-2d" (setq ih (1+ ih)))
@@ -3349,7 +3382,7 @@ Use COMMAND to do the motion, repeat if necessary to end up in a data line."
 		  s1 (concat "$" (int-to-string ic))
 		  s2 (org-number-to-letters ic)
 		  str (if (eq org-table-use-standard-references t) s2 s1))
-	    (setq ov (org-make-overlay beg (+ beg (length str))))
+	    (setq ov (make-overlay beg (+ beg (length str))))
 	    (push ov org-table-coordinate-overlays)
 	    (org-overlay-display ov str 'org-special-keyword 'evaporate)))
 	(beginning-of-line 2)))))
@@ -3363,7 +3396,7 @@ Use COMMAND to do the motion, repeat if necessary to end up in a data line."
   (if (and (org-at-table-p) org-table-overlay-coordinates)
       (org-table-align))
   (unless org-table-overlay-coordinates
-    (mapc 'org-delete-overlay org-table-coordinate-overlays)
+    (mapc 'delete-overlay org-table-coordinate-overlays)
     (setq org-table-coordinate-overlays nil)))
 
 (defun org-table-toggle-formula-debugger ()
@@ -3454,7 +3487,7 @@ table editor in arbitrary modes.")
 			     (concat orgtbl-line-start-regexp "\\|"
 				     auto-fill-inhibit-regexp)
 			   orgtbl-line-start-regexp))
-	  (org-add-to-invisibility-spec '(org-cwidth))
+	  (add-to-invisibility-spec '(org-cwidth))
 	  (when (fboundp 'font-lock-add-keywords)
 	    (font-lock-add-keywords nil orgtbl-extra-font-lock-keywords)
 	    (org-restart-font-lock))
@@ -3800,7 +3833,7 @@ a radio table."
     (goto-char (org-table-begin))
     (let (rtn)
       (beginning-of-line 0)
-      (while (looking-at "[ \t]*#\\+ORGTBL[: \t][ \t]*SEND +\\([a-zA-Z0-9_]+\\) +\\([^ \t\r\n]+\\)\\( +.*\\)?")
+      (while (looking-at "[ \t]*#\\+ORGTBL[: \t][ \t]*SEND[ \t]+\\([^ \t\r\n]+\\)[ \t]+\\([^ \t\r\n]+\\)\\([ \t]+.*\\)?")
 	(let ((name (org-no-properties (match-string 1)))
 	      (transform (intern (match-string 2)))
 	      (params (if (match-end 3)
